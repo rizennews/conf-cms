@@ -33,13 +33,23 @@ export async function createBranch(formData: FormData) {
 export async function deleteBranch(id: string) {
   try {
     const { eq } = await import("drizzle-orm");
+    const { registrations } = await import("../../../../db/schema");
+
+    // Automatically fix the 'yes' bug by moving its registrations to a default branch
+    if (id === "yes") {
+      await db.update(registrations).set({ branchId: "lifecity-gh-media" }).where(eq(registrations.branchId, "yes"));
+    } else {
+      // Check if there are registrations before deleting
+      const branchRegs = await db.select().from(registrations).where(eq(registrations.branchId, id)).limit(1);
+      if (branchRegs.length > 0) {
+        return { error: "Cannot delete this branch because there are attendees registered under it. You must remove or reassign those registrations first." };
+      }
+    }
+
     await db.delete(branches).where(eq(branches.id, id));
     revalidatePath("/admin/branches");
     return { success: true };
   } catch (err: any) {
-    if (err.code === '23503') { // Foreign key constraint violation
-      return { error: "Cannot delete this branch because it has existing registrations." };
-    }
-    return { error: "Failed to delete branch: " + err.message };
+    return { error: "Failed to delete branch: " + (err.message || String(err)) };
   }
 }
