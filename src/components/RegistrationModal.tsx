@@ -14,6 +14,8 @@ type Props = {
 export default function RegistrationModal({ isOpen, onClose, branches = [], event }: Props) {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [userName, setUserName] = useState("");
   const [customData, setCustomData] = useState<Record<string, string>>({});
 
   let customFields: any[] = [];
@@ -62,12 +64,45 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     if (res.error) {
       alert("Something went wrong.\n\nError: " + res.error);
     } else {
-      alert("Registration successful! Thank you for registering.");
-      setStep(1);
-      setCustomData({});
-      onClose();
+      const nameKey = Object.keys(customData).find(k => k.toLowerCase().includes("name"));
+      setUserName(nameKey ? customData[nameKey] : "Guest");
+      setIsSuccess(true);
     }
   };
+
+  const handleCloseSuccess = () => {
+    setStep(1);
+    setCustomData({});
+    setIsSuccess(false);
+    onClose();
+  };
+
+  if (isSuccess) {
+    return (
+      <div className={styles.overlay} onClick={handleCloseSuccess} style={{ zIndex: 100 }}>
+        <div className={styles.modal} onClick={e => e.stopPropagation()} style={{ textAlign: "center", padding: "4rem 2rem" }}>
+          <div style={{ display: "inline-flex", padding: "1.5rem", background: "#f0fdf4", borderRadius: "50%", marginBottom: "2rem" }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <h2 style={{ fontSize: "2rem", marginBottom: "1rem", fontFamily: "'Inter', sans-serif", fontWeight: 600, color: "#111" }}>
+            Thank you, {userName}!
+          </h2>
+          <p style={{ color: "#666", fontSize: "1.1rem", marginBottom: "3rem", lineHeight: 1.5, maxWidth: "400px", margin: "0 auto 3rem auto" }}>
+            Your registration is confirmed. We can't wait to see you at the event. 
+          </p>
+          <button 
+            onClick={handleCloseSuccess} 
+            style={{ background: "#111", border: "none", color: "white", padding: "1rem 3rem", borderRadius: "99px", fontWeight: 500, fontSize: "1.05rem", cursor: "pointer" }}
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.overlay} onClick={onClose} style={{ zIndex: 100 }}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { authClient } from "../../../lib/auth-client";
 import styles from "./login.module.css";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,17 @@ export default function AdminLogin() {
   const [name, setName] = useState("");
   const router = useRouter();
 
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "auth-sync") {
+        router.push("/admin");
+        router.refresh();
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [router]);
+
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
@@ -25,11 +36,17 @@ export default function AdminLogin() {
     if (isRegistering) {
       const { error } = await authClient.signUp.email({ email, password, name });
       if (error) alert(error.message);
-      else router.push("/admin");
+      else {
+        localStorage.setItem("auth-sync", Date.now().toString());
+        router.push("/admin");
+      }
     } else {
       const { error } = await authClient.signIn.email({ email, password });
       if (error) alert(error.message);
-      else router.push("/admin");
+      else {
+        localStorage.setItem("auth-sync", Date.now().toString());
+        router.push("/admin");
+      }
     }
     
     setLoading(false);

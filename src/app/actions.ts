@@ -23,18 +23,19 @@ export async function submitRegistration(data: any) {
     const isFirstTime = findField(["first time", "first-time"]) === "Yes";
     const heardFrom = findField(["hear", "heard"]);
     const invitees = findField(["invitees"]);
-    let branchId = findField(["branch", "church"]);
+    let branchName = findField(["branch", "church"]) || "Unknown";
+    if (branchName === "Other" && custom.otherBranch) {
+      branchName = custom.otherBranch;
+    }
 
-    // If they typed a custom "Other" branch
-    if (branchId === "Other" || (!branchId && custom.otherBranch)) {
-      const branchName = branchId === "Other" ? "Other" : branchId || "Unknown";
-      const slug = branchName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      
-      const existing = await db.select().from(branches).where(eq(branches.id, slug));
-      if (existing.length === 0) {
-        await db.insert(branches).values({ id: slug, name: branchName });
-      }
-      branchId = slug;
+    let branchId = "";
+    const existing = await db.select().from(branches).where(eq(branches.name, branchName)).limit(1);
+    
+    if (existing.length > 0) {
+      branchId = existing[0].id;
+    } else {
+      branchId = branchName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      await db.insert(branches).values({ id: branchId, name: branchName });
     }
 
     await db.insert(registrations).values({
