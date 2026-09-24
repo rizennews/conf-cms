@@ -70,12 +70,25 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: any }) {
     setDeleteConfirmIndex(activeIndex);
   };
   
-  const confirmDeleteField = () => {
+  const confirmDeleteField = async () => {
     if (deleteConfirmIndex === null) return;
     const newFields = fields.filter((_, i) => i !== deleteConfirmIndex);
     setFields(newFields);
     setActiveIndex(null);
     setDeleteConfirmIndex(null);
+    
+    // Automatically save so the deletion persists immediately
+    setLoading(true);
+    await saveEvent({
+      id: initialEvent?.id,
+      name,
+      slug,
+      deadline: deadline ? new Date(deadline) : null,
+      isActive,
+      isMainEvent,
+      customFields: JSON.stringify(newFields)
+    });
+    setLoading(false);
   };
 
   return (
