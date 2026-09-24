@@ -123,8 +123,8 @@ export default function RegistrationsTable({ data, events, canBulkUpload }: { da
       {showUpload && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100 }}>
           <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "100%", maxWidth: "500px" }}>
-            <h2 style={{ marginTop: 0 }}>Bulk Upload Registrations</h2>
-            <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "8px", padding: "1rem", marginBottom: "1.5rem", fontSize: "0.9rem" }}>
+            <h2 style={{ marginTop: 0, color: "#111" }}>Bulk Upload Registrations</h2>
+            <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "8px", padding: "1rem", marginBottom: "1.5rem", fontSize: "0.9rem", color: "#111" }}>
               <strong>CSV Format:</strong> <code style={{ background: "#e0f2fe", padding: "0.2rem 0.4rem", borderRadius: "4px" }}>fullName, email, whatsapp, address, branchId, ageRange</code>
               <br/>
               <button onClick={downloadTemplate} style={{ marginTop: "0.75rem", background: "none", border: "1px solid #7dd3fc", borderRadius: "6px", padding: "0.4rem 0.75rem", color: "#0284c7", cursor: "pointer", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
@@ -132,14 +132,14 @@ export default function RegistrationsTable({ data, events, canBulkUpload }: { da
               </button>
             </div>
             <div style={{ marginBottom: "1.5rem" }}>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Target Event</label>
-              <select value={uploadEvent} onChange={e => setUploadEvent(e.target.value)} style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db" }}>
+              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, color: "#111" }}>Target Event</label>
+              <select value={uploadEvent} onChange={e => setUploadEvent(e.target.value)} style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", color: "#111", background: "#fff" }}>
                 {events.map(e => <option key={e.id} value={e.id}>{e.name || e.id}</option>)}
               </select>
             </div>
             <div style={{ marginBottom: "1.5rem" }}>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500 }}>Upload CSV File</label>
-              <input type="file" accept=".csv" onChange={e => setCsvFile(e.target.files?.[0] || null)} style={{ width: "100%", padding: "0.75rem", border: "1px dashed #d1d5db", borderRadius: "6px" }} />
+              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, color: "#111" }}>Upload CSV File</label>
+              <input type="file" accept=".csv" onChange={e => setCsvFile(e.target.files?.[0] || null)} style={{ width: "100%", padding: "0.75rem", border: "1px dashed #d1d5db", borderRadius: "6px", color: "#111" }} />
             </div>
             {uploadResult && (
               <div style={{ padding: "1rem", borderRadius: "8px", marginBottom: "1rem", background: uploadResult.error ? "#fef2f2" : "#f0fdf4", color: uploadResult.error ? "#ef4444" : "#16a34a" }}>
@@ -147,7 +147,7 @@ export default function RegistrationsTable({ data, events, canBulkUpload }: { da
               </div>
             )}
             <div style={{ display: "flex", gap: "1rem" }}>
-              <button onClick={() => { setShowUpload(false); setUploadResult(null); setCsvFile(null); }} style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>Cancel</button>
+              <button onClick={() => { setShowUpload(false); setUploadResult(null); setCsvFile(null); }} style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer", fontWeight: 600, color: "#111" }}>Cancel</button>
               <button onClick={handleBulkUpload} disabled={!csvFile || uploading} style={{ flex: 1, padding: "0.75rem", background: uploading ? "#9ca3af" : "#111", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
                 {uploading ? "Uploading..." : "Upload & Import"}
               </button>

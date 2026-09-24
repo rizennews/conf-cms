@@ -53,35 +53,35 @@ export default function ProfileForm() {
       {message && <div style={{ padding: "0.75rem", background: "#f0fdf4", color: "#16a34a", borderRadius: "6px", fontSize: "0.9rem" }}>{message}</div>}
 
       <div>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, fontSize: "0.9rem" }}>Current Password</label>
+        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, fontSize: "0.9rem", color: "#111" }}>Current Password</label>
         <input 
           required 
           type="password" 
           value={currentPassword} 
           onChange={e => setCurrentPassword(e.target.value)} 
-          style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db" }} 
+          style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", color: "#111", background: "#fff" }} 
         />
       </div>
 
       <div>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, fontSize: "0.9rem" }}>New Password</label>
+        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, fontSize: "0.9rem", color: "#111" }}>New Password</label>
         <input 
           required 
           type="password" 
           value={newPassword} 
           onChange={e => setNewPassword(e.target.value)} 
-          style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db" }} 
+          style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", color: "#111", background: "#fff" }} 
         />
       </div>
 
       <div>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, fontSize: "0.9rem" }}>Confirm New Password</label>
+        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, fontSize: "0.9rem", color: "#111" }}>Confirm New Password</label>
         <input 
           required 
           type="password" 
           value={confirmPassword} 
           onChange={e => setConfirmPassword(e.target.value)} 
-          style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db" }} 
+          style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", color: "#111", background: "#fff" }} 
         />
       </div>
 
