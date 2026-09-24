@@ -13,6 +13,9 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<any>(null);
 
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [printEventId, setPrintEventId] = useState("");
+
   const filteredData = data.filter(r => {
     const matchesSearch = (r.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
                           (r.email || "").toLowerCase().includes(searchTerm.toLowerCase());
@@ -112,11 +115,11 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
           
           <button 
             onClick={() => {
-              if (!filterEvent) {
-                alert("Please select a specific event from the dropdown first to print nametags.");
-                return;
+              if (filterEvent) {
+                window.open(`/admin/print-nametags?eventId=${filterEvent}`, '_blank');
+              } else {
+                setShowPrintModal(true);
               }
-              window.open(`/admin/print-nametags?eventId=${filterEvent}`, '_blank');
             }}
             style={{ padding: "0.75rem 1.25rem", background: "white", color: "#111", border: "1px solid #d1d5db", borderRadius: "6px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
           >
@@ -208,6 +211,45 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
               <button onClick={() => { setShowUpload(false); setUploadResult(null); setCsvFile(null); }} style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer", fontWeight: 600, color: "#111" }}>Cancel</button>
               <button onClick={handleBulkUpload} disabled={!csvFile || uploading} style={{ flex: 1, padding: "0.75rem", background: uploading ? "#9ca3af" : "#111", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
                 {uploading ? "Uploading..." : "Upload & Import"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showPrintModal && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100 }}>
+          <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+            <h2 style={{ marginTop: 0, color: "#111", fontSize: "1.25rem", marginBottom: "1rem" }}>Print Nametags</h2>
+            <p style={{ color: "#4b5563", fontSize: "0.95rem", marginBottom: "1.5rem" }}>
+              Please select the event you want to print nametags for.
+            </p>
+            <select 
+              value={printEventId} 
+              onChange={e => setPrintEventId(e.target.value)} 
+              style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", color: "#111", background: "#fff", marginBottom: "1.5rem" }}
+            >
+              <option value="">Select Event...</option>
+              {events.map(e => <option key={e.id} value={e.id}>{e.name || e.id}</option>)}
+            </select>
+            <div style={{ display: "flex", gap: "1rem" }}>
+              <button 
+                onClick={() => { setShowPrintModal(false); setPrintEventId(""); }} 
+                style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer", fontWeight: 600, color: "#111" }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  if (printEventId) {
+                    window.open(`/admin/print-nametags?eventId=${printEventId}`, '_blank');
+                    setShowPrintModal(false);
+                    setPrintEventId("");
+                  }
+                }} 
+                disabled={!printEventId}
+                style={{ flex: 1, padding: "0.75rem", background: printEventId ? "#111" : "#9ca3af", color: "white", border: "none", borderRadius: "8px", cursor: printEventId ? "pointer" : "not-allowed", fontWeight: 600 }}
+              >
+                Print
               </button>
             </div>
           </div>

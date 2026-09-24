@@ -40,19 +40,26 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
   const ageCounts: Record<string, number> = {};
 
   eventRegs.forEach(r => {
+    // Check standard ageRange column first
+    if (r.ageRange) {
+      ageCounts[r.ageRange] = (ageCounts[r.ageRange] || 0) + 1;
+    }
+
     if (r.customData) {
       try {
         const data = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
         
-        // Gender
-        const gender = data['Gender'];
+        // Gender (Custom Data)
+        const gender = data['Gender'] || data['gender'];
         if (gender === 'Male') maleCount++;
         else if (gender === 'Female') femaleCount++;
 
-        // Age Range
-        const age = data['Age Range'];
-        if (age) {
-          ageCounts[age] = (ageCounts[age] || 0) + 1;
+        // Age Range fallback to custom data if standard column is missing
+        if (!r.ageRange) {
+          const customAge = data['Age Range'] || data['ageRange'] || data['Age'] || data['age'];
+          if (customAge) {
+            ageCounts[customAge] = (ageCounts[customAge] || 0) + 1;
+          }
         }
       } catch (e) {}
     }
