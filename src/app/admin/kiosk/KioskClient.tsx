@@ -1,26 +1,66 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { getRegistrationById, checkInById } from "../(dashboard)/checkin/actions";
+import { getRegistrationById, checkInById, searchRegistrations } from "../(dashboard)/checkin/actions";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import { CheckCircle, AlertTriangle, XCircle, QrCode } from "lucide-react";
+import { CheckCircle, AlertTriangle, XCircle, QrCode, Search, UserCheck } from "lucide-react";
 import Link from "next/link";
 
 type ScanState = "IDLE" | "SUCCESS" | "ALREADY_CHECKED_IN" | "INVALID";
 
-export default function KioskClient({ events }: { events: any[] }) {
+export default function KioskClient({ events, branches }: { events: any[], branches: any[] }) {
   const [selectedEvent, setSelectedEvent] = useState(events[0]?.id || "");
   const [isStarted, setIsStarted] = useState(false);
   const [scanState, setScanState] = useState<ScanState>("IDLE");
   const [message, setMessage] = useState("");
+  const [subMessage, setSubMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [recentCheckins, setRecentCheckins] = useState<{name: string, time: Date}[]>([]);
+  
+  // Search Fallback State
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  // We need to keep a ref to avoid processing the same QR code multiple times in rapid succession
   const lastScannedIdRef = useRef<number | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const playSound = (type: 'success' | 'error' | 'warn') => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      if (type === 'success') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.3);
+      } else {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.2);
+      }
+    } catch(e) {
+      console.warn("Audio not supported or muted");
+    }
+  };
+
   useEffect(() => {
-    if (isStarted && scanState === "IDLE") {
+    if (isStarted && scanState === "IDLE" && !isSearchMode) {
       const scanner = new Html5QrcodeScanner("kiosk-reader", { 
         fps: 10, 
         qrbox: { width: 300, height: 300 },
@@ -32,15 +72,12 @@ export default function KioskClient({ events }: { events: any[] }) {
         
         const idMatch = decodedText.match(/\d+/);
         if (!idMatch) {
-          handleResult("INVALID", "Invalid QR code format.");
+          handleResult("INVALID", "Invalid QR code format.", "");
           return;
         }
 
         const regId = Number(idMatch[0]);
-        if (lastScannedIdRef.current === regId) {
-          // Ignore same ID if scanned rapidly
-          return;
-        }
+        if (lastScannedIdRef.current === regId) return;
 
         setIsProcessing(true);
         lastScannedIdRef.current = regId;
@@ -49,15 +86,17 @@ export default function KioskClient({ events }: { events: any[] }) {
         const { registration } = await getRegistrationById(regId);
         
         if (!registration || registration.eventId !== selectedEvent) {
-          handleResult("INVALID", "Ticket not valid for this event.");
+          handleResult("INVALID", "Ticket not valid for this event.", "");
         } else if (registration.status === "checked-in") {
-          handleResult("ALREADY_CHECKED_IN", `${registration.fullName || 'Guest'} is already checked in.`);
+          handleResult("ALREADY_CHECKED_IN", `${registration.fullName || 'Guest'}`, "Already checked in!");
         } else {
           const res = await checkInById(regId);
           if (res.success) {
-            handleResult("SUCCESS", `Welcome, ${registration.fullName || 'Guest'}!`);
+            const branchName = branches.find(b => b.id === registration.branchId)?.name || "VIP Guest";
+            handleResult("SUCCESS", `Welcome, ${registration.fullName || 'Guest'}!`, branchName);
+            setRecentCheckins(prev => [{ name: registration.fullName || 'Guest', time: new Date() }, ...prev].slice(0, 5));
           } else {
-            handleResult("INVALID", "Server error during check-in.");
+            handleResult("INVALID", "Server error during check-in.", "");
           }
         }
         
@@ -69,20 +108,50 @@ export default function KioskClient({ events }: { events: any[] }) {
         scanner.clear().catch(console.error);
       };
     }
-  }, [isStarted, scanState, isProcessing, selectedEvent]);
+  }, [isStarted, scanState, isProcessing, selectedEvent, isSearchMode, branches]);
 
-  const handleResult = (state: ScanState, msg: string) => {
+  const handleResult = (state: ScanState, msg: string, sub: string) => {
     setScanState(state);
     setMessage(msg);
+    setSubMessage(sub);
     setIsProcessing(false);
+    setIsSearchMode(false);
+    
+    if (state === "SUCCESS") playSound("success");
+    else if (state === "INVALID") playSound("error");
+    else playSound("warn");
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     
     timeoutRef.current = setTimeout(() => {
       setScanState("IDLE");
       setMessage("");
+      setSubMessage("");
       lastScannedIdRef.current = null;
-    }, 3000);
+    }, 3500);
+  };
+
+  const handleManualSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    const { results } = await searchRegistrations(searchQuery, selectedEvent);
+    setSearchResults(results || []);
+    setIsSearching(false);
+  };
+
+  const handleManualCheckIn = async (reg: any) => {
+    if (reg.status === "checked-in") {
+      handleResult("ALREADY_CHECKED_IN", `${reg.fullName || 'Guest'}`, "Already checked in!");
+      return;
+    }
+    const res = await checkInById(reg.id);
+    if (res.success) {
+      const branchName = branches.find(b => b.id === reg.branchId)?.name || "VIP Guest";
+      handleResult("SUCCESS", `Welcome, ${reg.fullName || 'Guest'}!`, branchName);
+      setRecentCheckins(prev => [{ name: reg.fullName || 'Guest', time: new Date() }, ...prev].slice(0, 5));
+    } else {
+      handleResult("INVALID", "Server error during check-in.", "");
+    }
   };
 
   if (!isStarted) {
@@ -122,6 +191,15 @@ export default function KioskClient({ events }: { events: any[] }) {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f4f5f7", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      <style>{`
+        @keyframes pulse-ring {
+          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(43, 63, 242, 0.4); }
+          70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(43, 63, 242, 0); }
+          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(43, 63, 242, 0); }
+        }
+        .scanner-ring { animation: pulse-ring 2.5s infinite cubic-bezier(0.66, 0, 0, 1); }
+      `}</style>
+      
       {/* Top Bar */}
       <div style={{ padding: "1.5rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center", background: "white", borderBottom: "1px solid #e5e7eb" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -131,7 +209,7 @@ export default function KioskClient({ events }: { events: any[] }) {
           </h2>
         </div>
         <button 
-          onClick={() => { setIsStarted(false); setScanState("IDLE"); }} 
+          onClick={() => { setIsStarted(false); setScanState("IDLE"); setIsSearchMode(false); }} 
           style={{ background: "#fff", border: "1px solid #d1d5db", padding: "0.6rem 1.25rem", borderRadius: "8px", color: "#111", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem", transition: "all 0.2s" }}
           onMouseOver={e => e.currentTarget.style.background = "#f9fafb"}
           onMouseOut={e => e.currentTarget.style.background = "#fff"}
@@ -140,61 +218,170 @@ export default function KioskClient({ events }: { events: any[] }) {
         </button>
       </div>
 
-      {/* Main Scanner Area */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", position: "relative", padding: "2rem" }}>
+      <div style={{ flex: 1, display: "flex" }}>
         
-        {scanState === "IDLE" ? (
-          <div style={{ width: "100%", maxWidth: "640px", textAlign: "center", background: "white", padding: "3rem 2rem", borderRadius: "24px", border: "1px solid #e5e7eb", boxShadow: "0 10px 40px rgba(0,0,0,0.04)" }}>
-            <h1 style={{ fontSize: "1.75rem", color: "#111", marginBottom: "0.5rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Hold your QR Code to the camera</h1>
-            <p style={{ color: "#666", marginBottom: "2.5rem", fontSize: "1.05rem" }}>Ensure the QR code is bright and clearly visible.</p>
-            
-            <div style={{ padding: "1rem", background: "#f9fafb", borderRadius: "16px", border: "1px dashed #d1d5db", margin: "0 auto" }}>
-              <div id="kiosk-reader" style={{ width: "100%", borderRadius: "12px", overflow: "hidden" }}></div>
+        {/* Left: Main Area */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", position: "relative", padding: "2rem" }}>
+          
+          {scanState === "IDLE" ? (
+            <div style={{ width: "100%", maxWidth: "640px", textAlign: "center", background: "white", padding: "3rem 2rem", borderRadius: "24px", border: "1px solid #e5e7eb", boxShadow: "0 10px 40px rgba(0,0,0,0.04)" }}>
+              
+              {!isSearchMode ? (
+                <>
+                  <h1 style={{ fontSize: "1.75rem", color: "#111", marginBottom: "0.5rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Hold your QR Code to the camera</h1>
+                  <p style={{ color: "#666", marginBottom: "2.5rem", fontSize: "1.05rem" }}>Ensure the QR code is bright and clearly visible.</p>
+                  
+                  <div className="scanner-ring" style={{ padding: "0.5rem", background: "#f9fafb", borderRadius: "20px", border: "1px dashed #d1d5db", margin: "0 auto", width: "100%", maxWidth: "400px" }}>
+                    <div id="kiosk-reader" style={{ width: "100%", borderRadius: "12px", overflow: "hidden" }}></div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => { setIsSearchMode(true); setSearchResults([]); setSearchQuery(""); }}
+                    style={{ marginTop: "2rem", padding: "0.85rem 1.5rem", background: "#f3f4f6", color: "#111", border: "1px solid #e5e7eb", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "0.95rem" }}
+                  >
+                    Forgot your QR Code?
+                  </button>
+                  
+                  <style>{`
+                    #kiosk-reader { border: none !important; }
+                    #kiosk-reader__scan_region { background: white; border-radius: 8px; }
+                    #kiosk-reader button { background: #2b3ff2; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem; transition: opacity 0.2s; }
+                    #kiosk-reader button:hover { opacity: 0.9; }
+                    #kiosk-reader a { display: none !important; }
+                  `}</style>
+                </>
+              ) : (
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+                    <h2 style={{ margin: 0, fontSize: "1.5rem", color: "#111", fontWeight: 700 }}>Manual Check-in</h2>
+                    <button onClick={() => setIsSearchMode(false)} style={{ background: "transparent", border: "none", color: "#666", cursor: "pointer", fontWeight: 600 }}>Cancel</button>
+                  </div>
+                  
+                  <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+                    <input 
+                      type="text" 
+                      placeholder="Enter name, email, or phone..." 
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && handleManualSearch()}
+                      style={{ flex: 1, padding: "1rem", borderRadius: "8px", border: "2px solid #e5e7eb", fontSize: "1.05rem" }}
+                      autoFocus
+                    />
+                    <button 
+                      onClick={handleManualSearch}
+                      disabled={isSearching}
+                      style={{ padding: "0 1.5rem", background: "#111", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer" }}
+                    >
+                      <Search size={20} />
+                    </button>
+                  </div>
+
+                  <div style={{ maxHeight: "300px", overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: "8px" }}>
+                    {searchResults.length === 0 ? (
+                      <div style={{ padding: "2rem", textAlign: "center", color: "#666" }}>No results found.</div>
+                    ) : (
+                      searchResults.map(r => (
+                        <div key={r.id} style={{ padding: "1rem", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div>
+                            <div style={{ fontWeight: 600, color: "#111" }}>{r.fullName}</div>
+                            <div style={{ fontSize: "0.85rem", color: "#666" }}>{r.email}</div>
+                          </div>
+                          <button 
+                            onClick={() => handleManualCheckIn(r)}
+                            style={{ padding: "0.5rem 1rem", background: r.status === "checked-in" ? "#f3f4f6" : "#2b3ff2", color: r.status === "checked-in" ? "#666" : "white", border: "none", borderRadius: "6px", fontWeight: 600, cursor: "pointer" }}
+                          >
+                            {r.status === "checked-in" ? "Already In" : "Check In"}
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            
-            <style>{`
-              #kiosk-reader { border: none !important; }
-              #kiosk-reader__scan_region { background: white; border-radius: 8px; }
-              #kiosk-reader button { background: #2b3ff2; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem; transition: opacity 0.2s; }
-              #kiosk-reader button:hover { opacity: 0.9; }
-              #kiosk-reader a { display: none !important; }
-            `}</style>
-          </div>
-        ) : (
-          <div style={{ 
-            position: "absolute", 
-            inset: 0, 
-            display: "flex", 
-            flexDirection: "column", 
-            justifyContent: "center", 
-            alignItems: "center",
-            padding: "2rem",
-            background: scanState === "SUCCESS" ? "#f0fdf4" : (scanState === "ALREADY_CHECKED_IN" ? "#fefce8" : "#fef2f2") 
-          }}>
-            <div style={{ marginBottom: "2rem" }}>
-              {scanState === "SUCCESS" && <CheckCircle size={120} color="#16a34a" />}
-              {scanState === "ALREADY_CHECKED_IN" && <AlertTriangle size={120} color="#eab308" />}
-              {scanState === "INVALID" && <XCircle size={120} color="#ef4444" />}
-            </div>
-            
-            <h1 style={{ 
-              fontSize: "3.5rem", 
-              fontWeight: 700, 
-              textAlign: "center", 
-              letterSpacing: "-0.02em",
-              color: scanState === "SUCCESS" ? "#166534" : (scanState === "ALREADY_CHECKED_IN" ? "#854d0e" : "#991b1b") 
+          ) : (
+            <div style={{ 
+              position: "absolute", 
+              inset: 0, 
+              display: "flex", 
+              flexDirection: "column", 
+              justifyContent: "center", 
+              alignItems: "center",
+              padding: "2rem",
+              background: scanState === "SUCCESS" ? "#f0fdf4" : (scanState === "ALREADY_CHECKED_IN" ? "#fefce8" : "#fef2f2"),
+              zIndex: 10
             }}>
-              {message}
-            </h1>
-            
-            {scanState !== "SUCCESS" && (
-              <p style={{ fontSize: "1.5rem", color: scanState === "ALREADY_CHECKED_IN" ? "#a16207" : "#b91c1c", marginTop: "1rem" }}>
-                Please see a staff member.
-              </p>
+              <div style={{ marginBottom: "2rem" }}>
+                {scanState === "SUCCESS" && <CheckCircle size={140} color="#16a34a" />}
+                {scanState === "ALREADY_CHECKED_IN" && <AlertTriangle size={140} color="#eab308" />}
+                {scanState === "INVALID" && <XCircle size={140} color="#ef4444" />}
+              </div>
+              
+              <h1 style={{ 
+                fontSize: "4rem", 
+                fontWeight: 700, 
+                textAlign: "center", 
+                letterSpacing: "-0.03em",
+                color: scanState === "SUCCESS" ? "#166534" : (scanState === "ALREADY_CHECKED_IN" ? "#854d0e" : "#991b1b"),
+                margin: "0 0 1rem 0"
+              }}>
+                {message}
+              </h1>
+              
+              {subMessage && (
+                <p style={{ 
+                  fontSize: "1.75rem", 
+                  fontWeight: 600,
+                  color: scanState === "SUCCESS" ? "#15803d" : (scanState === "ALREADY_CHECKED_IN" ? "#a16207" : "#b91c1c"),
+                  margin: 0,
+                  background: scanState === "SUCCESS" ? "#dcfce7" : "transparent",
+                  padding: scanState === "SUCCESS" ? "0.5rem 1.5rem" : "0",
+                  borderRadius: "99px"
+                }}>
+                  {subMessage}
+                </p>
+              )}
+
+              {scanState !== "SUCCESS" && !subMessage && (
+                <p style={{ fontSize: "1.5rem", color: "#b91c1c", marginTop: "1rem", fontWeight: 500 }}>
+                  Please see a staff member.
+                </p>
+              )}
+            </div>
+          )}
+          
+        </div>
+
+        {/* Right: Live Ticker */}
+        <div style={{ width: "320px", background: "white", borderLeft: "1px solid #e5e7eb", padding: "2rem" }}>
+          <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "0.95rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "#666", fontWeight: 600 }}>Live Feed</h3>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {recentCheckins.length === 0 ? (
+              <div style={{ color: "#9ca3af", fontSize: "0.95rem", fontStyle: "italic" }}>Waiting for check-ins...</div>
+            ) : (
+              recentCheckins.map((rc, i) => (
+                <div key={i} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", animation: "slide-in 0.3s ease-out" }}>
+                  <div style={{ background: "#dcfce7", padding: "0.4rem", borderRadius: "50%", color: "#16a34a" }}>
+                    <UserCheck size={16} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>{rc.name}</div>
+                    <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.1rem" }}>Just checked in</div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
-        )}
-        
+
+          <style>{`
+            @keyframes slide-in {
+              from { opacity: 0; transform: translateY(-10px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
+        </div>
+
       </div>
     </div>
   );
