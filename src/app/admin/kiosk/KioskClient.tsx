@@ -105,7 +105,9 @@ export default function KioskClient({ events }: { events: any[] }) {
 
           <button 
             onClick={() => setIsStarted(true)}
-            style={{ width: "100%", padding: "1.1rem", background: "#111", color: "white", border: "none", borderRadius: "8px", fontSize: "1.1rem", fontWeight: 600, cursor: "pointer" }}
+            style={{ width: "100%", padding: "1.1rem", background: "#2b3ff2", color: "white", border: "none", borderRadius: "8px", fontSize: "1.1rem", fontWeight: 600, cursor: "pointer", transition: "opacity 0.2s" }}
+            onMouseOver={e => e.currentTarget.style.opacity = "0.9"}
+            onMouseOut={e => e.currentTarget.style.opacity = "1"}
           >
             Launch Kiosk
           </button>
@@ -153,7 +155,8 @@ export default function KioskClient({ events }: { events: any[] }) {
             <style>{`
               #kiosk-reader { border: none !important; }
               #kiosk-reader__scan_region { background: white; border-radius: 8px; }
-              #kiosk-reader button { background: #111; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem; }
+              #kiosk-reader button { background: #2b3ff2; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem; transition: opacity 0.2s; }
+              #kiosk-reader button:hover { opacity: 0.9; }
               #kiosk-reader a { display: none !important; }
             `}</style>
           </div>
