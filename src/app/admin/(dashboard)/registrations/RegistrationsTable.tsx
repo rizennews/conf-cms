@@ -29,11 +29,23 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     const lines = text.trim().split("\n");
     const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
     const rows = lines.slice(1).map(line => {
+      // Basic CSV splitting (doesn't handle quotes with commas inside perfectly, but good enough for simple uploads)
       const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
       const row: any = {};
-      headers.forEach((h, i) => { row[h] = values[i] || null; });
+      const customData: any = {};
+      const standardFields = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange"];
+      
+      headers.forEach((h, i) => {
+        if (standardFields.includes(h)) {
+          row[h] = values[i] || null;
+        } else {
+          customData[h] = values[i] || "";
+        }
+      });
+      row.customData = JSON.stringify(customData);
       return row;
-    }).filter(r => r.fullName || r.email);
+    }).filter(r => r.fullName || r.email || r.customData !== "{}");
+    
     const { bulkInsertRegistrations } = await import("./actions");
     const result = await bulkInsertRegistrations(rows, uploadEvent);
     setUploadResult(result);
@@ -41,12 +53,35 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
   };
 
   const downloadTemplate = () => {
-    const csv = "fullName,email,whatsapp,address,branchId,ageRange\nJohn Doe,john@example.com,0241234567,Accra,main-branch,25-34";
+    let headers = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange"];
+    const targetEvent = events.find(e => e.id === uploadEvent);
+    
+    if (targetEvent?.customFields) {
+      try {
+        const fields = JSON.parse(targetEvent.customFields);
+        fields.forEach((f: any) => {
+          if (!headers.includes(f.label)) {
+            headers.push(f.label);
+          }
+        });
+      } catch (e) {}
+    }
+
+    const csv = headers.join(",") + "\n" + headers.map(h => {
+      if (h === "fullName") return "John Doe";
+      if (h === "email") return "john@example.com";
+      if (h === "whatsapp") return "0241234567";
+      if (h === "address") return "Accra";
+      if (h === "branchId") return "main-branch";
+      if (h === "ageRange") return "25-34";
+      return "Sample Answer";
+    }).join(",");
+
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "registration-template.csv";
+    a.download = `template-${targetEvent?.slug || "registrations"}.csv`;
     a.click();
   };
 

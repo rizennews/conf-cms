@@ -29,6 +29,7 @@ export async function bulkInsertRegistrations(rows: any[], eventId: string) {
           branchId: row.branchId || "unknown",
           eventId: eventId,
           status: "registered",
+          customData: row.customData || null,
         });
         inserted++;
       } catch (e: any) {
