@@ -49,3 +49,21 @@ export async function addUser(data: { name: string, email: string, password: str
     return { error: err.message || "An error occurred creating the user." };
   }
 }
+
+export async function deleteUser(userId: string) {
+  try {
+    const { session, account } = await import("../../../../db/schema");
+    
+    // Delete related records first to avoid foreign key constraints
+    await db.delete(session).where(eq(session.userId, userId));
+    await db.delete(account).where(eq(account.userId, userId));
+    
+    // Delete user
+    await db.delete(user).where(eq(user.id, userId));
+    
+    revalidatePath("/admin/staff");
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message || "An error occurred deleting the user." };
+  }
+}

@@ -15,7 +15,7 @@ export default async function ProfilePage() {
 
 
   return (
-    <div style={{ maxWidth: "700px", margin: "0 auto", paddingBottom: "4rem" }}>
+    <div style={{ maxWidth: "1100px", margin: "0 auto", paddingBottom: "4rem" }}>
       <div style={{ marginBottom: "2.5rem" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 600, color: "#111", margin: "0 0 0.5rem 0", letterSpacing: "-0.02em" }}>Settings</h1>
         <p style={{ color: "#666", margin: 0, fontSize: "0.95rem" }}>Manage your account and security settings.</p>

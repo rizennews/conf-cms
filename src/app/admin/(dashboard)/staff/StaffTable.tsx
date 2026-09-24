@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { updateUserRole, addUser } from "./actions";
+import { updateUserRole, addUser, deleteUser } from "./actions";
+import { Trash2 } from "lucide-react";
 
 export default function StaffTable({ users, branches }: { users: any[]; branches: any[] }) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -61,6 +64,7 @@ export default function StaffTable({ users, branches }: { users: any[]; branches
               <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Email</th>
               <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Role</th>
               <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Assigned Branch</th>
+              <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem", textAlign: "right" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -110,6 +114,15 @@ export default function StaffTable({ users, branches }: { users: any[]; branches
                       N/A (Global Access)
                     </span>
                   )}
+                </td>
+                <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>
+                  <button 
+                    onClick={() => setDeleteConfirmId(u.id)}
+                    style={{ background: "transparent", color: "#ef4444", border: "1px solid #fecaca", padding: "0.4rem", borderRadius: "4px", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                    title="Delete User"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </td>
               </tr>
             ))}
@@ -168,6 +181,39 @@ export default function StaffTable({ users, branches }: { users: any[]; branches
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    )}
+
+    {deleteConfirmId && (
+      <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+        <div style={{ background: "white", padding: "2rem", borderRadius: "12px", maxWidth: "400px", width: "90%", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)" }}>
+          <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.25rem", color: "#111", fontWeight: 600 }}>Delete Staff Member?</h3>
+          <p style={{ color: "#4b5563", fontSize: "0.95rem", lineHeight: 1.5, marginBottom: "2rem" }}>
+            Are you sure you want to completely delete this user? All their sessions will be terminated and they will lose access immediately. This action cannot be undone.
+          </p>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem" }}>
+            <button 
+              onClick={() => setDeleteConfirmId(null)}
+              disabled={isDeleting}
+              style={{ padding: "0.6rem 1.25rem", background: "transparent", border: "1px solid #d1d5db", borderRadius: "6px", cursor: "pointer", fontWeight: 500, color: "#374151" }}
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={async () => {
+                setIsDeleting(true);
+                const res = await deleteUser(deleteConfirmId);
+                setIsDeleting(false);
+                if (res.error) alert(res.error);
+                setDeleteConfirmId(null);
+              }}
+              disabled={isDeleting}
+              style={{ padding: "0.6rem 1.25rem", background: "#ef4444", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: 500, opacity: isDeleting ? 0.7 : 1 }}
+            >
+              {isDeleting ? "Deleting..." : "Delete User"}
+            </button>
+          </div>
         </div>
       </div>
     )}
