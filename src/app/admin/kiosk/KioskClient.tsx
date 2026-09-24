@@ -64,10 +64,13 @@ export default function KioskClient({ events, branches }: { events: any[], branc
     let html5QrCode: Html5Qrcode;
 
     if (isStarted && scanState === "IDLE" && !isSearchMode) {
-      html5QrCode = new Html5Qrcode("kiosk-reader");
-      
       const startScanner = async () => {
+        // Wait briefly for React to finish rendering the DOM element (fixes "Element not found" error)
+        await new Promise(r => setTimeout(r, 50));
+        if (!document.getElementById("kiosk-reader")) return;
+        
         try {
+          html5QrCode = new Html5Qrcode("kiosk-reader");
           await html5QrCode.start(
             { facingMode: "environment" },
             { fps: 10, qrbox: { width: 300, height: 300 }, aspectRatio: 1.0 },
@@ -115,7 +118,7 @@ export default function KioskClient({ events, branches }: { events: any[], branc
       startScanner();
 
       return () => {
-        if (html5QrCode.isScanning) {
+        if (html5QrCode && html5QrCode.isScanning) {
           html5QrCode.stop().then(() => html5QrCode.clear()).catch(console.error);
         }
       };
@@ -168,25 +171,22 @@ export default function KioskClient({ events, branches }: { events: any[], branc
 
   if (!isStarted) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "radial-gradient(circle at top, #fafafa, #ffffff 40%)", padding: "2rem", fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "#ffffff", padding: "2rem", fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital@1&display=swap');
-          .editorial-heading { font-family: 'Inter', sans-serif; font-size: 2.75rem; font-weight: 500; letter-spacing: -0.03em; color: #111; margin-bottom: 0.5rem; }
+          .editorial-heading { font-family: 'Inter', sans-serif; font-size: 3.5rem; font-weight: 500; letter-spacing: -0.04em; color: #111; margin-bottom: 0.5rem; }
           .editorial-serif { font-family: 'Playfair Display', serif; font-style: italic; font-weight: 400; letter-spacing: 0; }
         `}</style>
         
-        <div style={{ background: "#fff", padding: "4rem", borderRadius: "24px", border: "1px solid #eaeaea", maxWidth: "500px", width: "100%", textAlign: "center" }}>
-          <div style={{ display: "inline-flex", padding: "1rem", background: "#fafafa", border: "1px solid #eaeaea", borderRadius: "50%", marginBottom: "2rem" }}>
-            <QrCode size={32} color="#111" strokeWidth={1.5} />
-          </div>
-          <h1 className="editorial-heading">Start <span className="editorial-serif">the</span> kiosk</h1>
-          <p style={{ margin: "0 0 3rem 0", color: "#888", fontSize: "1.05rem", fontWeight: 400 }}>Select an event to begin check-in.</p>
+        <div style={{ maxWidth: "400px", width: "100%", textAlign: "center" }}>
+          <h1 className="editorial-heading">Start <span className="editorial-serif">kiosk</span></h1>
+          <p style={{ margin: "0 0 4rem 0", color: "#888", fontSize: "1.1rem", fontWeight: 400 }}>Select the active event.</p>
           
-          <div style={{ textAlign: "left", marginBottom: "2.5rem" }}>
+          <div style={{ textAlign: "left", marginBottom: "2rem" }}>
             <select 
               value={selectedEvent}
               onChange={(e) => setSelectedEvent(e.target.value)}
-              style={{ width: "100%", padding: "1rem 1.25rem", borderRadius: "12px", border: "1px solid #eaeaea", fontSize: "1.05rem", background: "#fafafa", color: "#111", outline: "none", fontWeight: 500 }}
+              style={{ width: "100%", padding: "1rem 0", border: "none", borderBottom: "2px solid #111", fontSize: "1.2rem", background: "transparent", color: "#111", outline: "none", fontWeight: 500, borderRadius: 0 }}
             >
               {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
             </select>
@@ -194,11 +194,11 @@ export default function KioskClient({ events, branches }: { events: any[], branc
 
           <button 
             onClick={() => setIsStarted(true)}
-            style={{ width: "100%", padding: "1.15rem", background: "#2b3ff2", color: "white", border: "none", borderRadius: "12px", fontSize: "1rem", fontWeight: 500, cursor: "pointer", transition: "opacity 0.2s" }}
+            style={{ width: "100%", padding: "1.25rem", background: "#2b3ff2", color: "white", border: "none", borderRadius: "99px", fontSize: "1.05rem", fontWeight: 500, cursor: "pointer", transition: "opacity 0.2s" }}
             onMouseOver={e => e.currentTarget.style.opacity = "0.85"}
             onMouseOut={e => e.currentTarget.style.opacity = "1"}
           >
-            Launch Kiosk
+            Launch Scanner
           </button>
         </div>
       </div>
@@ -206,21 +206,20 @@ export default function KioskClient({ events, branches }: { events: any[], branc
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "radial-gradient(circle at top, #fafafa, #ffffff 40%)", color: "#111", fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#ffffff", color: "#111", fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital@1&display=swap');
 
         .scanner-container {
           position: relative;
           width: 100%;
-          max-width: 280px;
+          max-width: 320px;
           margin: 0 auto;
           aspect-ratio: 1;
-          border-radius: 24px;
+          border-radius: 40px;
           overflow: hidden;
-          background: #fff;
-          border: 1px solid #eaeaea;
-          padding: 0.5rem;
+          background: #fafafa;
+          padding: 0;
         }
 
         #kiosk-reader {
@@ -306,52 +305,55 @@ export default function KioskClient({ events, branches }: { events: any[], branc
                 
                 <button 
                   onClick={() => { setIsSearchMode(true); setSearchResults([]); setSearchQuery(""); }}
-                  style={{ marginTop: "3rem", background: "transparent", color: "#a1a1aa", border: "none", fontWeight: 400, cursor: "pointer", fontSize: "0.95rem", transition: "color 0.2s" }}
+                  style={{ marginTop: "3rem", background: "transparent", color: "#888", border: "none", fontWeight: 400, cursor: "pointer", fontSize: "1rem", transition: "color 0.2s" }}
                   onMouseOver={e => e.currentTarget.style.color = "#111"}
-                  onMouseOut={e => e.currentTarget.style.color = "#a1a1aa"}
+                  onMouseOut={e => e.currentTarget.style.color = "#888"}
                 >
-                  No QR Code? Search instead
+                  No QR code? Search manually &rarr;
                 </button>
               </>
             ) : (
-              <div style={{ textAlign: "left", background: "#fff", padding: "3rem", borderRadius: "24px", border: "1px solid #eaeaea", maxWidth: "480px", margin: "0 auto" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-                  <h2 className="editorial-heading" style={{ fontSize: "1.75rem" }}>Manual search</h2>
-                  <button onClick={() => setIsSearchMode(false)} style={{ background: "transparent", border: "none", color: "#888", cursor: "pointer", fontWeight: 400, fontSize: "0.95rem" }}>Cancel</button>
-                </div>
+              <div style={{ textAlign: "center", maxWidth: "480px", margin: "0 auto", width: "100%" }}>
+                <h2 className="editorial-heading" style={{ fontSize: "3rem", marginBottom: "3rem" }}>
+                  Manual <span className="editorial-serif">search</span>
+                </h2>
                 
-                <div style={{ display: "flex", gap: "0.75rem", marginBottom: "2rem" }}>
+                <div style={{ display: "flex", gap: "0.5rem", marginBottom: "2rem", borderBottom: "2px solid #111", paddingBottom: "0.5rem" }}>
                   <input 
                     type="text" 
-                    placeholder="Name or email..." 
+                    placeholder="Enter name or email..." 
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && handleManualSearch()}
-                    style={{ flex: 1, padding: "1rem 1.25rem", borderRadius: "12px", border: "1px solid #eaeaea", fontSize: "1.05rem", background: "#fafafa", color: "#111", outline: "none", fontWeight: 400 }}
+                    style={{ flex: 1, padding: "0.5rem", border: "none", fontSize: "1.25rem", background: "transparent", color: "#111", outline: "none", fontWeight: 400 }}
                     autoFocus
                   />
                   <button 
                     onClick={handleManualSearch}
                     disabled={isSearching}
-                    style={{ padding: "0 1.5rem", background: "#2b3ff2", color: "white", border: "none", borderRadius: "12px", cursor: "pointer" }}
+                    style={{ padding: "0 1rem", background: "transparent", color: "#2b3ff2", border: "none", cursor: "pointer" }}
                   >
-                    <Search size={20} />
+                    <Search size={28} strokeWidth={1.5} />
                   </button>
                 </div>
+                
+                <button onClick={() => setIsSearchMode(false)} style={{ background: "transparent", border: "none", color: "#888", cursor: "pointer", fontWeight: 400, fontSize: "1rem" }}>
+                  &larr; Back to scanner
+                </button>
 
-                <div style={{ maxHeight: "300px", overflowY: "auto", borderTop: "1px solid #eaeaea", paddingTop: "1rem" }}>
+                <div style={{ maxHeight: "300px", overflowY: "auto", marginTop: "3rem", textAlign: "left" }}>
                   {searchResults.length === 0 ? (
-                    <div style={{ padding: "3rem", textAlign: "center", color: "#a1a1aa", fontSize: "1rem", fontWeight: 400 }}>No results found.</div>
+                    <div style={{ padding: "3rem", textAlign: "center", color: "#a1a1aa", fontSize: "1.1rem", fontWeight: 400 }}>No results found.</div>
                   ) : (
                     searchResults.map(r => (
-                      <div key={r.id} style={{ padding: "1.25rem", borderBottom: "1px solid #fafafa", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div key={r.id} style={{ padding: "1.5rem 0", borderBottom: "1px solid #eaeaea", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
-                          <div style={{ fontWeight: 500, fontSize: "1.05rem", color: "#111", marginBottom: "0.2rem" }}>{r.fullName}</div>
-                          <div style={{ fontSize: "0.9rem", color: "#888" }}>{r.email}</div>
+                          <div style={{ fontWeight: 500, fontSize: "1.1rem", color: "#111", marginBottom: "0.25rem" }}>{r.fullName}</div>
+                          <div style={{ fontSize: "0.95rem", color: "#888" }}>{r.email}</div>
                         </div>
                         <button 
                           onClick={() => handleManualCheckIn(r)}
-                          style={{ padding: "0.6rem 1.25rem", background: r.status === "checked-in" ? "#fafafa" : "#2b3ff2", color: r.status === "checked-in" ? "#a1a1aa" : "white", borderRadius: "8px", fontWeight: 500, cursor: "pointer", fontSize: "0.9rem", border: r.status === "checked-in" ? "1px solid #eaeaea" : "none" }}
+                          style={{ padding: "0.6rem 1.25rem", background: r.status === "checked-in" ? "#fafafa" : "#2b3ff2", color: r.status === "checked-in" ? "#a1a1aa" : "white", borderRadius: "99px", fontWeight: 500, cursor: "pointer", fontSize: "0.9rem", border: r.status === "checked-in" ? "1px solid #eaeaea" : "none" }}
                         >
                           {r.status === "checked-in" ? "Already In" : "Check In"}
                         </button>
