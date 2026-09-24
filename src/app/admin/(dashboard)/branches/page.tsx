@@ -1,9 +1,10 @@
 import { db } from "../../../../db";
-import { branches } from "../../../../db/schema";
+import { branches, registrations } from "../../../../db/schema";
 import CreateBranchForm from "./CreateBranchForm";
 
 export default async function BranchesPage() {
   const allBranches = await db.select().from(branches);
+  const allRegistrations = await db.select({ branchId: registrations.branchId, status: registrations.status }).from(registrations);
 
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto", paddingBottom: "4rem" }}>
@@ -27,17 +28,24 @@ export default async function BranchesPage() {
                 <tr style={{ borderBottom: "1px solid #eaeaea", background: "#fafafa" }}>
                   <th style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#111", fontSize: "0.85rem" }}>Name</th>
                   <th style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#111", fontSize: "0.85rem" }}>ID / Slug</th>
-                  <th style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#111", fontSize: "0.85rem" }}>Created At</th>
+                  <th style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#111", fontSize: "0.85rem", textAlign: "right" }}>Registered</th>
+                  <th style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#111", fontSize: "0.85rem", textAlign: "right" }}>Checked In</th>
                 </tr>
               </thead>
               <tbody>
-                {allBranches.map((branch, i) => (
-                  <tr key={branch.id} style={{ borderTop: i > 0 ? "1px solid #eaeaea" : "none" }}>
-                    <td style={{ padding: "1rem 1.5rem", color: "#111", fontSize: "0.9rem" }}>{branch.name}</td>
-                    <td style={{ padding: "1rem 1.5rem", color: "#666", fontSize: "0.9rem", fontFamily: "monospace" }}>{branch.id}</td>
-                    <td style={{ padding: "1rem 1.5rem", color: "#666", fontSize: "0.9rem" }}>{new Date(branch.createdAt).toLocaleDateString()}</td>
-                  </tr>
-                ))}
+                {allBranches.map((branch, i) => {
+                  const branchRegs = allRegistrations.filter(r => r.branchId === branch.id);
+                  const checkedInCount = branchRegs.filter(r => r.status === 'checked-in').length;
+                  
+                  return (
+                    <tr key={branch.id} style={{ borderTop: i > 0 ? "1px solid #eaeaea" : "none" }}>
+                      <td style={{ padding: "1rem 1.5rem", color: "#111", fontSize: "0.9rem" }}>{branch.name}</td>
+                      <td style={{ padding: "1rem 1.5rem", color: "#666", fontSize: "0.9rem", fontFamily: "monospace" }}>{branch.id}</td>
+                      <td style={{ padding: "1rem 1.5rem", color: "#111", fontSize: "0.9rem", textAlign: "right", fontWeight: 500 }}>{branchRegs.length}</td>
+                      <td style={{ padding: "1rem 1.5rem", color: "#16a34a", fontSize: "0.9rem", textAlign: "right", fontWeight: 600 }}>{checkedInCount}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
