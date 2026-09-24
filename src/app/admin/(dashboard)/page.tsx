@@ -11,8 +11,15 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
   const resolvedParams = await searchParams;
   const eventId = resolvedParams.eventId;
 
-  // To avoid complex drizzle AND imports for now, we'll just fetch all regs and filter in JS since we need recentRegs anyway
-  const allRegs = await db.select().from(registrations).orderBy(desc(registrations.createdAt));
+  let allRegs = await db.select().from(registrations).orderBy(desc(registrations.createdAt));
+  const currentUser = await db.select().from(user).where(eq(user.id, session?.user.id as string)).limit(1);
+  const userRole = currentUser[0]?.role || "branch_head";
+  const userBranchId = currentUser[0]?.branchId;
+
+  if (userRole === "branch_head" && userBranchId) {
+    allRegs = allRegs.filter(r => r.branchId === userBranchId);
+  }
+
   const activeEventsResult = await db.select({ count: count() }).from(events).where(eq(events.isActive, true));
   const totalBranchesResult = await db.select({ count: count() }).from(branches);
   

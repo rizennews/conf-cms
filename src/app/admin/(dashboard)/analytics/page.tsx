@@ -1,11 +1,25 @@
+import { auth } from "../../../../lib/auth";
+import { headers } from "next/headers";
 import { db } from "../../../../db";
-import { registrations, events, branches } from "../../../../db/schema";
+import { registrations, events, branches, user } from "../../../../db/schema";
+import { eq } from "drizzle-orm";
 import AnalyticsClient from "./AnalyticsClient";
 
 export default async function AnalyticsPage() {
+  const reqHeaders = await headers();
+  const session = await auth.api.getSession({ headers: reqHeaders });
+
   const allEvents = await db.select().from(events);
-  const allRegistrations = await db.select().from(registrations);
+  let allRegistrations = await db.select().from(registrations);
   const allBranchesData = await db.select().from(branches);
+
+  const currentUser = await db.select().from(user).where(eq(user.id, session?.user.id as string)).limit(1);
+  const userRole = currentUser[0]?.role || "branch_head";
+  const userBranchId = currentUser[0]?.branchId;
+
+  if (userRole === "branch_head" && userBranchId) {
+    allRegistrations = allRegistrations.filter(r => r.branchId === userBranchId);
+  }
 
   return (
     <div style={{ maxWidth: "1100px", margin: "0 auto", paddingBottom: "4rem" }}>
