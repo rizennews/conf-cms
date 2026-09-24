@@ -91,7 +91,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
             Thank you, {userName}!
           </h2>
           <p style={{ color: "#666", fontSize: "1.1rem", marginBottom: "3rem", lineHeight: 1.5, maxWidth: "400px", margin: "0 auto 3rem auto" }}>
-            Your registration is confirmed. We can't wait to see you at the event. 
+            Your registration is confirmed. We can't wait to see you at {event?.name || 'the event'}. 
           </p>
           <button 
             onClick={handleCloseSuccess} 
