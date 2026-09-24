@@ -1,0 +1,215 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 2.5rem 3rem;
+  width: 90%;
+  max-width: 600px;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #111111;
+}
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  color: #6f7287;
+  font-size: 2.5rem;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.closeButton:hover {
+  color: #111;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1e0a3c;
+  margin-bottom: 0.2rem;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  color: #6f7287;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.progressContainer {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 2.5rem;
+  width: 100%;
+}
+
+.progressSegment {
+  flex: 1;
+  height: 4px;
+  background: #eeedf2;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.progressSegmentActive {
+  background: #3659e3; /* Eventbrite blue for active steps */
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.stepContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.inputGroup label, .checkboxGroup label {
+  font-size: 0.85rem;
+  color: #39364f;
+  font-weight: 600;
+}
+
+.inputGroup input, .inputGroup select, .inputGroup textarea {
+  background: #ffffff;
+  border: 1px solid #dbdae3;
+  border-radius: 4px;
+  padding: 0.85rem 1rem;
+  color: #111;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.inputGroup input::placeholder, .inputGroup textarea::placeholder {
+  color: #a9a8b3;
+}
+
+.inputGroup input:focus, .inputGroup select:focus, .inputGroup textarea:focus {
+  outline: none;
+  border-color: #3659e3;
+  box-shadow: 0 0 0 3px rgba(54, 89, 227, 0.1);
+}
+
+.checkboxGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.radioOptions {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.radioOptions label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #39364f;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+.radioOptions input[type="radio"] {
+  accent-color: #3659e3;
+  width: 18px;
+  height: 18px;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.backBtn {
+  background: #f8f7fa;
+  color: #39364f;
+  border: 1px solid #dbdae3;
+  border-radius: 4px;
+  padding: 1rem;
+  font-weight: 600;
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  flex: 1;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.backBtn:hover {
+  background: #eeedf2;
+  border-color: #c2c1ca;
+}
+
+.submitBtn {
+  background: #d1410c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 1rem;
+  font-weight: 600;
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  flex: 2;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.submitBtn:hover {
+  background: #b5380a;
+}
+
+.submitBtn:active {
+  transform: scale(0.98);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .modal {
+    padding: 1.5rem 1.5rem;
+    width: 95%;
+  }
+  .radioOptions {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+}

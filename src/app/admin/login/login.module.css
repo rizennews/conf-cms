@@ -1,0 +1,221 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f4f5f7; /* Light background */
+  padding: 1rem;
+  font-family: inherit;
+}
+
+.wrapper {
+  width: 100%;
+  max-width: 420px;
+}
+
+.title {
+  color: #111111;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  color: #555555;
+  font-size: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.tabsContainer {
+  display: flex;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 0.7rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.tab:hover:not(.activeTab) {
+  color: #111111;
+  background-color: #f9fafb;
+}
+
+.activeTab {
+  background-color: #2b3ff2; /* Electric Blue */
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(43, 63, 242, 0.2);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.inputHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.inputHeader label {
+  font-size: 0.9rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+.actionLink {
+  background: none;
+  border: none;
+  color: #2b3ff2; /* Electric Blue */
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.actionLink:hover {
+  text-decoration: underline;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #111111;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.input:focus {
+  outline: none;
+  border-color: #2b3ff2;
+  box-shadow: 0 0 0 3px rgba(43, 63, 242, 0.15);
+}
+
+.input::placeholder {
+  color: #9ca3af;
+}
+
+.iconBtn {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.iconBtn:hover {
+  color: #4b5563;
+}
+
+.checkboxGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.checkboxGroup input[type="checkbox"] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.checkboxGroup input[type="checkbox"]:checked {
+  background-color: #2b3ff2;
+  border-color: #2b3ff2;
+}
+
+.checkboxGroup input[type="checkbox"]:checked::after {
+  content: "✔";
+  position: absolute;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.checkboxGroup label {
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.submitBtn {
+  background: #2b3ff2; /* Electric Blue Button */
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem;
+  font-weight: 600;
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  box-shadow: 0 4px 10px rgba(43, 63, 242, 0.25);
+}
+
+.submitBtn:hover {
+  background: #1d2bba; /* Darker blue on hover */
+  transform: translateY(-1px);
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

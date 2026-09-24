@@ -1,0 +1,137 @@
+.dashboardContainer {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f4f5f7; /* Vessa Light Background */
+  color: #111111;
+  font-family: inherit;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: #ffffff; /* Vessa White Surface */
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarHeader {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sidebarHeader h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111111;
+  margin-bottom: 0.2rem;
+}
+
+.roleBadge {
+  display: inline-block;
+  background-color: rgba(43, 63, 242, 0.1);
+  color: #2b3ff2; /* Vessa Electric Blue */
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.navLinks {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.navLink {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: #6b7280;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.navLink:hover {
+  background-color: #f9fafb;
+  color: #111111;
+}
+
+.sidebarFooter {
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.userName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111111;
+}
+
+.userNameLink {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111111;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.userNameLink:hover {
+  background: #f3f4f6;
+}
+
+.logoutBtn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 500;
+  font-family: inherit;
+  transition: color 0.2s;
+}
+
+.logoutBtn:hover {
+  color: #ef4444; /* Red for logout */
+}
+
+.mainContent {
+  flex: 1;
+  padding: 2.5rem;
+  /* Light subtle noise overlay similar to Vessa */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+}
+
+@media (max-width: 768px) {
+  .dashboardContainer {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .navLinks {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 1rem;
+    white-space: nowrap;
+  }
+  .sidebarFooter {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+  }
+  .mainContent {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+}
