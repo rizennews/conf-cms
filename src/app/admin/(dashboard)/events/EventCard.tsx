@@ -105,6 +105,8 @@ export default function EventCard({ event, origin }: { event: any; origin: strin
             </button>
           </div>
         </div>
+      )}
+      
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 60 }}>
