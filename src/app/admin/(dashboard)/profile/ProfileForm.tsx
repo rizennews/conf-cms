@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { authClient } from "../../../../lib/auth-client";
+import { useRouter } from "next/navigation";
 
-export default function ProfileForm() {
+export default function ProfileForm({ activeSessions = [], currentToken = "" }: { activeSessions?: any[], currentToken?: string }) {
+  const router = useRouter();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -92,6 +94,43 @@ export default function ProfileForm() {
       >
         {loading ? "Updating..." : "Update Password"}
       </button>
+
+      <div style={{ marginTop: "3rem" }}>
+        <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "#111", marginBottom: "0.5rem" }}>Active Sessions</h3>
+        <p style={{ color: "#666", fontSize: "0.85rem", marginBottom: "1.5rem" }}>These devices are currently logged into your account.</p>
+        
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {activeSessions.map((session) => (
+            <div key={session.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", border: "1px solid #eaeaea", borderRadius: "8px", background: session.token === currentToken ? "#f8fafc" : "#fff" }}>
+              <div>
+                <div style={{ fontWeight: 500, color: "#111", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  {session.userAgent ? (session.userAgent.includes("Mac") ? "Mac" : session.userAgent.includes("Win") ? "Windows" : session.userAgent.includes("iPhone") ? "iPhone" : session.userAgent.includes("Android") ? "Android" : "Unknown Device") : "Unknown Device"}
+                  {session.token === currentToken && (
+                    <span style={{ fontSize: "0.7rem", padding: "0.15rem 0.4rem", background: "#dbeafe", color: "#1d4ed8", borderRadius: "99px", fontWeight: 600 }}>This Device</span>
+                  )}
+                </div>
+                <div style={{ fontSize: "0.85rem", color: "#666", marginTop: "0.25rem" }}>
+                  IP: {session.ipAddress || "Unknown"} • Logged in: {new Date(session.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+              {session.token !== currentToken && (
+                <button 
+                  type="button"
+                  onClick={async () => {
+                    const confirm = window.confirm("Are you sure you want to log out this device?");
+                    if (!confirm) return;
+                    await authClient.revokeSession({ token: session.token });
+                    router.refresh();
+                  }}
+                  style={{ background: "transparent", color: "#ef4444", border: "1px solid #fecaca", padding: "0.5rem 1rem", borderRadius: "6px", cursor: "pointer", fontSize: "0.85rem", fontWeight: 500 }}
+                >
+                  Log Out
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     </form>
   );
 }

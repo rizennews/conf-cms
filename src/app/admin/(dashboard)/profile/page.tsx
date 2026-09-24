@@ -2,11 +2,17 @@ import { auth } from "../../../../lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import ProfileForm from "./ProfileForm";
+import { db } from "../../../../db";
+import { session as sessionTable } from "../../../../db/schema";
+import { eq, desc } from "drizzle-orm";
 
 export default async function ProfilePage() {
   const reqHeaders = await headers();
   const session = await auth.api.getSession({ headers: reqHeaders });
   if (!session) redirect("/admin/login");
+
+  const activeSessions = await db.select().from(sessionTable).where(eq(sessionTable.userId, session.user.id)).orderBy(desc(sessionTable.createdAt));
+
 
   return (
     <div style={{ maxWidth: "700px", margin: "0 auto", paddingBottom: "4rem" }}>
@@ -38,7 +44,7 @@ export default async function ProfilePage() {
         {/* Password update form */}
         <div style={{ marginBottom: "3rem" }}>
           <h2 style={{ fontSize: "1rem", fontWeight: 600, color: "#111", marginBottom: "1.5rem" }}>Security</h2>
-          <ProfileForm />
+          <ProfileForm activeSessions={activeSessions} currentToken={session.session.token} />
         </div>
 
       </div>
