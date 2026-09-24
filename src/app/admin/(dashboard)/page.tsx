@@ -5,20 +5,23 @@ import { registrations, events, branches, user } from "../../../db/schema";
 import { eq, count, desc } from "drizzle-orm";
 import DashboardStats from "./DashboardStats";
 
-export default async function AdminDashboardPage() {
+export default async function AdminDashboardPage({ searchParams }: { searchParams: Promise<{ eventId?: string }> }) {
   const reqHeaders = await headers();
   const session = await auth.api.getSession({ headers: reqHeaders });
+  const resolvedParams = await searchParams;
+  const eventId = resolvedParams.eventId;
 
-  const [totalRegsResult, checkedInResult, activeEventsResult, totalBranchesResult, recentRegs] = await Promise.all([
-    db.select({ count: count() }).from(registrations),
-    db.select({ count: count() }).from(registrations).where(eq(registrations.status, "checked-in")),
-    db.select({ count: count() }).from(events).where(eq(events.isActive, true)),
-    db.select({ count: count() }).from(branches),
-    db.select({ id: registrations.id, fullName: registrations.fullName, email: registrations.email, eventId: registrations.eventId, status: registrations.status, createdAt: registrations.createdAt }).from(registrations).orderBy(desc(registrations.createdAt)).limit(5),
-  ]);
+  // To avoid complex drizzle AND imports for now, we'll just fetch all regs and filter in JS since we need recentRegs anyway
+  const allRegs = await db.select().from(registrations).orderBy(desc(registrations.createdAt));
+  const activeEventsResult = await db.select({ count: count() }).from(events).where(eq(events.isActive, true));
+  const totalBranchesResult = await db.select({ count: count() }).from(branches);
+  
+  const filteredRegs = eventId ? allRegs.filter(r => r.eventId === eventId) : allRegs;
+  
+  const totalRegs = filteredRegs.length;
+  const checkedIn = filteredRegs.filter(r => r.status === "checked-in").length;
+  const recentRegs = filteredRegs.slice(0, 5);
 
-  const totalRegs = Number(totalRegsResult[0]?.count ?? 0);
-  const checkedIn = Number(checkedInResult[0]?.count ?? 0);
   const activeEvents = Number(activeEventsResult[0]?.count ?? 0);
   const totalBranches = Number(totalBranchesResult[0]?.count ?? 0);
   const checkInPct = totalRegs > 0 ? Math.round((checkedIn / totalRegs) * 100) : 0;
@@ -39,6 +42,8 @@ export default async function AdminDashboardPage() {
         activeEvents={activeEvents}
         totalBranches={totalBranches}
         checkInPct={checkInPct}
+        events={allEvents}
+        selectedEventId={eventId || ""}
       />
 
       <div style={{ marginTop: "3rem" }}>

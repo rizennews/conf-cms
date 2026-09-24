@@ -1,14 +1,19 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 interface Props {
   totalRegs: number;
   checkedIn: number;
   activeEvents: number;
   totalBranches: number;
   checkInPct: number;
+  events?: any[];
+  selectedEventId?: string;
 }
 
-export default function DashboardStats({ totalRegs, checkedIn, activeEvents, totalBranches, checkInPct }: Props) {
+export default function DashboardStats({ totalRegs, checkedIn, activeEvents, totalBranches, checkInPct, events = [], selectedEventId = "" }: Props) {
+  const router = useRouter();
   const stats = [
     { label: "Total Registrations", value: totalRegs },
     { label: "Checked In", value: checkedIn },
@@ -17,7 +22,24 @@ export default function DashboardStats({ totalRegs, checkedIn, activeEvents, tot
   ];
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+    <div>
+      {events.length > 0 && (
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1rem" }}>
+          <select 
+            value={selectedEventId}
+            onChange={(e) => {
+              const val = e.target.value;
+              router.push(val ? `/admin?eventId=${val}` : `/admin`);
+            }}
+            style={{ padding: "0.5rem 1rem", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "0.9rem", minWidth: "200px" }}
+          >
+            <option value="">All Events (Global)</option>
+            {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+          </select>
+        </div>
+      )}
+      
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
       {stats.map(({ label, value }) => (
         <div key={label} style={{
           background: "#fff",
@@ -55,6 +77,7 @@ export default function DashboardStats({ totalRegs, checkedIn, activeEvents, tot
           </div>
         </div>
       </div>
-    </div>
+        </div>
+      </div>
   );
 }
