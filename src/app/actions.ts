@@ -41,7 +41,7 @@ export async function submitRegistration(data: any) {
       await db.insert(branches).values({ id: branchId, name: branchName });
     }
 
-    await db.insert(registrations).values({
+    const [inserted] = await db.insert(registrations).values({
       fullName,
       email,
       whatsapp,
@@ -54,9 +54,9 @@ export async function submitRegistration(data: any) {
       invitees,
       eventId: data.eventId,
       customData: JSON.stringify(custom)
-    });
+    }).returning({ id: registrations.id });
 
-    return { success: true };
+    return { success: true, id: inserted.id };
   } catch (err: any) {
     return { error: "Failed to submit registration: " + err.message };
   }

@@ -1,8 +1,7 @@
-"use client";
-
 import { useState } from "react";
 import styles from "./RegistrationModal.module.css";
 import { submitRegistration } from "../app/actions";
+import { QRCodeSVG } from "qrcode.react";
 
 type Props = {
   isOpen: boolean;
@@ -16,6 +15,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [userName, setUserName] = useState("");
+  const [registrationId, setRegistrationId] = useState("");
   const [customData, setCustomData] = useState<Record<string, string>>({});
 
   let customFields: any[] = [];
@@ -66,6 +66,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     } else {
       const nameKey = Object.keys(customData).find(k => k.toLowerCase().includes("name"));
       setUserName(nameKey ? customData[nameKey] : "Guest");
+      if (res.id) setRegistrationId(String(res.id));
       setIsSuccess(true);
     }
   };
@@ -77,28 +78,69 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     onClose();
   };
 
+  const downloadQR = () => {
+    const svg = document.getElementById("registration-qr-code");
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width + 40;
+      canvas.height = img.height + 40;
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 20, 20);
+      const pngFile = canvas.toDataURL("image/png");
+      const downloadLink = document.createElement("a");
+      downloadLink.download = `${userName.replace(/\s+/g, "_") || "Guest"}_Ticket.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+    };
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+  };
+
   if (isSuccess) {
     return (
       <div className={styles.overlay} onClick={handleCloseSuccess} style={{ zIndex: 100 }}>
-        <div className={styles.modal} onClick={e => e.stopPropagation()} style={{ textAlign: "center", padding: "4rem 2rem" }}>
-          <div style={{ display: "inline-flex", padding: "1.5rem", background: "#f0fdf4", borderRadius: "50%", marginBottom: "2rem" }}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div className={styles.modal} onClick={e => e.stopPropagation()} style={{ textAlign: "center", padding: "3rem 2rem", maxWidth: "450px" }}>
+          <div style={{ display: "inline-flex", padding: "1rem", background: "#f0fdf4", borderRadius: "50%", marginBottom: "1.5rem" }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
           </div>
-          <h2 style={{ fontSize: "2rem", marginBottom: "1rem", fontFamily: "'Inter', sans-serif", fontWeight: 600, color: "#111" }}>
+          <h2 style={{ fontSize: "1.75rem", marginBottom: "0.5rem", fontFamily: "'Inter', sans-serif", fontWeight: 600, color: "#111" }}>
             Thank you, {userName}!
           </h2>
-          <p style={{ color: "#666", fontSize: "1.1rem", marginBottom: "3rem", lineHeight: 1.5, maxWidth: "400px", margin: "0 auto 3rem auto" }}>
-            Your registration is confirmed. We can't wait to see you at {event?.name || 'the event'}. 
+          <p style={{ color: "#666", fontSize: "0.95rem", marginBottom: "1.5rem", lineHeight: 1.5, maxWidth: "400px", margin: "0 auto 1.5rem auto" }}>
+            Your registration is confirmed. Please save this QR code to check in at {event?.name || 'the event'}. 
           </p>
-          <button 
-            onClick={handleCloseSuccess} 
-            style={{ background: "#111", border: "none", color: "white", padding: "1rem 3rem", borderRadius: "99px", fontWeight: 500, fontSize: "1.05rem", cursor: "pointer" }}
-          >
-            Done
-          </button>
+          
+          <div style={{ background: "#f9fafb", padding: "1.5rem", borderRadius: "12px", border: "1px dashed #d1d5db", marginBottom: "2rem", display: "inline-block" }}>
+            <QRCodeSVG id="registration-qr-code" value={registrationId} size={160} level="H" />
+          </div>
+
+          <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+            <button 
+              onClick={handleCloseSuccess} 
+              style={{ background: "transparent", border: "1px solid #d1d5db", color: "#374151", padding: "0.85rem 2rem", borderRadius: "99px", fontWeight: 600, cursor: "pointer" }}
+            >
+              Done
+            </button>
+            <button 
+              onClick={downloadQR}
+              style={{ background: "#2b3ff2", border: "none", color: "white", padding: "0.85rem 2rem", borderRadius: "99px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download Ticket
+            </button>
+          </div>
         </div>
       </div>
     );
