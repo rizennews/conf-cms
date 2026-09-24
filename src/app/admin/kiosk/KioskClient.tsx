@@ -119,27 +119,43 @@ export default function KioskClient({ events }: { events: any[] }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "white" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f4f5f7", fontFamily: "system-ui, -apple-system, sans-serif" }}>
       {/* Top Bar */}
-      <div style={{ padding: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #eaeaea" }}>
-        <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600, color: "#111" }}>
-          {events.find(e => e.id === selectedEvent)?.name || "Event Kiosk"}
-        </h2>
+      <div style={{ padding: "1.5rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center", background: "white", borderBottom: "1px solid #e5e7eb" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <QrCode size={24} color="#111" />
+          <h2 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#111", letterSpacing: "-0.01em" }}>
+            {events.find(e => e.id === selectedEvent)?.name || "Event Kiosk"}
+          </h2>
+        </div>
         <button 
           onClick={() => { setIsStarted(false); setScanState("IDLE"); }} 
-          style={{ background: "transparent", border: "1px solid #eaeaea", padding: "0.5rem 1rem", borderRadius: "99px", color: "#666", fontWeight: 600, cursor: "pointer" }}
+          style={{ background: "#fff", border: "1px solid #d1d5db", padding: "0.6rem 1.25rem", borderRadius: "8px", color: "#111", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem", transition: "all 0.2s" }}
+          onMouseOver={e => e.currentTarget.style.background = "#f9fafb"}
+          onMouseOut={e => e.currentTarget.style.background = "#fff"}
         >
           Exit Kiosk
         </button>
       </div>
 
       {/* Main Scanner Area */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", position: "relative" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", position: "relative", padding: "2rem" }}>
         
         {scanState === "IDLE" ? (
-          <div style={{ width: "100%", maxWidth: "600px", textAlign: "center", padding: "2rem" }}>
-            <h1 style={{ fontSize: "2rem", color: "#111", marginBottom: "2rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Hold your QR Code to the camera</h1>
-            <div id="kiosk-reader" style={{ borderRadius: "16px", overflow: "hidden", border: "2px solid #eaeaea" }}></div>
+          <div style={{ width: "100%", maxWidth: "640px", textAlign: "center", background: "white", padding: "3rem 2rem", borderRadius: "24px", border: "1px solid #e5e7eb", boxShadow: "0 10px 40px rgba(0,0,0,0.04)" }}>
+            <h1 style={{ fontSize: "1.75rem", color: "#111", marginBottom: "0.5rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Hold your QR Code to the camera</h1>
+            <p style={{ color: "#666", marginBottom: "2.5rem", fontSize: "1.05rem" }}>Ensure the QR code is bright and clearly visible.</p>
+            
+            <div style={{ padding: "1rem", background: "#f9fafb", borderRadius: "16px", border: "1px dashed #d1d5db", margin: "0 auto" }}>
+              <div id="kiosk-reader" style={{ width: "100%", borderRadius: "12px", overflow: "hidden" }}></div>
+            </div>
+            
+            <style>{`
+              #kiosk-reader { border: none !important; }
+              #kiosk-reader__scan_region { background: white; border-radius: 8px; }
+              #kiosk-reader button { background: #111; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 1rem; }
+              #kiosk-reader a { display: none !important; }
+            `}</style>
           </div>
         ) : (
           <div style={{ 
