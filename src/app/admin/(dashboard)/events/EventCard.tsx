@@ -8,15 +8,15 @@ import { deleteEvent } from "./actions";
 export default function EventCard({ event, origin }: { event: any; origin: string }) {
   const router = useRouter();
   const [showQR, setShowQR] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this event? This action cannot be undone.")) {
-      setIsDeleting(true);
-      const res = await deleteEvent(event.id);
-      if (res?.error) alert(res.error);
-      setIsDeleting(false);
-    }
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    const res = await deleteEvent(event.id);
+    if (res?.error) alert(res.error);
+    setIsDeleting(false);
+    setShowDeleteConfirm(false);
   };
 
   const eventUrl = `${origin}/${event.slug}`;
@@ -67,7 +67,7 @@ export default function EventCard({ event, origin }: { event: any; origin: strin
 
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <button
-            onClick={handleDelete}
+            onClick={() => setShowDeleteConfirm(true)}
             disabled={isDeleting}
             style={{ background: "#fff", border: "1px solid #ef4444", color: "#ef4444", padding: "0.4rem 0.8rem", borderRadius: "6px", fontSize: "0.85rem", cursor: "pointer", opacity: isDeleting ? 0.7 : 1 }}
           >
@@ -103,6 +103,32 @@ export default function EventCard({ event, origin }: { event: any; origin: strin
             <button onClick={() => setShowQR(false)} style={{ background: "#111", border: "none", color: "#fff", padding: "0.6rem 2rem", borderRadius: "6px", cursor: "pointer", fontSize: "0.9rem", width: "100%" }}>
               Close
             </button>
+          </div>
+        </div>
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 60 }}>
+          <div style={{ background: "#fff", padding: "2rem", borderRadius: "12px", textAlign: "center", maxWidth: "400px", width: "90%", border: "1px solid #eaeaea", boxShadow: "0 10px 40px rgba(0,0,0,0.1)" }}>
+            <h3 style={{ margin: "0 0 1rem", fontWeight: 700, fontSize: "1.2rem", color: "#111" }}>Delete Event?</h3>
+            <p style={{ color: "#6b7280", fontSize: "0.95rem", marginBottom: "2rem", lineHeight: "1.5" }}>
+              Are you sure you want to delete <strong>{event.name}</strong>? This will permanently remove the event and all associated registrations. This action cannot be undone.
+            </p>
+            <div style={{ display: "flex", gap: "1rem" }}>
+              <button 
+                onClick={() => setShowDeleteConfirm(false)} 
+                disabled={isDeleting}
+                style={{ flex: 1, background: "#f3f4f6", border: "1px solid #d1d5db", color: "#374151", padding: "0.75rem", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDelete} 
+                disabled={isDeleting}
+                style={{ flex: 1, background: "#ef4444", border: "none", color: "#fff", padding: "0.75rem", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}
+              >
+                {isDeleting ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
           </div>
         </div>
       )}
