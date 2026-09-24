@@ -140,7 +140,7 @@ export default function Sidebar({ role, userName }: { role: string; userName: st
 
       {/* Desktop sidebar (always visible) + Mobile drawer */}
       <aside
-        className="sidebar-root"
+        className={`sidebar-root ${mobileOpen ? "mobile-open" : ""}`}
         style={{
           width: "260px",
           background: "white",
@@ -165,9 +165,13 @@ export default function Sidebar({ role, userName }: { role: string; userName: st
             left: 0 !important;
             height: 100vh !important;
             z-index: 200 !important;
-            transform: ${mobileOpen ? "translateX(0)" : "translateX(-100%)"};
+            transform: translateX(-100%);
             transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
-            box-shadow: ${mobileOpen ? "4px 0 24px rgba(0,0,0,0.15)" : "none"};
+            box-shadow: none;
+          }
+          .sidebar-root.mobile-open {
+            transform: translateX(0);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.15);
           }
         }
       `}</style>

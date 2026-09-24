@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { Download, Upload, Printer } from "lucide-react";
 
-export default function RegistrationsTable({ data, events, canBulkUpload }: { data: any[]; events: any[]; canBulkUpload?: boolean }) {
+export default function RegistrationsTable({ data, events, branches = [], canBulkUpload }: { data: any[]; events: any[]; branches?: any[]; canBulkUpload?: boolean }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterEvent, setFilterEvent] = useState("");
+  const [filterBranch, setFilterBranch] = useState("");
   const [showUpload, setShowUpload] = useState(false);
   const [uploadEvent, setUploadEvent] = useState(events[0]?.id || "");
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -16,7 +17,8 @@ export default function RegistrationsTable({ data, events, canBulkUpload }: { da
     const matchesSearch = (r.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
                           (r.email || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesEvent = filterEvent ? r.eventId === filterEvent : true;
-    return matchesSearch && matchesEvent;
+    const matchesBranch = filterBranch ? r.branchId === filterBranch : true;
+    return matchesSearch && matchesEvent && matchesBranch;
   });
 
   const handleBulkUpload = async () => {
@@ -59,10 +61,16 @@ export default function RegistrationsTable({ data, events, canBulkUpload }: { da
             onChange={e => setSearchTerm(e.target.value)}
             style={{ padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", flex: 1, minWidth: "200px" }}
           />
-          <select value={filterEvent} onChange={e => setFilterEvent(e.target.value)} style={{ padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", minWidth: "200px" }}>
+          <select value={filterEvent} onChange={e => setFilterEvent(e.target.value)} style={{ padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", minWidth: "200px", flex: 1 }}>
             <option value="">All Events</option>
             {events.map(e => <option key={e.id} value={e.id}>{e.name || e.id}</option>)}
           </select>
+          {branches && branches.length > 0 && (
+            <select value={filterBranch} onChange={e => setFilterBranch(e.target.value)} style={{ padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", minWidth: "200px", flex: 1 }}>
+              <option value="">All Branches</option>
+              {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          )}
           <a href="/api/export-csv" style={{ padding: "0.75rem 1.25rem", borderRadius: "6px", border: "1px solid #d1d5db", fontWeight: 600, textDecoration: "none", color: "#111", background: "white", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Download size={16} /> Download CSV
           </a>

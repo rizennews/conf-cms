@@ -30,7 +30,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f4f5f7" }}>
+    <div className="layout-root">
+      <style>{`
+        .layout-root { display: flex; min-height: 100vh; background: #f4f5f7; }
+        @media (max-width: 768px) {
+          .layout-root { flex-direction: column; }
+        }
+      `}</style>
       <Sidebar role={role} userName={session.user.name} />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>

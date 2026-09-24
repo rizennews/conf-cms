@@ -1,7 +1,7 @@
 import { auth } from "../../../../lib/auth";
 import { headers } from "next/headers";
 import { db } from "../../../../db";
-import { registrations, user, events } from "../../../../db/schema";
+import { registrations, user, events, branches } from "../../../../db/schema";
 import { eq, desc } from "drizzle-orm";
 import RegistrationsTable from "./RegistrationsTable";
 
@@ -31,6 +31,7 @@ export default async function RegistrationsPage() {
   }
 
   const allEvents = await db.select().from(events);
+  const allBranches = await db.select().from(branches);
 
   return (
     <div style={{ maxWidth: "1100px", margin: "0 auto", paddingBottom: "4rem" }}>
@@ -40,7 +41,12 @@ export default async function RegistrationsPage() {
       </div>
 
       <div style={{ borderTop: "1px solid #eaeaea", paddingTop: "2rem" }}>
-        <RegistrationsTable data={allRegs} events={allEvents} canBulkUpload={role === "super_admin" || role === "admin"} />
+        <RegistrationsTable 
+          data={allRegs} 
+          events={allEvents} 
+          branches={allBranches}
+          canBulkUpload={role === "super_admin" || role === "admin"} 
+        />
       </div>
     </div>
   );
