@@ -4,6 +4,7 @@ import { db } from "../../../db";
 import { registrations, events, branches, user } from "../../../db/schema";
 import { eq, count, desc } from "drizzle-orm";
 import DashboardStats from "./DashboardStats";
+import AnalyticsDashboard from "./AnalyticsDashboard";
 
 export default async function AdminDashboardPage() {
   const reqHeaders = await headers();
@@ -25,6 +26,9 @@ export default async function AdminDashboardPage() {
 
   const allEvents = await db.select().from(events);
   const eventMap = Object.fromEntries(allEvents.map(e => [e.id, e.name]));
+  
+  const allRegistrations = await db.select().from(registrations);
+  const allBranchesData = await db.select().from(branches);
 
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto", paddingBottom: "4rem" }}>
@@ -84,6 +88,13 @@ export default async function AdminDashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Advanced Analytics */}
+      <AnalyticsDashboard 
+        registrations={allRegistrations} 
+        events={allEvents} 
+        branches={allBranchesData} 
+      />
     </div>
   );
 }

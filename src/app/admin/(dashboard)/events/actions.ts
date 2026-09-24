@@ -50,10 +50,10 @@ export async function createBlankEvent() {
     { label: "Full Name", type: "text" },
     { label: "Email Address", type: "email" },
     { label: "WhatsApp Number", type: "tel" },
-    { label: "Age Range", type: "select" },
-    { label: "Are you a church member?", type: "checkbox" },
-    { label: "Is this your first time?", type: "checkbox" },
-    { label: "Branch", type: "select" }
+    { label: "Gender", type: "select", options: ["Male", "Female"] },
+    { label: "Age Range", type: "select", options: ["Under 18", "18-25", "26-35", "36-50", "51+"] },
+    { label: "Are you a church member?", type: "radio", options: ["Yes", "No"] },
+    { label: "Is this your first time?", type: "radio", options: ["Yes", "No"] }
   ];
 
   await db.insert(events).values({

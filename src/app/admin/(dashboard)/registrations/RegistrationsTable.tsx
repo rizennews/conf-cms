@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Upload } from "lucide-react";
+import { Download, Upload, Printer } from "lucide-react";
 
 export default function RegistrationsTable({ data, events, canBulkUpload }: { data: any[]; events: any[]; canBulkUpload?: boolean }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -66,6 +66,20 @@ export default function RegistrationsTable({ data, events, canBulkUpload }: { da
           <a href="/api/export-csv" style={{ padding: "0.75rem 1.25rem", borderRadius: "6px", border: "1px solid #d1d5db", fontWeight: 600, textDecoration: "none", color: "#111", background: "white", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Download size={16} /> Download CSV
           </a>
+          
+          <button 
+            onClick={() => {
+              if (!filterEvent) {
+                alert("Please select a specific event from the dropdown first to print nametags.");
+                return;
+              }
+              window.open(`/admin/print-nametags?eventId=${filterEvent}`, '_blank');
+            }}
+            style={{ padding: "0.75rem 1.25rem", background: "white", color: "#111", border: "1px solid #d1d5db", borderRadius: "6px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
+          >
+            <Printer size={16} /> Print Nametags
+          </button>
+
           {canBulkUpload && (
             <button onClick={() => setShowUpload(true)} style={{ padding: "0.75rem 1.25rem", background: "#2b3ff2", color: "white", border: "none", borderRadius: "6px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <Upload size={16} /> Bulk Upload
