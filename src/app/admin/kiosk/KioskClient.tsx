@@ -224,22 +224,24 @@ export default function KioskClient({ events, branches }: { events: any[], branc
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", position: "relative", padding: "2rem" }}>
           
           {scanState === "IDLE" ? (
-            <div style={{ width: "100%", maxWidth: "640px", textAlign: "center", background: "white", padding: "3rem 2rem", borderRadius: "24px", border: "1px solid #e5e7eb", boxShadow: "0 10px 40px rgba(0,0,0,0.04)" }}>
+            <div style={{ width: "100%", maxWidth: "600px", textAlign: "center", padding: "2rem" }}>
               
               {!isSearchMode ? (
                 <>
-                  <h1 style={{ fontSize: "1.75rem", color: "#111", marginBottom: "0.5rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Hold your QR Code to the camera</h1>
-                  <p style={{ color: "#666", marginBottom: "2.5rem", fontSize: "1.05rem" }}>Ensure the QR code is bright and clearly visible.</p>
+                  <h1 style={{ fontSize: "2rem", color: "#111", marginBottom: "0.5rem", fontWeight: 700, letterSpacing: "-0.02em" }}>Hold your QR Code to the camera</h1>
+                  <p style={{ color: "#666", marginBottom: "3rem", fontSize: "1.05rem" }}>Ensure the QR code is bright and clearly visible.</p>
                   
-                  <div className="scanner-ring" style={{ padding: "0.5rem", background: "#f9fafb", borderRadius: "20px", border: "1px dashed #d1d5db", margin: "0 auto", width: "100%", maxWidth: "400px" }}>
+                  <div className="scanner-ring" style={{ padding: "0.25rem", background: "white", borderRadius: "16px", margin: "0 auto", width: "100%", maxWidth: "360px", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
                     <div id="kiosk-reader" style={{ width: "100%", borderRadius: "12px", overflow: "hidden" }}></div>
                   </div>
                   
                   <button 
                     onClick={() => { setIsSearchMode(true); setSearchResults([]); setSearchQuery(""); }}
-                    style={{ marginTop: "2rem", padding: "0.85rem 1.5rem", background: "#f3f4f6", color: "#111", border: "1px solid #e5e7eb", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "0.95rem" }}
+                    style={{ marginTop: "2.5rem", background: "transparent", color: "#666", border: "none", fontWeight: 500, cursor: "pointer", fontSize: "0.95rem" }}
+                    onMouseOver={e => e.currentTarget.style.color = "#111"}
+                    onMouseOut={e => e.currentTarget.style.color = "#666"}
                   >
-                    Forgot your QR Code?
+                    Forgot your QR Code? &rarr;
                   </button>
                   
                   <style>{`
@@ -350,36 +352,6 @@ export default function KioskClient({ events, branches }: { events: any[], branc
             </div>
           )}
           
-        </div>
-
-        {/* Right: Live Ticker */}
-        <div style={{ width: "320px", background: "white", borderLeft: "1px solid #e5e7eb", padding: "2rem" }}>
-          <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "0.95rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "#666", fontWeight: 600 }}>Live Feed</h3>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {recentCheckins.length === 0 ? (
-              <div style={{ color: "#9ca3af", fontSize: "0.95rem", fontStyle: "italic" }}>Waiting for check-ins...</div>
-            ) : (
-              recentCheckins.map((rc, i) => (
-                <div key={i} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", animation: "slide-in 0.3s ease-out" }}>
-                  <div style={{ background: "#dcfce7", padding: "0.4rem", borderRadius: "50%", color: "#16a34a" }}>
-                    <UserCheck size={16} />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>{rc.name}</div>
-                    <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.1rem" }}>Just checked in</div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          <style>{`
-            @keyframes slide-in {
-              from { opacity: 0; transform: translateY(-10px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-          `}</style>
         </div>
 
       </div>
