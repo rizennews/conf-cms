@@ -141,10 +141,11 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
                     style={{ width: "100%", padding: "0.85rem", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f9fafb", fontSize: "1rem" }}
                   >
                     <option value="">Select an option...</option>
-                    {(field.options && field.options.length > 0) ? (
+                    {(field.label.toLowerCase().includes("branch") || field.label.toLowerCase().includes("church")) && !field.label.toLowerCase().includes("member") ? (
+                      branches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)
+                    ) : (field.options && field.options.length > 0) ? (
                       field.options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)
                     ) : (
-                      // Fallback dummy options if none provided
                       <>
                         <option value="Option 1">Option 1</option>
                         <option value="Option 2">Option 2</option>
