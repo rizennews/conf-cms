@@ -118,6 +118,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
               )}
               {filteredData.map(r => {
                 const event = events.find(e => e.id === r.eventId);
+                const branch = branches.find(b => b.id === r.branchId);
                 const isCheckedIn = r.status === "checked-in";
                 return (
                   <tr key={r.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
@@ -125,7 +126,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                     <td style={{ padding: "1rem 1.5rem", color: "#4b5563" }}>{r.email || "—"}</td>
                     <td style={{ padding: "1rem 1.5rem", color: "#4b5563" }}>{r.whatsapp || "—"}</td>
                     <td style={{ padding: "1rem 1.5rem" }}>
-                      <span style={{ display: "inline-block", background: "#f3f4f6", padding: "0.2rem 0.6rem", borderRadius: "4px", fontSize: "0.85rem", color: "#374151" }}>{r.branchId || "Unknown"}</span>
+                      <span style={{ display: "inline-block", background: "#f3f4f6", padding: "0.2rem 0.6rem", borderRadius: "4px", fontSize: "0.85rem", color: "#374151" }}>{branch?.name || r.branchId || "Unknown"}</span>
                     </td>
                     <td style={{ padding: "1rem 1.5rem", color: "#4b5563", fontSize: "0.9rem" }}>{event?.name || r.eventId || "—"}</td>
                     <td style={{ padding: "1rem 1.5rem" }}>

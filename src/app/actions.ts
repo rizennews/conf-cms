@@ -9,8 +9,11 @@ export async function submitRegistration(data: any) {
     const custom = data.customData || {};
     
     // Find fields using case-insensitive keyword matching
-    const findField = (keywords: string[]) => {
-      const key = Object.keys(custom).find(k => keywords.some(kw => k.toLowerCase().includes(kw)));
+    const findField = (keywords: string[], exclude: string[] = []) => {
+      const key = Object.keys(custom).find(k => {
+        const lower = k.toLowerCase();
+        return keywords.some(kw => lower.includes(kw)) && !exclude.some(ex => lower.includes(ex));
+      });
       return key ? custom[key] : null;
     };
 
@@ -23,7 +26,7 @@ export async function submitRegistration(data: any) {
     const isFirstTime = findField(["first time", "first-time"]) === "Yes";
     const heardFrom = findField(["hear", "heard"]);
     const invitees = findField(["invitees"]);
-    let branchName = findField(["branch", "church"]) || "Unknown";
+    let branchName = findField(["branch", "church"], ["member"]) || "Unknown";
     if (branchName === "Other" && custom.otherBranch) {
       branchName = custom.otherBranch;
     }

@@ -27,10 +27,19 @@ export default function KioskClient({ events, branches }: { events: any[], branc
   const lastScannedIdRef = useRef<number | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Use a singleton AudioContext so the browser doesn't block it
   const playSound = (type: 'success' | 'error' | 'warn') => {
     try {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioContext();
+      if (!(window as any).kioskAudioCtx) {
+        (window as any).kioskAudioCtx = new AudioContext();
+      }
+      const ctx = (window as any).kioskAudioCtx;
+      
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
@@ -56,8 +65,21 @@ export default function KioskClient({ events, branches }: { events: any[], branc
         osc.stop(ctx.currentTime + 0.2);
       }
     } catch(e) {
-      console.warn("Audio not supported or muted");
+      console.warn("Audio not supported or muted", e);
     }
+  };
+
+  const startKiosk = () => {
+    // Initialize audio context on first click to satisfy browser policies
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!(window as any).kioskAudioCtx) {
+        (window as any).kioskAudioCtx = new AudioContext();
+      }
+      (window as any).kioskAudioCtx.resume();
+    } catch (e) {}
+    
+    setIsStarted(true);
   };
 
   useEffect(() => {
@@ -193,7 +215,7 @@ export default function KioskClient({ events, branches }: { events: any[], branc
           </div>
 
           <button 
-            onClick={() => setIsStarted(true)}
+            onClick={startKiosk}
             style={{ width: "100%", padding: "1.25rem", background: "#2b3ff2", color: "white", border: "none", borderRadius: "99px", fontSize: "1.05rem", fontWeight: 500, cursor: "pointer", transition: "opacity 0.2s" }}
             onMouseOver={e => e.currentTarget.style.opacity = "0.85"}
             onMouseOut={e => e.currentTarget.style.opacity = "1"}
@@ -342,8 +364,10 @@ export default function KioskClient({ events, branches }: { events: any[], branc
                 </button>
 
                 <div style={{ maxHeight: "300px", overflowY: "auto", marginTop: "3rem", textAlign: "left" }}>
-                  {searchResults.length === 0 ? (
-                    <div style={{ padding: "3rem", textAlign: "center", color: "#a1a1aa", fontSize: "1.1rem", fontWeight: 400 }}>No results found.</div>
+                  {searchResults.length === 0 && searchQuery && !isSearching ? (
+                    <div style={{ padding: "3rem", textAlign: "center", color: "#ef4444", fontSize: "1.1rem", fontWeight: 500, background: "#fef2f2", borderRadius: "16px" }}>
+                      We couldn't find any registration matching "{searchQuery}".
+                    </div>
                   ) : (
                     searchResults.map(r => (
                       <div key={r.id} style={{ padding: "1.5rem 0", borderBottom: "1px solid #eaeaea", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
