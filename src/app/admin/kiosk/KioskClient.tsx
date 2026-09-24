@@ -284,11 +284,20 @@ export default function KioskClient({ events, branches }: { events: any[], branc
                 
                 <div className="scanner-container">
                   {cameraError ? (
-                    <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "2rem", textAlign: "center" }}>
-                      <AlertTriangle size={32} color="#9ca3af" style={{ marginBottom: "1rem" }} />
-                      <p style={{ color: "#666", fontSize: "0.95rem", margin: 0, fontWeight: 500 }}>
-                        Camera access blocked. Please allow camera permissions in your browser URL bar and refresh.
+                    <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "2rem", textAlign: "center", background: "#fafafa" }}>
+                      <div style={{ background: "#fef2f2", padding: "1rem", borderRadius: "50%", marginBottom: "1.25rem" }}>
+                        <Camera size={28} color="#ef4444" strokeWidth={1.5} />
+                      </div>
+                      <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.1rem", fontWeight: 600, color: "#111" }}>Camera Blocked</h3>
+                      <p style={{ color: "#666", fontSize: "0.95rem", margin: "0 0 1.5rem 0", lineHeight: 1.5 }}>
+                        Please click the lock icon in your URL bar to allow camera access.
                       </p>
+                      <button 
+                        onClick={() => { setCameraError(false); setTimeout(() => window.location.reload(), 100); }}
+                        style={{ padding: "0.75rem 1.5rem", background: "white", border: "1px solid #eaeaea", borderRadius: "99px", color: "#111", fontWeight: 500, cursor: "pointer", fontSize: "0.9rem", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}
+                      >
+                        Refresh Page
+                      </button>
                     </div>
                   ) : (
                     <div id="kiosk-reader"></div>
