@@ -1,6 +1,7 @@
 import { db } from "../../../../db";
 import { branches, registrations } from "../../../../db/schema";
 import CreateBranchForm from "./CreateBranchForm";
+import DeleteBranchButton from "./DeleteBranchButton";
 
 export default async function BranchesPage() {
   const allBranches = await db.select().from(branches);
@@ -30,6 +31,7 @@ export default async function BranchesPage() {
                   <th style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#111", fontSize: "0.85rem" }}>ID / Slug</th>
                   <th style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#111", fontSize: "0.85rem", textAlign: "right" }}>Registered</th>
                   <th style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#111", fontSize: "0.85rem", textAlign: "right" }}>Checked In</th>
+                  <th style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#111", fontSize: "0.85rem", textAlign: "right" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -43,6 +45,9 @@ export default async function BranchesPage() {
                       <td style={{ padding: "1rem 1.5rem", color: "#666", fontSize: "0.9rem", fontFamily: "monospace" }}>{branch.id}</td>
                       <td style={{ padding: "1rem 1.5rem", color: "#111", fontSize: "0.9rem", textAlign: "right", fontWeight: 500 }}>{branchRegs.length}</td>
                       <td style={{ padding: "1rem 1.5rem", color: "#16a34a", fontSize: "0.9rem", textAlign: "right", fontWeight: 600 }}>{checkedInCount}</td>
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>
+                        <DeleteBranchButton id={branch.id} />
+                      </td>
                     </tr>
                   );
                 })}

@@ -134,6 +134,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
                 )}
 
                 {field.type === 'select' ? (
+                  <>
                   <select 
                     required={field.required !== false} 
                     value={customData[field.label] || ""} 
@@ -142,7 +143,10 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
                   >
                     <option value="">Select an option...</option>
                     {(field.label.toLowerCase().includes("branch") || field.label.toLowerCase().includes("church")) && !field.label.toLowerCase().includes("member") ? (
-                      branches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)
+                      <>
+                        {branches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                        <option value="Other">Other</option>
+                      </>
                     ) : (field.options && field.options.length > 0) ? (
                       field.options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)
                     ) : (
@@ -152,6 +156,23 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
                       </>
                     )}
                   </select>
+                  
+                  {field.type === 'select' && customData[field.label] === "Other" && (
+                    <div style={{ marginTop: "1rem" }}>
+                      <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>
+                        Please specify <span style={{ color: "#ef4444" }}>*</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={customData["otherBranch"] || ""} 
+                        onChange={(e) => setCustomData({ ...customData, "otherBranch": e.target.value })} 
+                        placeholder="Type your branch name..."
+                        style={{ width: "100%", padding: "0.85rem", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f9fafb", fontSize: "1rem" }}
+                      />
+                    </div>
+                  )}
+                  </>
                 ) : field.type === 'radio' ? (
                   <div style={{ display: 'flex', gap: '1.5rem', marginTop: "0.5rem" }}>
                      {(field.options && field.options.length > 0 ? field.options : ["Yes", "No"]).map((opt: string) => (

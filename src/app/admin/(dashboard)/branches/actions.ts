@@ -29,3 +29,17 @@ export async function createBranch(formData: FormData) {
     return { error: "Failed to create branch: " + err.message };
   }
 }
+
+export async function deleteBranch(id: string) {
+  try {
+    const { eq } = await import("drizzle-orm");
+    await db.delete(branches).where(eq(branches.id, id));
+    revalidatePath("/admin/branches");
+    return { success: true };
+  } catch (err: any) {
+    if (err.code === '23503') { // Foreign key constraint violation
+      return { error: "Cannot delete this branch because it has existing registrations." };
+    }
+    return { error: "Failed to delete branch: " + err.message };
+  }
+}
