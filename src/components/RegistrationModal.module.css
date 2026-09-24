@@ -11,6 +11,7 @@
 
 .modal {
   background: #ffffff;
+  border: 1px solid #eaeaea;
   border-radius: 8px;
   padding: 2.5rem 3rem;
   width: 90%;
@@ -42,13 +43,13 @@
 .title {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #1e0a3c;
+  color: #111111;
   margin-bottom: 0.2rem;
   letter-spacing: -0.5px;
 }
 
 .subtitle {
-  color: #6f7287;
+  color: #6b7280;
   font-size: 0.95rem;
   margin-bottom: 1.5rem;
   line-height: 1.5;
@@ -65,13 +66,13 @@
 .progressSegment {
   flex: 1;
   height: 4px;
-  background: #eeedf2;
+  background: #e5e7eb;
   border-radius: 4px;
   transition: background 0.3s ease;
 }
 
 .progressSegmentActive {
-  background: #3659e3; /* Eventbrite blue for active steps */
+  background: #111111;
 }
 
 .form {
@@ -94,29 +95,28 @@
 
 .inputGroup label, .checkboxGroup label {
   font-size: 0.85rem;
-  color: #39364f;
+  color: #111111;
   font-weight: 600;
 }
 
 .inputGroup input, .inputGroup select, .inputGroup textarea {
   background: #ffffff;
-  border: 1px solid #dbdae3;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
   padding: 0.85rem 1rem;
-  color: #111;
+  color: #111111;
   font-family: inherit;
   font-size: 0.95rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .inputGroup input::placeholder, .inputGroup textarea::placeholder {
-  color: #a9a8b3;
+  color: #9ca3af;
 }
 
 .inputGroup input:focus, .inputGroup select:focus, .inputGroup textarea:focus {
   outline: none;
-  border-color: #3659e3;
-  box-shadow: 0 0 0 3px rgba(54, 89, 227, 0.1);
+  border-color: #111111;
 }
 
 .checkboxGroup {
@@ -134,14 +134,14 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #39364f;
+  color: #111111;
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 400;
 }
 
 .radioOptions input[type="radio"] {
-  accent-color: #3659e3;
+  accent-color: #111111;
   width: 18px;
   height: 18px;
 }
@@ -153,9 +153,9 @@
 }
 
 .backBtn {
-  background: #f8f7fa;
-  color: #39364f;
-  border: 1px solid #dbdae3;
+  background: #ffffff;
+  color: #111111;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
   padding: 1rem;
   font-weight: 600;
@@ -167,13 +167,13 @@
 }
 
 .backBtn:hover {
-  background: #eeedf2;
-  border-color: #c2c1ca;
+  background: #f3f4f6;
+  border-color: #9ca3af;
 }
 
 .submitBtn {
-  background: #d1410c;
-  color: #fff;
+  background: #111111;
+  color: #ffffff;
   border: none;
   border-radius: 4px;
   padding: 1rem;
@@ -186,7 +186,7 @@
 }
 
 .submitBtn:hover {
-  background: #b5380a;
+  background: #333333;
 }
 
 .submitBtn:active {

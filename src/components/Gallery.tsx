@@ -124,20 +124,20 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
         <div className={styles.heroCard}>
           {/* Faux logo / Title graphic similar to the Next.js Conf logo */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', marginTop: '-2rem' }}>
-            <h1 style={{ fontFamily: "var(--font-dancing), cursive", fontSize: "2.8rem", whiteSpace: "nowrap", fontWeight: "700", color: "#fff", display: "flex", alignItems: "center", textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>
+            <h1 style={{ fontFamily: "var(--font-dancing), cursive", fontSize: "2.8rem", whiteSpace: "nowrap", fontWeight: "700", color: "#fff", display: "flex", alignItems: "center" }}>
               Multiply Sunday
             </h1>
           </div>
           
-          <h2 style={{ fontSize: "0.9rem", fontWeight: "700", letterSpacing: "0.1em", color: "#dd6534", marginBottom: "1.5rem", textTransform: "uppercase" }}>
+          <h2 style={{ fontSize: "0.9rem", fontWeight: "700", letterSpacing: "0.1em", color: "#2b3ff2", marginBottom: "1.5rem", textTransform: "uppercase" }}>
             Theme: Get The Most Important Thing
           </h2>
           
-          <p style={{ color: "#aaa", fontSize: "0.9rem", marginBottom: "3rem", lineHeight: "1.5", maxWidth: "260px", fontWeight: "400" }}>
+          <p style={{ color: "#a1a1aa", fontSize: "0.9rem", marginBottom: "3rem", lineHeight: "1.5", maxWidth: "260px", fontWeight: "400" }}>
             Join our incredible community as we gather for our most anticipated Sunday!
           </p>
           
-          {/* Button styled exactly like "Clone and Deploy" */}
+          {/* Button styled minimally */}
           <button style={{ 
             backgroundColor: "#fff", 
             color: "#000", 
@@ -150,7 +150,7 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
             cursor: "pointer",
             transition: "all 0.2s ease"
           }}
-          onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#e0e0e0"}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#e4e4e7"}
           onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#fff"}
           onClick={() => setIsModalOpen(true)}
           >

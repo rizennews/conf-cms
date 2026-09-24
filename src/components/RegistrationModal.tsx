@@ -127,7 +127,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
                            required={field.required !== false}
                            checked={customData[field.label] === opt}
                            onChange={(e) => setCustomData({ ...customData, [field.label]: e.target.value })}
-                           style={{ width: "18px", height: "18px", accentColor: "#d94314" }}
+                           style={{ width: "18px", height: "18px", accentColor: "#111" }}
                          />
                          {opt}
                        </label>
@@ -163,7 +163,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
                 Back
               </button>
             )}
-            <button type="submit" disabled={isSubmitting} style={{ background: "#d94314", border: "none", color: "white", padding: "0.85rem 2rem", borderRadius: "8px", fontWeight: 600, cursor: "pointer", flex: 1 }}>
+            <button type="submit" disabled={isSubmitting} style={{ background: "#111", border: "none", color: "white", padding: "0.85rem 2rem", borderRadius: "8px", fontWeight: 600, cursor: "pointer", flex: 1 }}>
               {step < totalSteps ? 'Next Step' : isSubmitting ? 'Submitting...' : 'Complete Registration'}
             </button>
           </div>

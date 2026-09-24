@@ -3,10 +3,21 @@
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { useRouter } from "next/navigation";
+import { deleteEvent } from "./actions";
 
 export default function EventCard({ event, origin }: { event: any; origin: string }) {
   const router = useRouter();
   const [showQR, setShowQR] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this event? This action cannot be undone.")) {
+      setIsDeleting(true);
+      const res = await deleteEvent(event.id);
+      if (res?.error) alert(res.error);
+      setIsDeleting(false);
+    }
+  };
 
   const eventUrl = `${origin}/${event.slug}`;
   let customFieldsCount = 0;
@@ -55,6 +66,13 @@ export default function EventCard({ event, origin }: { event: any; origin: strin
         </div>
 
         <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            style={{ background: "#fff", border: "1px solid #ef4444", color: "#ef4444", padding: "0.4rem 0.8rem", borderRadius: "6px", fontSize: "0.85rem", cursor: "pointer", opacity: isDeleting ? 0.7 : 1 }}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </button>
           <button
             onClick={() => setShowQR(true)}
             style={{ background: "#fff", border: "1px solid #eaeaea", color: "#111", padding: "0.4rem 0.8rem", borderRadius: "6px", fontSize: "0.85rem", cursor: "pointer" }}

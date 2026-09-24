@@ -1,16 +1,16 @@
 :root {
-  /* Core Colors from Church Palette */
-  --bg-dark: #050410;
-  --bg-card: rgba(19, 23, 62, 0.7); /* #13173e with opacity */
-  --text-main: #efe8e3;
-  --text-muted: #8a8c8f;
+  /* Core Colors - Vercel Dark Theme */
+  --bg-dark: #000000;
+  --bg-card: #000000;
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
   
-  /* Brand/Accent - Rust Orange */
-  --accent-color: #dd6534;
-  --accent-hover: #d15d39;
+  /* Brand/Accent - Dashboard Blue */
+  --accent-color: #2b3ff2;
+  --accent-hover: #1e33d9;
 
   /* Glassmorphism Utilities */
-  --glass-border: rgba(239, 232, 227, 0.08); /* #efe8e3 with opacity */
+  --glass-border: #333333;
   --glass-blur: blur(12px);
   
   /* Layout */

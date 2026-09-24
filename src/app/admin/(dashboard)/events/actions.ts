@@ -66,3 +66,13 @@ export async function createBlankEvent() {
   revalidatePath("/admin/events");
   return id;
 }
+
+export async function deleteEvent(id: string) {
+  try {
+    await db.delete(events).where(eq(events.id, id));
+    revalidatePath("/admin/events");
+    return { success: true };
+  } catch (err: any) {
+    return { error: "Failed to delete event: " + err.message };
+  }
+}
