@@ -37,7 +37,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
       const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
       const row: any = {};
       const customData: any = {};
-      const standardFields = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange"];
+      const standardFields = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange", "registrantStatus"];
       
       headers.forEach((h, i) => {
         if (standardFields.includes(h)) {
@@ -57,7 +57,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
   };
 
   const downloadTemplate = () => {
-    let headers = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange"];
+    let headers = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange", "registrantStatus"];
     const targetEvent = events.find(e => e.id === uploadEvent);
     
     if (targetEvent?.customFields) {
@@ -78,6 +78,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
       if (h === "address") return "Accra";
       if (h === "branchId") return "main-branch";
       if (h === "ageRange") return "25-34";
+      if (h === "registrantStatus") return "Member";
       return "Sample Answer";
     }).join(",");
 
@@ -147,7 +148,8 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                 <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Phone</th>
                 <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Branch</th>
                 <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Event</th>
-                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Status</th>
+                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Reg. Status</th>
+                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Check-in</th>
                 <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Date</th>
                 <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem", textAlign: "right" }}>Actions</th>
               </tr>
@@ -160,15 +162,27 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                 const event = events.find(e => e.id === r.eventId);
                 const branch = branches.find(b => b.id === r.branchId);
                 const isCheckedIn = r.status === "checked-in";
+                
+                let displayBranch = branch?.name || r.branchId || "Unknown";
+                if (r.branchId === "other" && r.customData) {
+                  try {
+                    const custom = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
+                    if (custom.specifiedBranch) {
+                      displayBranch = `Other (${custom.specifiedBranch})`;
+                    }
+                  } catch (e) {}
+                }
+
                 return (
                   <tr key={r.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
                     <td style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#111" }}>{r.fullName || "—"}</td>
                     <td style={{ padding: "1rem 1.5rem", color: "#4b5563" }}>{r.email || "—"}</td>
                     <td style={{ padding: "1rem 1.5rem", color: "#4b5563" }}>{r.whatsapp || "—"}</td>
                     <td style={{ padding: "1rem 1.5rem" }}>
-                      <span style={{ display: "inline-block", background: "#f3f4f6", padding: "0.2rem 0.6rem", borderRadius: "4px", fontSize: "0.85rem", color: "#374151" }}>{branch?.name || r.branchId || "Unknown"}</span>
+                      <span style={{ display: "inline-block", background: "#f3f4f6", padding: "0.2rem 0.6rem", borderRadius: "4px", fontSize: "0.85rem", color: "#374151" }}>{displayBranch}</span>
                     </td>
                     <td style={{ padding: "1rem 1.5rem", color: "#4b5563", fontSize: "0.9rem" }}>{event?.name || r.eventId || "—"}</td>
+                    <td style={{ padding: "1rem 1.5rem", color: "#4b5563", fontSize: "0.9rem" }}>{r.registrantStatus || "—"}</td>
                     <td style={{ padding: "1rem 1.5rem" }}>
                       <span style={{ display: "inline-block", padding: "0.25rem 0.75rem", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 600, background: isCheckedIn ? "#dcfce7" : "#fef9c3", color: isCheckedIn ? "#16a34a" : "#854d0e" }}>
                         {isCheckedIn ? "✓ Checked In" : "Registered"}
@@ -276,7 +290,8 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
               <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Email:</strong> {viewRegistration.email || "—"}</div>
               <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Phone/WhatsApp:</strong> {viewRegistration.whatsapp || "—"}</div>
               <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Age Range:</strong> {viewRegistration.ageRange || "—"}</div>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Status:</strong> {viewRegistration.status === 'checked-in' ? "Checked In" : "Registered"}</div>
+              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Registrant Status:</strong> {viewRegistration.registrantStatus || "—"}</div>
+              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Check-in Status:</strong> {viewRegistration.status === 'checked-in' ? "Checked In" : "Registered"}</div>
               
               {viewRegistration.customData && (() => {
                 try {

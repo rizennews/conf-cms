@@ -89,4 +89,7 @@ export const registrations = pgTable("registrations", {
   eventId: text("event_id").references(() => events.id),
   // New check-in status
   status: text("status").notNull().default("registered"), // 'registered' | 'checked-in'
+  
+  // Registrant status (e.g. Member, Guest, Worker)
+  registrantStatus: text("registrant_status"),
 });

@@ -6,39 +6,41 @@ import { eq } from "drizzle-orm";
 
 export async function submitRegistration(data: any) {
   try {
-    const custom = data.customData || {};
-    
-    // Find fields using case-insensitive keyword matching
-    const findField = (keywords: string[], exclude: string[] = []) => {
-      const key = Object.keys(custom).find(k => {
-        const lower = k.toLowerCase();
-        return keywords.some(kw => lower.includes(kw)) && !exclude.some(ex => lower.includes(ex));
-      });
-      return key ? custom[key] : null;
-    };
-
-    const fullName = findField(["name"]);
-    const email = findField(["email"]);
-    const whatsapp = findField(["contact", "number", "whatsapp", "phone"]);
-    const address = findField(["address", "location"]);
-    const ageRange = findField(["age"]);
-    const isMember = findField(["member"]) === "Yes";
-    const isFirstTime = findField(["first time", "first-time"]) === "Yes";
-    const heardFrom = findField(["hear", "heard"]);
-    const invitees = findField(["invitees"]);
-    let branchName = findField(["branch", "church"], ["member"]) || "Unknown";
-    if (branchName === "Other" && custom.otherBranch) {
-      branchName = custom.otherBranch;
-    }
+    const {
+      fullName,
+      email,
+      whatsapp,
+      address,
+      ageRange,
+      isMember,
+      isFirstTime,
+      heardFrom,
+      invitees,
+      registrantStatus,
+      branchName,
+      otherBranch,
+      eventId
+    } = data;
 
     let branchId = "";
-    const existing = await db.select().from(branches).where(eq(branches.name, branchName)).limit(1);
     
-    if (existing.length > 0) {
-      branchId = existing[0].id;
+    if (branchName === "Other") {
+      branchId = "other";
+      // Ensure 'Other' category exists in branches
+      const existingOther = await db.select().from(branches).where(eq(branches.id, "other")).limit(1);
+      if (existingOther.length === 0) {
+        await db.insert(branches).values({ id: "other", name: "Other (External)" });
+      }
     } else {
-      branchId = branchName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      await db.insert(branches).values({ id: branchId, name: branchName });
+      let finalBranchName = branchName || "Unknown";
+      const existing = await db.select().from(branches).where(eq(branches.name, finalBranchName)).limit(1);
+      
+      if (existing.length > 0) {
+        branchId = existing[0].id;
+      } else {
+        branchId = finalBranchName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        await db.insert(branches).values({ id: branchId, name: finalBranchName });
+      }
     }
 
     const [inserted] = await db.insert(registrations).values({
@@ -47,13 +49,14 @@ export async function submitRegistration(data: any) {
       whatsapp,
       address,
       ageRange,
-      isMember,
-      isFirstTime,
+      isMember: isMember === "Yes",
+      isFirstTime: isFirstTime === "Yes",
       branchId,
       heardFrom,
       invitees,
-      eventId: data.eventId,
-      customData: JSON.stringify(custom)
+      registrantStatus,
+      eventId,
+      customData: branchName === "Other" && otherBranch ? JSON.stringify({ specifiedBranch: otherBranch }) : "{}"
     }).returning({ id: registrations.id });
 
     return { success: true, id: inserted.id };

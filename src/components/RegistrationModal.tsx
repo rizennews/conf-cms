@@ -14,14 +14,22 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [userName, setUserName] = useState("");
   const [registrationId, setRegistrationId] = useState("");
-  const [customData, setCustomData] = useState<Record<string, string>>({});
-
-  let customFields: any[] = [];
-  try {
-    if (event?.customFields) customFields = JSON.parse(event.customFields);
-  } catch (e) {}
+  
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    whatsapp: "",
+    address: "",
+    ageRange: "",
+    isMember: "Yes",
+    isFirstTime: "Yes",
+    branchName: "",
+    otherBranch: "",
+    heardFrom: "",
+    invitees: "",
+    registrantStatus: "",
+  });
 
   if (!isOpen) return null;
 
@@ -37,11 +45,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     );
   }
 
-  // Chunk fields into groups of 4 for pagination
-  const fieldsPerStep = 4;
-  const totalSteps = Math.max(1, Math.ceil(customFields.length / fieldsPerStep));
-  const currentFields = customFields.slice((step - 1) * fieldsPerStep, step * fieldsPerStep);
-
+  const totalSteps = 3;
   const nextStep = () => setStep(prev => Math.min(prev + 1, totalSteps));
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
@@ -56,7 +60,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     
     const res = await submitRegistration({
       eventId: event?.id,
-      customData
+      ...formData
     });
 
     setIsSubmitting(false);
@@ -64,8 +68,6 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     if (res.error) {
       alert("Something went wrong.\n\nError: " + res.error);
     } else {
-      const nameKey = Object.keys(customData).find(k => k.toLowerCase().includes("name"));
-      setUserName(nameKey ? customData[nameKey] : "Guest");
       if (res.id) setRegistrationId(String(res.id));
       setIsSuccess(true);
     }
@@ -73,7 +75,6 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
 
   const handleCloseSuccess = () => {
     setStep(1);
-    setCustomData({});
     setIsSuccess(false);
     onClose();
   };
@@ -94,7 +95,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
       ctx.drawImage(img, 20, 20);
       const pngFile = canvas.toDataURL("image/png");
       const downloadLink = document.createElement("a");
-      downloadLink.download = `${userName.replace(/\s+/g, "_") || "Guest"}_Ticket.png`;
+      downloadLink.download = `${(formData.fullName || "Guest").replace(/\s+/g, "_")}_Ticket.png`;
       downloadLink.href = pngFile;
       downloadLink.click();
     };
@@ -112,7 +113,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
             </svg>
           </div>
           <h2 style={{ fontSize: "1.75rem", marginBottom: "0.5rem", fontFamily: "'Inter', sans-serif", fontWeight: 600, color: "#111" }}>
-            Thank you, {userName}!
+            Thank you, {formData.fullName}!
           </h2>
           <p style={{ color: "#666", fontSize: "0.95rem", marginBottom: "1.5rem", lineHeight: 1.5, maxWidth: "400px", margin: "0 auto 1.5rem auto" }}>
             Your registration is confirmed. Please save this QR code to check in at {event?.name || 'the event'}. 
@@ -123,21 +124,10 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
           </div>
 
           <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
-            <button 
-              onClick={handleCloseSuccess} 
-              style={{ background: "transparent", border: "1px solid #d1d5db", color: "#374151", padding: "0.85rem 2rem", borderRadius: "99px", fontWeight: 600, cursor: "pointer" }}
-            >
+            <button onClick={handleCloseSuccess} style={{ background: "transparent", border: "1px solid #d1d5db", color: "#374151", padding: "0.85rem 2rem", borderRadius: "99px", fontWeight: 600, cursor: "pointer" }}>
               Done
             </button>
-            <button 
-              onClick={downloadQR}
-              style={{ background: "#2b3ff2", border: "none", color: "white", padding: "0.85rem 2rem", borderRadius: "99px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
+            <button onClick={downloadQR} style={{ background: "#2b3ff2", border: "none", color: "white", padding: "0.85rem 2rem", borderRadius: "99px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
               Download Ticket
             </button>
           </div>
@@ -145,6 +135,14 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
       </div>
     );
   }
+
+  const InputLabel = ({ children, required }: { children: React.ReactNode, required?: boolean }) => (
+    <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>
+      {children} {required && <span style={{ color: "#ef4444" }}>*</span>}
+    </label>
+  );
+
+  const inputStyle = { width: "100%", padding: "0.85rem", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f9fafb", fontSize: "1rem" };
 
   return (
     <div className={styles.overlay} onClick={onClose} style={{ zIndex: 100 }}>
@@ -155,104 +153,111 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
         
         <div className={styles.progressContainer}>
           {Array.from({ length: totalSteps }).map((_, i) => (
-            <div 
-              key={i} 
-              className={`${styles.progressSegment} ${step >= i + 1 ? styles.progressSegmentActive : ''}`} 
-            />
+            <div key={i} className={`${styles.progressSegment} ${step >= i + 1 ? styles.progressSegmentActive : ''}`} />
           ))}
         </div>
         
         <form onSubmit={handleSubmit} className={styles.formContainer}>
           <div className={styles.stepContainer} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             
-            {currentFields.map((field, i) => (
-              <div key={field.id || i} className={styles.inputGroup}>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>
-                  {field.label} {field.required && <span style={{ color: "#ef4444" }}>*</span>}
-                </label>
-                
-                {field.description && (
-                  <p style={{ margin: "0 0 0.5rem 0", fontSize: "0.85rem", color: "#6b7280" }}>{field.description}</p>
-                )}
+            {step === 1 && (
+              <>
+                <div className={styles.inputGroup}>
+                  <InputLabel required>Full Name</InputLabel>
+                  <input type="text" required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} placeholder="John Doe" style={inputStyle} />
+                </div>
+                <div className={styles.inputGroup}>
+                  <InputLabel required>Email</InputLabel>
+                  <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="john@example.com" style={inputStyle} />
+                </div>
+                <div className={styles.inputGroup}>
+                  <InputLabel required>Phone / WhatsApp</InputLabel>
+                  <input type="tel" required value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} placeholder="+233..." style={inputStyle} />
+                </div>
+                <div className={styles.inputGroup}>
+                  <InputLabel required>Address / Location</InputLabel>
+                  <input type="text" required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="City, Region" style={inputStyle} />
+                </div>
+              </>
+            )}
 
-                {field.type === 'select' ? (
-                  <>
-                  <select 
-                    required={field.required !== false} 
-                    value={customData[field.label] || ""} 
-                    onChange={(e) => setCustomData({ ...customData, [field.label]: e.target.value })}
-                    style={{ width: "100%", padding: "0.85rem", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f9fafb", fontSize: "1rem" }}
-                  >
+            {step === 2 && (
+              <>
+                <div className={styles.inputGroup}>
+                  <InputLabel required>Age Range</InputLabel>
+                  <select required value={formData.ageRange} onChange={e => setFormData({...formData, ageRange: e.target.value})} style={inputStyle}>
                     <option value="">Select an option...</option>
-                    {(field.label.toLowerCase().includes("branch") || field.label.toLowerCase().includes("church")) && !field.label.toLowerCase().includes("member") ? (
-                      <>
-                        {branches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
-                        <option value="Other">Other</option>
-                      </>
-                    ) : (field.options && field.options.length > 0) ? (
-                      field.options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)
-                    ) : (
-                      <>
-                        <option value="Option 1">Option 1</option>
-                        <option value="Option 2">Option 2</option>
-                      </>
-                    )}
+                    <option value="Under 18">Under 18</option>
+                    <option value="18-24">18-24</option>
+                    <option value="25-34">25-34</option>
+                    <option value="35-44">35-44</option>
+                    <option value="45-54">45-54</option>
+                    <option value="55-64">55-64</option>
+                    <option value="65+">65+</option>
                   </select>
-                  
-                  {field.type === 'select' && customData[field.label] === "Other" && (
+                </div>
+                <div className={styles.inputGroup}>
+                  <InputLabel required>Branch</InputLabel>
+                  <select required value={formData.branchName} onChange={e => setFormData({...formData, branchName: e.target.value})} style={inputStyle}>
+                    <option value="">Select an option...</option>
+                    {branches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                    <option value="Other">Other</option>
+                  </select>
+                  {formData.branchName === "Other" && (
                     <div style={{ marginTop: "1rem" }}>
-                      <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>
-                        Please specify <span style={{ color: "#ef4444" }}>*</span>
-                      </label>
-                      <input 
-                        type="text" 
-                        required 
-                        value={customData["otherBranch"] || ""} 
-                        onChange={(e) => setCustomData({ ...customData, "otherBranch": e.target.value })} 
-                        placeholder="Type your branch name..."
-                        style={{ width: "100%", padding: "0.85rem", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f9fafb", fontSize: "1rem" }}
-                      />
+                      <InputLabel required>Please specify</InputLabel>
+                      <input type="text" required value={formData.otherBranch} onChange={e => setFormData({...formData, otherBranch: e.target.value})} placeholder="Branch name" style={inputStyle} />
                     </div>
                   )}
-                  </>
-                ) : field.type === 'radio' ? (
+                </div>
+                <div className={styles.inputGroup}>
+                  <InputLabel required>Registrant Status</InputLabel>
+                  <select required value={formData.registrantStatus} onChange={e => setFormData({...formData, registrantStatus: e.target.value})} style={inputStyle}>
+                    <option value="">Select an option...</option>
+                    <option value="Member">Member</option>
+                    <option value="First-time Guest">First-time Guest</option>
+                    <option value="Regular Attendee">Regular Attendee</option>
+                    <option value="Worker / Volunteer">Worker / Volunteer</option>
+                    <option value="Minister / Clergy">Minister / Clergy</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <div className={styles.inputGroup}>
+                  <InputLabel required>Are you a church member?</InputLabel>
                   <div style={{ display: 'flex', gap: '1.5rem', marginTop: "0.5rem" }}>
-                     {(field.options && field.options.length > 0 ? field.options : ["Yes", "No"]).map((opt: string) => (
+                     {["Yes", "No"].map(opt => (
                        <label key={opt} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "1rem" }}>
-                         <input 
-                           type="radio" 
-                           name={field.label}
-                           value={opt}
-                           required={field.required !== false}
-                           checked={customData[field.label] === opt}
-                           onChange={(e) => setCustomData({ ...customData, [field.label]: e.target.value })}
-                           style={{ width: "18px", height: "18px", accentColor: "#111" }}
-                         />
+                         <input type="radio" name="isMember" value={opt} required checked={formData.isMember === opt} onChange={e => setFormData({...formData, isMember: e.target.value})} style={{ width: "18px", height: "18px", accentColor: "#111" }} />
                          {opt}
                        </label>
                      ))}
                   </div>
-                ) : field.type === 'textarea' ? (
-                  <textarea 
-                    required={field.required !== false} 
-                    value={customData[field.label] || ""} 
-                    onChange={(e) => setCustomData({ ...customData, [field.label]: e.target.value })} 
-                    rows={4}
-                    placeholder="Type your answer here..."
-                    style={{ width: "100%", padding: "0.85rem", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f9fafb", fontSize: "1rem", resize: "none" }}
-                  />
-                ) : (
-                  <input 
-                    type={field.type === "email" ? "email" : field.type === "tel" ? "tel" : field.type === "url" ? "url" : "text"} 
-                    required={field.required !== false} 
-                    value={customData[field.label] || ""} 
-                    onChange={(e) => setCustomData({ ...customData, [field.label]: e.target.value })} 
-                    placeholder="e.g. Type your answer here..."
-                    style={{ width: "100%", padding: "0.85rem", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f9fafb", fontSize: "1rem" }}
-                  />
-                )}
-              </div>
-            ))}
+                </div>
+                <div className={styles.inputGroup}>
+                  <InputLabel required>Is this your first time?</InputLabel>
+                  <div style={{ display: 'flex', gap: '1.5rem', marginTop: "0.5rem" }}>
+                     {["Yes", "No"].map(opt => (
+                       <label key={opt} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "1rem" }}>
+                         <input type="radio" name="isFirstTime" value={opt} required checked={formData.isFirstTime === opt} onChange={e => setFormData({...formData, isFirstTime: e.target.value})} style={{ width: "18px", height: "18px", accentColor: "#111" }} />
+                         {opt}
+                       </label>
+                     ))}
+                  </div>
+                </div>
+                <div className={styles.inputGroup}>
+                  <InputLabel>How did you hear about us?</InputLabel>
+                  <input type="text" value={formData.heardFrom} onChange={e => setFormData({...formData, heardFrom: e.target.value})} placeholder="E.g. Social Media, Friend" style={inputStyle} />
+                </div>
+                <div className={styles.inputGroup}>
+                  <InputLabel>Who invited you? (Optional)</InputLabel>
+                  <input type="text" value={formData.invitees} onChange={e => setFormData({...formData, invitees: e.target.value})} placeholder="Name of person" style={inputStyle} />
+                </div>
+              </>
+            )}
 
           </div>
 
