@@ -104,6 +104,15 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     }
   };
 
+  const handleToggleCheckin = async (r: RegRecord) => {
+    const isCheckedIn = r.status === "checked-in";
+    const { checkInById, undoCheckInById } = await import("../checkin/actions");
+    const result = isCheckedIn ? await undoCheckInById(r.id as number) : await checkInById(r.id as number);
+    if (result.success) {
+      window.location.reload();
+    }
+  };
+
   const openEdit = (r: RegRecord) => {
     setEditRegistration(r);
     
@@ -335,9 +344,26 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                     </td>
                     <td style={{ padding: "0.85rem 1.25rem" }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", alignItems: "flex-start" }}>
-                        <span style={{ display: "inline-block", padding: "0.15rem 0.5rem", borderRadius: "99px", fontSize: "0.7rem", fontWeight: 600, background: isCheckedIn ? "#dcfce7" : "#fef9c3", color: isCheckedIn ? "#16a34a" : "#854d0e" }}>
+                        <button 
+                          onClick={() => handleToggleCheckin(r)}
+                          style={{ 
+                            border: "none", 
+                            cursor: "pointer", 
+                            display: "inline-block", 
+                            padding: "0.2rem 0.6rem", 
+                            borderRadius: "99px", 
+                            fontSize: "0.7rem", 
+                            fontWeight: 600, 
+                            background: isCheckedIn ? "#dcfce7" : "#fef9c3", 
+                            color: isCheckedIn ? "#16a34a" : "#854d0e",
+                            transition: "opacity 0.2s"
+                          }}
+                          onMouseOver={e => e.currentTarget.style.opacity = "0.7"}
+                          onMouseOut={e => e.currentTarget.style.opacity = "1"}
+                          title={isCheckedIn ? "Click to undo check-in" : "Click to check in"}
+                        >
                           {isCheckedIn ? "✓ Checked In" : "Pending"}
-                        </span>
+                        </button>
                         {r.registrantStatus && r.registrantStatus !== "Unknown" ? (
                           <span style={{ fontSize: "0.7rem", color: "#6b7280", background: "#f3f4f6", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>
                             {r.registrantStatus as string}
