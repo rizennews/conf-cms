@@ -97,8 +97,18 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
       <div className={styles.galleryGrid}>
         {/* Hero Card embedded in the grid */}
         <div className={styles.heroCard}>
+          <div style={{ marginBottom: "1rem", marginTop: "-1rem" }}>
+            <Image 
+              src="/LCC-LOGO.png" 
+              alt="LCC Logo" 
+              width={100} 
+              height={100} 
+              style={{ objectFit: 'contain' }}
+              unoptimized 
+            />
+          </div>
           {/* Faux logo / Title graphic similar to the Next.js Conf logo */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', marginTop: '-2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
             <h1 style={{ fontFamily: "var(--font-dancing), cursive", fontSize: "2.8rem", whiteSpace: "nowrap", fontWeight: "700", color: "#fff", display: "flex", alignItems: "center" }}>
               Multiply Sunday
             </h1>
