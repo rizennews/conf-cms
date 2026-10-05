@@ -19,10 +19,16 @@ interface RegistrationInput {
   otherBranch?: string;
   eventId?: string;
   customData?: Record<string, unknown>;
+  website?: string; // Honeypot
 }
 
 export async function submitRegistration(data: RegistrationInput) {
   try {
+    // Spam protection: honeypot check
+    if (data.website) {
+      return { id: 999999, success: true };
+    }
+
     const {
       fullName,
       email,

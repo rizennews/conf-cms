@@ -49,6 +49,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     heardFrom: "",
     invitees: "",
     registrantStatus: "",
+    website: "", // Honeypot field
   });
   const [countryCode, setCountryCode] = useState("gh");
   const [customData, setCustomData] = useState<Record<string, string>>({});
@@ -198,6 +199,18 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
             
             {step === 1 && (
               <>
+                {/* Honeypot field for anti-spam */}
+                <input 
+                  type="text" 
+                  name="website" 
+                  value={formData.website} 
+                  onChange={e => setFormData({...formData, website: e.target.value})} 
+                  style={{ opacity: 0, position: 'absolute', top: 0, left: 0, height: 0, width: 0, zIndex: -1 }} 
+                  tabIndex={-1} 
+                  aria-hidden="true" 
+                  autoComplete="off" 
+                />
+
                 <div className={styles.inputGroup}>
                   <InputLabel required>Full Name</InputLabel>
                   <input type="text" required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} placeholder="John Doe" style={inputStyle} />
