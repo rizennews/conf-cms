@@ -35,10 +35,15 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
   const userRole = currentUser[0]?.role || "branch_head";
   const userBranchId = currentUser[0]?.branchId;
 
+  let userBranchName = null;
+  if (userBranchId) {
+    const branchRes = await db.select().from(branches).where(eq(branches.id, userBranchId)).limit(1);
+    if (branchRes.length > 0) userBranchName = branchRes[0].name;
+  }
+
   if (userRole === "branch_head" && userBranchId) {
     allRegs = allRegs.filter(r => r.branchId === userBranchId);
   }
-
 
   const totalBranchesResult = await db.select({ count: count() }).from(branches).where(not(eq(branches.id, "other")));
   
@@ -71,8 +76,14 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto", paddingBottom: "4rem" }}>
       <div style={{ marginBottom: "2.5rem" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 600, color: "#111", margin: "0 0 0.5rem 0", letterSpacing: "-0.02em" }}>Overview</h1>
-        <p style={{ color: "#666", fontSize: "0.95rem", margin: 0 }}>View your current registration and check-in metrics.</p>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 600, color: "#111", margin: "0 0 0.5rem 0", letterSpacing: "-0.02em" }}>
+          {userRole === "branch_head" && userBranchName ? `Welcome, ${userBranchName}` : "Overview"}
+        </h1>
+        <p style={{ color: "#666", fontSize: "0.95rem", margin: 0 }}>
+          {userRole === "branch_head" 
+            ? "View your branch's current registration and check-in metrics." 
+            : "View your current registration and check-in metrics."}
+        </p>
       </div>
 
       <DashboardStats
