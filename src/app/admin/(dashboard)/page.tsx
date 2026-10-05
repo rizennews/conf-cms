@@ -121,6 +121,37 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
     { name: "Not Arrived", value: totalRegs - checkedIn }
   ].filter(d => d.value > 0);
 
+  // Dynamic Custom Charts
+  let eventCustomFields: any[] = [];
+  if (eventId) {
+    const ev = allEvents.find(e => e.id === eventId);
+    if (ev && ev.customFields) {
+      try { eventCustomFields = JSON.parse(ev.customFields); } catch(e) {}
+    }
+  }
+  
+  const dynamicCharts: any[] = [];
+  eventCustomFields.forEach(field => {
+    if (field.type === "select" || field.type === "radio") {
+      const fieldCounts: Record<string, number> = {};
+      filteredRegs.forEach(r => {
+        if (r.customData) {
+          try {
+            const cData = typeof r.customData === "string" ? JSON.parse(r.customData) : r.customData;
+            const answer = cData[field.label];
+            if (answer) {
+              fieldCounts[answer] = (fieldCounts[answer] || 0) + 1;
+            }
+          } catch(e) {}
+        }
+      });
+      const data = Object.entries(fieldCounts).map(([name, value]) => ({ name, value }));
+      if (data.length > 0) {
+        dynamicCharts.push({ title: field.label, data });
+      }
+    }
+  });
+
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto", paddingBottom: "4rem" }}>
       <div style={{ marginBottom: "2.5rem" }}>
@@ -146,6 +177,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
         referralSources={referralSources}
         topBranches={topBranches}
         attendanceData={attendanceData}
+        dynamicCharts={dynamicCharts}
       />
 
       <div style={{ marginTop: "3rem" }}>

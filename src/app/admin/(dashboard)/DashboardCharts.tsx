@@ -10,11 +10,12 @@ interface Props {
   referralSources: { name: string; value: number }[];
   topBranches: { name: string; value: number }[];
   attendanceData: { name: string; value: number }[];
+  dynamicCharts?: { title: string; data: { name: string; value: number }[] }[];
 }
 
 const COLORS = ['#111111', '#2b3ff2', '#f59e0b', '#10b981', '#6366f1', '#ec4899', '#8b5cf6'];
 
-export default function DashboardCharts({ registrationsByDate, ageDemographics, registrantStatuses, topInviters, referralSources, topBranches, attendanceData }: Props) {
+export default function DashboardCharts({ registrationsByDate, ageDemographics, registrantStatuses, topInviters, referralSources, topBranches, attendanceData, dynamicCharts = [] }: Props) {
   return (
     <div style={{ marginTop: "3rem" }}>
       <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#111", margin: "0 0 1rem 0" }}>Analytics</h2>
@@ -191,6 +192,33 @@ export default function DashboardCharts({ registrationsByDate, ageDemographics, 
             )}
           </div>
         </div>
+
+        {/* Dynamic Custom Fields */}
+        {dynamicCharts.map((chart, i) => (
+          <div key={`dynamic-${i}`} style={{ background: "#fff", border: "1px solid #eaeaea", borderRadius: "8px", padding: "1.5rem" }}>
+            <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "0.95rem", color: "#666" }}>{chart.title}</h3>
+            <div style={{ width: "100%", height: 250 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chart.data}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    dataKey="value"
+                  >
+                    {chart.data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: "0.85rem" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ))}
 
       </div>
     </div>

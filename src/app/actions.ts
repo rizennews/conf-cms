@@ -56,7 +56,10 @@ export async function submitRegistration(data: any) {
       invitees,
       registrantStatus,
       eventId,
-      customData: branchName === "Other" && otherBranch ? JSON.stringify({ specifiedBranch: otherBranch }) : "{}"
+      customData: JSON.stringify({ 
+        ...(branchName === "Other" && otherBranch ? { specifiedBranch: otherBranch } : {}),
+        ...(data.customData || {})
+      })
     }).returning({ id: registrations.id });
 
     return { success: true, id: inserted.id };

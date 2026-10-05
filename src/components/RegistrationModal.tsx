@@ -31,6 +31,18 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     registrantStatus: "",
   });
 
+  const [customData, setCustomData] = useState<Record<string, any>>({});
+
+  let parsedCustomFields: any[] = [];
+  try {
+    if (event?.customFields) {
+      parsedCustomFields = JSON.parse(event.customFields);
+    }
+  } catch (e) {}
+
+  const hasCustomFields = parsedCustomFields.length > 0;
+  const totalSteps = hasCustomFields ? 4 : 3;
+
   if (!isOpen) return null;
 
   if (event?.isActive === false || (event?.deadline && new Date() > new Date(event.deadline))) {
@@ -45,7 +57,8 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     );
   }
 
-  const totalSteps = 3;
+
+
   const nextStep = () => setStep(prev => Math.min(prev + 1, totalSteps));
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
@@ -60,7 +73,8 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     
     const res = await submitRegistration({
       eventId: event?.id,
-      ...formData
+      ...formData,
+      customData
     });
 
     setIsSubmitting(false);
@@ -256,6 +270,63 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
                   <InputLabel>Who invited you? (Optional)</InputLabel>
                   <input type="text" value={formData.invitees} onChange={e => setFormData({...formData, invitees: e.target.value})} placeholder="Name of person" style={inputStyle} />
                 </div>
+              </>
+            )}
+
+            {step === 4 && hasCustomFields && (
+              <>
+                <p style={{ color: "#666", fontSize: "0.95rem", marginBottom: "1rem" }}>Additional Information</p>
+                {parsedCustomFields.map((field: any) => (
+                  <div key={field.id} className={styles.inputGroup}>
+                    <InputLabel required={field.required}>{field.label}</InputLabel>
+                    
+                    {field.type === "text" || field.type === "email" || field.type === "tel" || field.type === "url" || field.type === "fullname" ? (
+                      <input 
+                        type={field.type === "fullname" ? "text" : field.type} 
+                        required={field.required} 
+                        value={customData[field.label] || ""} 
+                        onChange={e => setCustomData({...customData, [field.label]: e.target.value})} 
+                        style={inputStyle} 
+                      />
+                    ) : field.type === "textarea" ? (
+                      <textarea 
+                        required={field.required} 
+                        value={customData[field.label] || ""} 
+                        onChange={e => setCustomData({...customData, [field.label]: e.target.value})} 
+                        style={{ ...inputStyle, minHeight: "80px" }} 
+                      />
+                    ) : field.type === "select" ? (
+                      <select 
+                        required={field.required} 
+                        value={customData[field.label] || ""} 
+                        onChange={e => setCustomData({...customData, [field.label]: e.target.value})} 
+                        style={inputStyle}
+                      >
+                        <option value="">Select an option...</option>
+                        {(field.options || []).map((opt: string) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    ) : field.type === "radio" ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: "0.5rem" }}>
+                        {(field.options || []).map((opt: string) => (
+                          <label key={opt} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "1rem" }}>
+                            <input 
+                              type="radio" 
+                              name={`custom_${field.id}`} 
+                              value={opt} 
+                              required={field.required} 
+                              checked={customData[field.label] === opt} 
+                              onChange={e => setCustomData({...customData, [field.label]: e.target.value})} 
+                              style={{ width: "18px", height: "18px", accentColor: "#111" }} 
+                            />
+                            {opt}
+                          </label>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
               </>
             )}
 
