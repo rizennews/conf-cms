@@ -11,6 +11,10 @@ export default async function RegistrationsPage() {
     headers: reqHeaders,
   });
 
+  if (!session) {
+    return null;
+  }
+
   let role = "branch_head";
   let branchId = null;
   const currentUser = await db.select().from(user).where(eq(user.id, session?.user.id as string)).limit(1);

@@ -7,6 +7,8 @@ import DashboardStats from "./DashboardStats";
 export default async function AdminDashboardPage({ searchParams }: { searchParams: Promise<{ eventId?: string }> }) {
   const reqHeaders = await headers();
   const session = await auth.api.getSession({ headers: reqHeaders });
+  if (!session) return null;
+
   const resolvedParams = await searchParams;
   const eventId = resolvedParams.eventId;
 

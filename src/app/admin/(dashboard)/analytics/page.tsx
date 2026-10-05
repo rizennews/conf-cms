@@ -8,6 +8,7 @@ import AnalyticsClient from "./AnalyticsClient";
 export default async function AnalyticsPage() {
   const reqHeaders = await headers();
   const session = await auth.api.getSession({ headers: reqHeaders });
+  if (!session) return null;
 
   const allEvents = await db.select().from(events);
   let allRegistrations = await db.select().from(registrations);
