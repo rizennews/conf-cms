@@ -7,18 +7,19 @@ interface Props {
   checkedIn: number;
   activeEvents: number;
   totalBranches: number;
+  externalChurches: number;
   checkInPct: number;
   events?: any[];
   selectedEventId?: string;
 }
 
-export default function DashboardStats({ totalRegs, checkedIn, activeEvents, totalBranches, checkInPct, events = [], selectedEventId = "" }: Props) {
+export default function DashboardStats({ totalRegs, checkedIn, activeEvents, totalBranches, externalChurches, checkInPct, events = [], selectedEventId = "" }: Props) {
   const router = useRouter();
   const stats = [
     { label: "Total Registrations", value: totalRegs },
     { label: "Checked In", value: checkedIn },
-    { label: "Active Events", value: activeEvents },
-    { label: "Branches", value: totalBranches },
+    { label: "Church Branches", value: totalBranches },
+    { label: "External Churches", value: externalChurches },
   ];
 
   return (

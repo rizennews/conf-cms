@@ -4,7 +4,7 @@ import CreateBranchForm from "./CreateBranchForm";
 import DeleteBranchButton from "./DeleteBranchButton";
 
 export default async function BranchesPage() {
-  const allBranches = await db.select().from(branches);
+  const allBranches = (await db.select().from(branches)).filter(b => b.id !== "other");
   const allRegistrations = await db.select({ branchId: registrations.branchId, status: registrations.status }).from(registrations);
 
   return (

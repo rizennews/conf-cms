@@ -2,7 +2,7 @@ import { auth } from "../../../lib/auth";
 import { headers } from "next/headers";
 import { db } from "../../../db";
 import { registrations, events, branches, user } from "../../../db/schema";
-import { eq, count, desc } from "drizzle-orm";
+import { eq, count, desc, not } from "drizzle-orm";
 import DashboardStats from "./DashboardStats";
 
 export default async function AdminDashboardPage({ searchParams }: { searchParams: Promise<{ eventId?: string }> }) {
@@ -21,7 +21,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
   }
 
   const activeEventsResult = await db.select({ count: count() }).from(events).where(eq(events.isActive, true));
-  const totalBranchesResult = await db.select({ count: count() }).from(branches);
+  const totalBranchesResult = await db.select({ count: count() }).from(branches).where(not(eq(branches.id, "other")));
   
   const filteredRegs = eventId ? allRegs.filter(r => r.eventId === eventId) : allRegs;
   
@@ -32,6 +32,20 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
   const activeEvents = Number(activeEventsResult[0]?.count ?? 0);
   const totalBranches = Number(totalBranchesResult[0]?.count ?? 0);
   const checkInPct = totalRegs > 0 ? Math.round((checkedIn / totalRegs) * 100) : 0;
+
+  const externalChurches = new Set(
+    filteredRegs
+      .filter(r => r.branchId === "other" && r.customData)
+      .map(r => {
+        try {
+          const custom = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
+          return custom.specifiedBranch || "Unknown";
+        } catch {
+          return "Unknown";
+        }
+      })
+      .filter(name => name !== "Unknown")
+  ).size;
 
   const allEvents = await db.select().from(events);
   const eventMap = Object.fromEntries(allEvents.map(e => [e.id, e.name]));
@@ -48,6 +62,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
         checkedIn={checkedIn}
         activeEvents={activeEvents}
         totalBranches={totalBranches}
+        externalChurches={externalChurches}
         checkInPct={checkInPct}
         events={allEvents}
         selectedEventId={eventId || ""}
