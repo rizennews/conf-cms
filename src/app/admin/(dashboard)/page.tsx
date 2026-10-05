@@ -21,7 +21,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
     allRegs = allRegs.filter(r => r.branchId === userBranchId);
   }
 
-  const activeEventsResult = await db.select({ count: count() }).from(events).where(eq(events.isActive, true));
+
   const totalBranchesResult = await db.select({ count: count() }).from(branches).where(not(eq(branches.id, "other")));
   
   const filteredRegs = eventId ? allRegs.filter(r => r.eventId === eventId) : allRegs;
@@ -30,7 +30,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
   const checkedIn = filteredRegs.filter(r => r.status === "checked-in").length;
   const recentRegs = filteredRegs.slice(0, 5);
 
-  const activeEvents = Number(activeEventsResult[0]?.count ?? 0);
+
   const totalBranches = Number(totalBranchesResult[0]?.count ?? 0);
   const checkInPct = totalRegs > 0 ? Math.round((checkedIn / totalRegs) * 100) : 0;
 
