@@ -210,6 +210,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
                   <InputLabel required>Phone / WhatsApp</InputLabel>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', background: '#f9fafb', border: '1px solid #d1d5db', borderRadius: '8px', padding: '0 0.5rem' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={`https://flagcdn.com/w20/${countryCode}.png`} alt={countryCode} width="20" style={{ borderRadius: '2px' }} />
                       <select 
                         value={countryCode} 
