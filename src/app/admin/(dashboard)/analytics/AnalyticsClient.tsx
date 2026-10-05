@@ -26,7 +26,7 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
   // Status map (Member, Guest, Worker)
   const statusMap: Record<string, number> = {};
   filteredRegs.forEach(r => {
-    let stat = r.type || "Guest";
+    let stat = (r.type as string) || "Guest";
     // Check custom fields just in case "Type" or "Status" exists
     if (r.customData) {
       try {
@@ -118,7 +118,7 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
         if (r.customData) {
           try {
             const cData = typeof r.customData === "string" ? JSON.parse(r.customData) : r.customData;
-            const answer = cData[field.label];
+            const answer = cData[field.label as string] as string;
             if (answer) {
               fieldCounts[answer] = (fieldCounts[answer] || 0) + 1;
             }
@@ -127,7 +127,7 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
       });
       const data = Object.entries(fieldCounts).map(([name, value]) => ({ name, value }));
       if (data.length > 0) {
-        dynamicCharts.push({ title: field.label, data });
+        dynamicCharts.push({ title: field.label as string, data });
       }
     }
   });

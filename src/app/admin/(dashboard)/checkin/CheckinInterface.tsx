@@ -7,7 +7,7 @@ import RegistrationModal from "../../../../components/RegistrationModal";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { get, set } from "idb-keyval";
 
-export default function CheckinInterface({ events }: { events: { id: string; name?: string }[] }) {
+export default function CheckinInterface({ events }: { events: { id: string; name?: string; customFields?: string | null }[] }) {
   const [selectedEvent, setSelectedEvent] = useState(events[0]?.id || "");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Record<string, unknown>[]>([]);
@@ -208,6 +208,32 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
                         {isCheckedIn(r) ? "✓ Checked In" : "Registered"}
                       </span>
                     </div>
+                    {/* Render dynamic custom form fields */}
+                    {(() => {
+                      if (!r.customData) return null;
+                      let parsed: Record<string, string> = {};
+                      try { parsed = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData; } catch {}
+                      
+                      let schema: Record<string, unknown>[] = [];
+                      try { if (activeEventObj?.customFields) schema = JSON.parse(activeEventObj.customFields); } catch {}
+                      
+                      if (schema.length === 0 || Object.keys(parsed).length === 0) return null;
+                      
+                      return (
+                        <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "#f8fafc", borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.85rem", color: "#475569", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                          {schema.map(field => {
+                            const label = field.label as string;
+                            const val = parsed[label];
+                            if (!val) return null;
+                            return (
+                              <div key={field.id as string}>
+                                <span style={{ fontWeight: 600, color: "#334155" }}>{label}:</span> {val}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
                   {!isCheckedIn(r) ? (
                     <button 
@@ -248,7 +274,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
       <RegistrationModal 
         isOpen={showWalkinModal} 
         onClose={() => setShowWalkinModal(false)}
-        event={activeEventObj}
+        event={activeEventObj ? { ...activeEventObj, customFields: activeEventObj.customFields || undefined } : undefined}
       />
     </div>
   );
