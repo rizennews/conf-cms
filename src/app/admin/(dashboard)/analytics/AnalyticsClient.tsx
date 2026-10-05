@@ -198,7 +198,7 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
       y: 0,
       w: "100%",
       h: "100%",
-      sizing: { type: "contain" }
+      sizing: { type: "contain", w: "100%", h: "100%" }
     });
 
     pptx.writeFile({ fileName: `${selectedEvent.name}-analytics.pptx` });

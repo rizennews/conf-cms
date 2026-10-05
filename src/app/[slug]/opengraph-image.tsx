@@ -31,7 +31,7 @@ export default async function Image(
     if (eventsList.length > 0) {
       eventName = eventsList[0].name as string;
       if (eventsList[0].deadline) {
-        const date = new Date(eventsList[0].deadline as string);
+        const date = new Date(eventsList[0].deadline as unknown as string);
         eventDate = `Register by ${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
       }
     }
