@@ -68,7 +68,6 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
       .filter(name => name !== "Unknown")
   ).size;
 
-  const allEvents = await db.select().from(events);
   const eventMap = Object.fromEntries(allEvents.map(e => [e.id, e.name]));
 
   // Data for Charts
