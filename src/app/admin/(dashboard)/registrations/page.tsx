@@ -19,7 +19,7 @@ export default async function RegistrationsPage() {
     branchId = currentUser[0].branchId;
   }
 
-  let allRegs: any[] = [];
+  let allRegs: Record<string, unknown>[] = [];
   if (role === "super_admin" || role === "admin" || role === "data_team") {
     allRegs = await db.select().from(registrations).orderBy(desc(registrations.createdAt));
   } else {
