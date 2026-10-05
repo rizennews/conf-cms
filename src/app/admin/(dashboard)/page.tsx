@@ -23,7 +23,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
     
     if (!fields.find(f => f.label === "Gender")) {
       fields.push({
-        id: Math.random().toString(36).substring(2, 9),
+        id: "auto_gender_123",
         label: "Gender",
         type: "radio",
         options: ["Male", "Female"],
