@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import DashboardCharts from "../DashboardCharts";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -8,6 +9,15 @@ import pptxgen from "pptxgenjs";
 
 export default function AnalyticsClient({ registrations, events, branches }: { registrations: Record<string, unknown>[], events: Record<string, unknown>[], branches: Record<string, unknown>[] }) {
   const [selectedEventId, setSelectedEventId] = useState<string>((events[0]?.id as string) || "");
+  const router = useRouter();
+
+  // Poll for real-time data updates every 5 seconds
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      router.refresh();
+    }, 5000);
+    return () => clearInterval(intervalId);
+  }, [router]);
 
   if (events.length === 0) return (
     <div style={{ padding: "3rem", textAlign: "center", color: "#6b7280", background: "white", borderRadius: "8px", border: "1px solid #eaeaea" }}>
