@@ -277,32 +277,36 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
                   </div>
                   {results.map(r => {
                     const alreadyCheckedIn = isCheckedIn(r);
+                    const initials = ((r.fullName as string) || "U").split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
                     return (
                       <div key={r.id as number} style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
-                        <div>
-                          <div style={{ fontWeight: 600, color: "#111", fontSize: "1.05rem" }}>{(r.fullName as string) || "Unknown"}</div>
-                          <div style={{ color: "#6b7280", fontSize: "0.9rem" }}>{r.email as string} · {r.whatsapp as string}</div>
-                          <div style={{ marginTop: "0.4rem" }}>
-                            <span style={{ display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 600, background: alreadyCheckedIn ? "#dcfce7" : "#f3f4f6", color: alreadyCheckedIn ? "#16a34a" : "#4b5563" }}>
-                              {alreadyCheckedIn ? "✓ Checked In" : "Registered"}
-                            </span>
+                        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                          <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "#e0e7ff", color: "#3730a3", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", fontWeight: 700, flexShrink: 0 }}>
+                            {initials}
                           </div>
-                          {(() => {
-                            if (!r.customData) return null;
-                            try {
-                              const custom = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
-                              if (custom._staffNotes) {
-                                return (
-                                  <div style={{ marginTop: "0.5rem" }}>
-                                    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", padding: "0.3rem 0.6rem", borderRadius: "6px", fontSize: "0.8rem", fontWeight: 700, background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>
-                                      ⭐ VIP / Note: {custom._staffNotes}
-                                    </span>
-                                  </div>
-                                );
-                              }
-                            } catch { /* ignore */ }
-                            return null;
-                          })()}
+                          <div>
+                            <div style={{ fontWeight: 600, color: "#111", fontSize: "1.05rem" }}>{(r.fullName as string) || "Unknown"}</div>
+                            <div style={{ color: "#6b7280", fontSize: "0.9rem" }}>{r.email as string} {r.whatsapp ? `· ${r.whatsapp}` : ''}</div>
+                            <div style={{ marginTop: "0.4rem", display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+                              <span style={{ display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 600, background: alreadyCheckedIn ? "#dcfce7" : "#f3f4f6", color: alreadyCheckedIn ? "#16a34a" : "#4b5563" }}>
+                                {alreadyCheckedIn ? "✓ Checked In" : "Registered"}
+                              </span>
+                              {(() => {
+                                if (!r.customData) return null;
+                                try {
+                                  const custom = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
+                                  if (custom._staffNotes) {
+                                    return (
+                                      <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", padding: "0.2rem 0.6rem", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 700, background: "#fef3c7", color: "#92400e" }}>
+                                        ⭐ {custom._staffNotes}
+                                      </span>
+                                    );
+                                  }
+                                } catch { /* ignore */ }
+                                return null;
+                              })()}
+                            </div>
+                          </div>
                         </div>
                         {!alreadyCheckedIn ? (
                           <button 
