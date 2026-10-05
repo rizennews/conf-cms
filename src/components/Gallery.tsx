@@ -38,7 +38,7 @@ const media = [
   ...images.map(url => ({ type: 'image' as const, url }))
 ];
 
-export default function Gallery({ branches, event, autoOpen = false }: { branches?: { id: string | number; name: string }[], event?: { id?: string | number; name?: string; isActive?: boolean; deadline?: string | Date | null }, autoOpen?: boolean }) {
+export default function Gallery({ branches, event, autoOpen = false }: { branches?: { id: string | number; name: string }[], event?: { id?: string | number; name?: string; isActive?: boolean; deadline?: string | Date | null } | null, autoOpen?: boolean }) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(autoOpen);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());

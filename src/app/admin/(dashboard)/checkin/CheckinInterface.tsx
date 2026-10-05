@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { searchRegistrations, checkInById } from "./actions";
-import { Search, CheckCircle, UserCheck, QrCode, UserPlus } from "lucide-react";
+import { searchRegistrations, checkInById, getAllRegistrations, bulkCheckIn } from "./actions";
+import { Search, CheckCircle, UserCheck, QrCode, UserPlus, RefreshCw } from "lucide-react";
 import RegistrationModal from "../../../../components/RegistrationModal";
 import { Html5QrcodeScanner } from "html5-qrcode";
+import { get, set } from "idb-keyval";
 
-export default function CheckinInterface({ events }: { events: any[] }) {
+export default function CheckinInterface({ events }: { events: { id: string; name?: string }[] }) {
   const [selectedEvent, setSelectedEvent] = useState(events[0]?.id || "");
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<Record<string, any>[]>([]);
   const [searched, setSearched] = useState(false);
   const [checkedInIds, setCheckedInIds] = useState<Set<number>>(new Set());
   const [isPending, startTransition] = useTransition();
@@ -17,8 +18,16 @@ export default function CheckinInterface({ events }: { events: any[] }) {
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [showWalkinModal, setShowWalkinModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [pendingCheckins, setPendingCheckins] = useState<number[]>([]);
 
   const activeEventObj = events.find(e => e.id === selectedEvent);
+
+  useEffect(() => {
+    get("pendingCheckins").then((val) => {
+      if (val) setPendingCheckins(val);
+    });
+  }, []);
 
   useEffect(() => {
     if (showScanner) {
@@ -32,7 +41,7 @@ export default function CheckinInterface({ events }: { events: any[] }) {
         } else {
           alert("Invalid QR code format. Could not find Registration ID.");
         }
-      }, (error) => {
+      }, () => {
         // ignore continuous scanning errors
       });
 
@@ -42,27 +51,64 @@ export default function CheckinInterface({ events }: { events: any[] }) {
     }
   }, [showScanner]);
 
+  const handleSyncDevice = async () => {
+    if (!selectedEvent) return;
+    setIsSyncing(true);
+    try {
+      if (pendingCheckins.length > 0) {
+        await bulkCheckIn(pendingCheckins);
+        await set("pendingCheckins", []);
+        setPendingCheckins([]);
+      }
+      
+      const { results } = await getAllRegistrations(selectedEvent);
+      if (results) {
+        await set(`event_${selectedEvent}_registrations`, results);
+        alert("Device synced! You can now search and check-in offline.");
+      }
+    } catch (err) {
+      alert("Failed to sync. Please check your connection.");
+    }
+    setIsSyncing(false);
+  };
+
   const handleSearch = () => {
     if (!query.trim() || !selectedEvent) return;
     startTransition(async () => {
-      const { results: res } = await searchRegistrations(query, selectedEvent);
-      setResults(res || []);
+      const localData: any[] = await get(`event_${selectedEvent}_registrations`) || [];
+      if (localData.length > 0 || !navigator.onLine) {
+        const q = query.toLowerCase();
+        const res = localData.filter(r => 
+          (r.fullName?.toLowerCase().includes(q) || 
+           r.email?.toLowerCase().includes(q) || 
+           r.whatsapp?.toLowerCase().includes(q))
+        ).slice(0, 10);
+        setResults(res);
+      } else {
+        const { results: res } = await searchRegistrations(query, selectedEvent);
+        setResults(res || []);
+      }
       setSearched(true);
     });
   };
 
   const handleCheckIn = async (id: number) => {
-    const res = await checkInById(id);
-    if (res.success) {
-      setCheckedInIds(prev => new Set([...prev, id]));
-      setResults(prev => prev.map(r => r.id === id ? { ...r, status: "checked-in" } : r));
-    } else {
-      alert("Error checking in.");
-    }
+    setCheckedInIds(prev => new Set([...prev, id]));
+    setResults(prev => prev.map(r => r.id === id ? { ...r, status: "checked-in" } : r));
     setConfirmId(null);
+
+    try {
+      if (!navigator.onLine) throw new Error("Offline");
+      const res = await checkInById(id);
+      if (!res?.success) throw new Error("API Failed");
+    } catch {
+      const pending = [...pendingCheckins, id];
+      setPendingCheckins(pending);
+      await set("pendingCheckins", pending);
+    }
   };
 
-  const isCheckedIn = (r: any) => r.status === "checked-in" || checkedInIds.has(r.id);
+  const isCheckedIn = (r: Record<string, any>) => r.status === "checked-in" || checkedInIds.has(r.id);
 
   return (
     <div style={{ maxWidth: "640px", margin: "0 auto", padding: "0 1rem" }}>
@@ -80,18 +126,28 @@ export default function CheckinInterface({ events }: { events: any[] }) {
               {events.map(e => <option key={e.id} value={e.id}>{e.name || e.id}</option>)}
             </select>
           </div>
-          <button 
-            onClick={() => setShowWalkinModal(true)}
-            style={{ padding: "0.75rem 1rem", background: "#f3f4f6", color: "#111", border: "1px solid #d1d5db", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
-          >
-            <UserPlus size={16} /> Walk-in
-          </button>
-          <button 
-            onClick={() => setShowScanner(true)}
-            style={{ padding: "0.75rem 1rem", background: "#2b3ff2", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
-          >
-            <QrCode size={16} /> Scan QR
-          </button>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button 
+              onClick={handleSyncDevice}
+              disabled={isSyncing}
+              style={{ padding: "0.75rem 1rem", background: "#f59e0b", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <RefreshCw size={16} /> 
+              {pendingCheckins.length > 0 ? `Sync (${pendingCheckins.length})` : "Sync Device"}
+            </button>
+            <button 
+              onClick={() => setShowWalkinModal(true)}
+              style={{ padding: "0.75rem 1rem", background: "#f3f4f6", color: "#111", border: "1px solid #d1d5db", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <UserPlus size={16} /> Walk-in
+            </button>
+            <button 
+              onClick={() => setShowScanner(true)}
+              style={{ padding: "0.75rem 1rem", background: "#2b3ff2", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <QrCode size={16} /> Scan QR
+            </button>
+          </div>
         </div>
       </div>
 
@@ -134,7 +190,7 @@ export default function CheckinInterface({ events }: { events: any[] }) {
           {results.length === 0 ? (
             <div style={{ padding: "3rem", textAlign: "center" }}>
               <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-              <p style={{ color: "#6b7280", fontWeight: 500 }}>No registrant found for "{query}"</p>
+              <p style={{ color: "#6b7280", fontWeight: 500 }}>No registrant found for &quot;{query}&quot;</p>
               <p style={{ color: "#9ca3af", fontSize: "0.9rem" }}>Try searching by a different name, email, or phone number.</p>
             </div>
           ) : (
