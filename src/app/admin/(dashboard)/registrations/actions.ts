@@ -65,6 +65,24 @@ export async function deleteRegistration(id: number) {
 
 export async function updateRegistration(id: number, data: Record<string, unknown>) {
   try {
+    const existing = await db.select({ customData: registrations.customData }).from(registrations).where(eq(registrations.id, id)).limit(1);
+    let updatedCustomData = existing[0]?.customData || null;
+
+    if (data._staffNotes !== undefined) {
+      let customObj: Record<string, unknown> = {};
+      if (updatedCustomData) {
+        try { customObj = typeof updatedCustomData === 'string' ? JSON.parse(updatedCustomData) : updatedCustomData; } catch { /* ignore */ }
+      }
+      
+      if (data._staffNotes) {
+        customObj._staffNotes = data._staffNotes;
+      } else {
+        delete customObj._staffNotes;
+      }
+      
+      updatedCustomData = Object.keys(customObj).length > 0 ? JSON.stringify(customObj) : null;
+    }
+
     await db.update(registrations).set({
       fullName: (data.fullName as string) || null,
       email: (data.email as string) || null,
@@ -72,6 +90,7 @@ export async function updateRegistration(id: number, data: Record<string, unknow
       address: (data.address as string) || null,
       ageRange: (data.ageRange as string) || null,
       registrantStatus: (data.registrantStatus as string) || null,
+      customData: updatedCustomData as string | null,
     }).where(eq(registrations.id, id));
     revalidatePath("/admin/registrations");
     return { success: true };

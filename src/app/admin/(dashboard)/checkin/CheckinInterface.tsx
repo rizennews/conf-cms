@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useMemo } from "react";
 import { searchRegistrations, checkInById, getAllRegistrations, bulkCheckIn } from "./actions";
-import { Search, CheckCircle, UserCheck, QrCode, UserPlus, RefreshCw } from "lucide-react";
+import { Search, CheckCircle, UserCheck, QrCode, UserPlus, RefreshCw, AlertTriangle, Clock } from "lucide-react";
 import RegistrationModal from "../../../../components/RegistrationModal";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { get, set } from "idb-keyval";
+
+type HistoryItem = { id: number; name: string; time: Date };
 
 export default function CheckinInterface({ events }: { events: { id: string; name?: string; customFields?: string | null }[] }) {
   const [selectedEvent, setSelectedEvent] = useState(events[0]?.id || "");
@@ -21,6 +23,10 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCheckins, setPendingCheckins] = useState<number[]>([]);
 
+  const [totalRegs, setTotalRegs] = useState(0);
+  const [checkedInCount, setCheckedInCount] = useState(0);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+
   const activeEventObj = events.find(e => e.id === selectedEvent);
 
   useEffect(() => {
@@ -29,15 +35,55 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
     });
   }, []);
 
+  const loadStats = async () => {
+    if (!selectedEvent) return;
+    const localData: Record<string, unknown>[] = await get(`event_${selectedEvent}_registrations`) || [];
+    if (localData.length > 0) {
+      setTotalRegs(localData.length);
+      setCheckedInCount(localData.filter(r => r.status === "checked-in").length);
+    } else {
+      const { results: res } = await getAllRegistrations(selectedEvent);
+      if (res) {
+        setTotalRegs(res.length);
+        setCheckedInCount(res.filter(r => r.status === "checked-in").length);
+      }
+    }
+  };
+
+  useEffect(() => {
+    loadStats();
+    setHistory([]);
+    setCheckedInIds(new Set());
+  }, [selectedEvent]);
+
   useEffect(() => {
     if (showScanner) {
       const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
-      scanner.render((decodedText) => {
+      scanner.render(async (decodedText) => {
         scanner.clear();
         setShowScanner(false);
         const idMatch = decodedText.match(/\d+/);
         if (idMatch) {
-          setConfirmId(Number(idMatch[0]));
+          const id = Number(idMatch[0]);
+          
+          // Check if already checked in
+          const localData: Record<string, unknown>[] = await get(`event_${selectedEvent}_registrations`) || [];
+          let reg: Record<string, unknown> | undefined;
+          
+          if (localData.length > 0) {
+            reg = localData.find(r => r.id === id);
+          } else {
+            const { results: res } = await searchRegistrations(String(id), selectedEvent);
+            if (res) reg = res.find(r => r.id === id);
+          }
+          
+          if (reg) {
+             setResults([reg]);
+             setSearched(true);
+             setConfirmId(id);
+          } else {
+             alert("Registration not found.");
+          }
         } else {
           alert("Invalid QR code format. Could not find Registration ID.");
         }
@@ -49,7 +95,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
         scanner.clear().catch(console.error);
       };
     }
-  }, [showScanner]);
+  }, [showScanner, selectedEvent]);
 
   const handleSyncDevice = async () => {
     if (!selectedEvent) return;
@@ -64,6 +110,8 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
       const { results } = await getAllRegistrations(selectedEvent);
       if (results) {
         await set(`event_${selectedEvent}_registrations`, results);
+        setTotalRegs(results.length);
+        setCheckedInCount(results.filter(r => r.status === "checked-in").length);
         alert("Device synced! You can now search and check-in offline.");
       }
     } catch {
@@ -79,9 +127,10 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
       if (localData.length > 0 || !navigator.onLine) {
         const q = query.toLowerCase();
         const res = localData.filter(r => 
-          (String(r.fullName || "").toLowerCase().includes(q) || 
-           String(r.email || "").toLowerCase().includes(q) || 
-           String(r.whatsapp || "").toLowerCase().includes(q))
+          String(r.id) === q ||
+          String(r.fullName || "").toLowerCase().includes(q) || 
+          String(r.email || "").toLowerCase().includes(q) || 
+          String(r.whatsapp || "").toLowerCase().includes(q)
         ).slice(0, 10);
         setResults(res);
       } else {
@@ -93,9 +142,15 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
   };
 
   const handleCheckIn = async (id: number) => {
+    const r = results.find(x => x.id === id);
+    const name = (r?.fullName as string) || `ID #${id}`;
+
     setCheckedInIds(prev => new Set([...prev, id]));
     setResults(prev => prev.map(r => r.id === id ? { ...r, status: "checked-in" } : r));
     setConfirmId(null);
+    setCheckedInCount(c => c + 1);
+    
+    setHistory(prev => [{ id, name, time: new Date() }, ...prev].slice(0, 50));
 
     try {
       if (!navigator.onLine) throw new Error("Offline");
@@ -109,6 +164,8 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
   };
 
   const isCheckedIn = (r: Record<string, unknown>) => r.status === "checked-in" || checkedInIds.has(r.id as number);
+  
+  const progressPct = totalRegs > 0 ? Math.round((checkedInCount / totalRegs) * 100) : 0;
 
   return (
     <div style={{ maxWidth: "640px", margin: "0 auto", padding: "0 1rem" }}>
@@ -149,6 +206,19 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
             </button>
           </div>
         </div>
+        
+        {/* Live Counter */}
+        {totalRegs > 0 && (
+          <div style={{ marginTop: "1.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem", color: "#4b5563" }}>
+              <span><strong>{checkedInCount}</strong> / {totalRegs} Checked In</span>
+              <span style={{ fontWeight: 600 }}>{progressPct}%</span>
+            </div>
+            <div style={{ height: "8px", background: "#f3f4f6", borderRadius: "99px", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${progressPct}%`, background: "#16a34a", transition: "width 0.3s ease" }}></div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* QR Scanner Container */}
@@ -162,110 +232,144 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
         </div>
       )}
 
-      {/* Search Box */}
-      <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e5e7eb", padding: "1.5rem", marginBottom: "1.5rem" }}>
-        <label style={{ display: "block", fontWeight: 600, marginBottom: "0.5rem", color: "#111" }}>Search Registrant</label>
-        <div style={{ display: "flex", gap: "0.75rem" }}>
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && handleSearch()}
-            placeholder="Search by name, email, or phone..."
-            style={{ flex: 1, padding: "0.85rem 1rem", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "1rem", color: "#111", background: "#fff" }}
-          />
-          <button 
-            onClick={handleSearch} 
-            disabled={isPending}
-            style={{ padding: "0.85rem 1.5rem", background: "#111", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.5rem" }}
-          >
-            {isPending ? "..." : <><Search size={16} /> Search</>}
-          </button>
-        </div>
-      </div>
-
-      {/* Results */}
-      {searched && (
-        <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e5e7eb", overflow: "hidden" }}>
-          {results.length === 0 ? (
-            <div style={{ padding: "3rem", textAlign: "center" }}>
-              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-              <p style={{ color: "#6b7280", fontWeight: 500 }}>No registrant found for &quot;{query}&quot;</p>
-              <p style={{ color: "#9ca3af", fontSize: "0.9rem" }}>Try searching by a different name, email, or phone number.</p>
+      <div style={{ display: "flex", gap: "1.5rem", flexDirection: "column" }}>
+        
+        {/* Search Box & Results */}
+        <div>
+          <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e5e7eb", padding: "1.5rem", marginBottom: "1.5rem" }}>
+            <label style={{ display: "block", fontWeight: 600, marginBottom: "0.5rem", color: "#111" }}>Search Registrant</label>
+            <div style={{ display: "flex", gap: "0.75rem" }}>
+              <input
+                type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleSearch()}
+                placeholder="Search by ID, name, email, or phone..."
+                style={{ flex: 1, padding: "0.85rem 1rem", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "1rem", color: "#111", background: "#fff" }}
+              />
+              <button 
+                onClick={handleSearch} 
+                disabled={isPending}
+                style={{ padding: "0.85rem 1.5rem", background: "#111", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                {isPending ? "..." : <><Search size={16} /> Search</>}
+              </button>
             </div>
-          ) : (
-            <>
-              <div style={{ padding: "1rem 1.5rem", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", color: "#6b7280", fontSize: "0.9rem" }}>
-                Found <strong>{results.length}</strong> result{results.length !== 1 ? "s" : ""}
-              </div>
-              {results.map(r => (
-                <div key={r.id as number} style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
-                  <div>
-                    <div style={{ fontWeight: 600, color: "#111", fontSize: "1.05rem" }}>{(r.fullName as string) || "Unknown"}</div>
-                    <div style={{ color: "#6b7280", fontSize: "0.9rem" }}>{r.email as string} · {r.whatsapp as string}</div>
-                    <div style={{ marginTop: "0.4rem" }}>
-                      <span style={{ display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 600, background: isCheckedIn(r) ? "#dcfce7" : "#f3f4f6", color: isCheckedIn(r) ? "#16a34a" : "#4b5563" }}>
-                        {isCheckedIn(r) ? "✓ Checked In" : "Registered"}
-                      </span>
-                    </div>
-                    {/* Render dynamic custom form fields */}
-                    {(() => {
-                      if (!r.customData) return null;
-                      let parsed: Record<string, string> = {};
-                      try { parsed = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData; } catch {}
-                      
-                      let schema: Record<string, unknown>[] = [];
-                      try { if (activeEventObj?.customFields) schema = JSON.parse(activeEventObj.customFields); } catch {}
-                      
-                      if (schema.length === 0 || Object.keys(parsed).length === 0) return null;
-                      
-                      return (
-                        <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "#f8fafc", borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.85rem", color: "#475569", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
-                          {schema.map(field => {
-                            const label = field.label as string;
-                            const val = parsed[label];
-                            if (!val) return null;
-                            return (
-                              <div key={field.id as string}>
-                                <span style={{ fontWeight: 600, color: "#334155" }}>{label}:</span> {val}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  {!isCheckedIn(r) ? (
-                    <button 
-                      onClick={() => setConfirmId(r.id as number)}
-                      style={{ padding: "0.75rem 1.25rem", background: "#16a34a", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.5rem" }}
-                    >
-                      <UserCheck size={16} /> Check In
-                    </button>
-                  ) : (
-                    <CheckCircle size={24} color="#16a34a" />
-                  )}
+          </div>
+
+          {/* Results */}
+          {searched && (
+            <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e5e7eb", overflow: "hidden" }}>
+              {results.length === 0 ? (
+                <div style={{ padding: "3rem", textAlign: "center" }}>
+                  <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
+                  <p style={{ color: "#6b7280", fontWeight: 500 }}>No registrant found for &quot;{query}&quot;</p>
+                  <p style={{ color: "#9ca3af", fontSize: "0.9rem" }}>Try searching by a different name, email, or phone number.</p>
                 </div>
-              ))}
-            </>
+              ) : (
+                <>
+                  <div style={{ padding: "1rem 1.5rem", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", color: "#6b7280", fontSize: "0.9rem" }}>
+                    Found <strong>{results.length}</strong> result{results.length !== 1 ? "s" : ""}
+                  </div>
+                  {results.map(r => {
+                    const alreadyCheckedIn = isCheckedIn(r);
+                    return (
+                      <div key={r.id as number} style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+                        <div>
+                          <div style={{ fontWeight: 600, color: "#111", fontSize: "1.05rem" }}>{(r.fullName as string) || "Unknown"}</div>
+                          <div style={{ color: "#6b7280", fontSize: "0.9rem" }}>{r.email as string} · {r.whatsapp as string}</div>
+                          <div style={{ marginTop: "0.4rem" }}>
+                            <span style={{ display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 600, background: alreadyCheckedIn ? "#dcfce7" : "#f3f4f6", color: alreadyCheckedIn ? "#16a34a" : "#4b5563" }}>
+                              {alreadyCheckedIn ? "✓ Checked In" : "Registered"}
+                            </span>
+                          </div>
+                          {(() => {
+                            if (!r.customData) return null;
+                            try {
+                              const custom = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
+                              if (custom._staffNotes) {
+                                return (
+                                  <div style={{ marginTop: "0.5rem" }}>
+                                    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", padding: "0.3rem 0.6rem", borderRadius: "6px", fontSize: "0.8rem", fontWeight: 700, background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>
+                                      ⭐ VIP / Note: {custom._staffNotes}
+                                    </span>
+                                  </div>
+                                );
+                              }
+                            } catch { /* ignore */ }
+                            return null;
+                          })()}
+                        </div>
+                        {!alreadyCheckedIn ? (
+                          <button 
+                            onClick={() => setConfirmId(r.id as number)}
+                            style={{ padding: "0.75rem 1.25rem", background: "#16a34a", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.5rem" }}
+                          >
+                            <UserCheck size={16} /> Check In
+                          </button>
+                        ) : (
+                          <CheckCircle size={24} color="#16a34a" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </>
+              )}
+            </div>
           )}
         </div>
-      )}
+
+        {/* Check-in History */}
+        {history.length > 0 && (
+          <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e5e7eb", padding: "1.5rem" }}>
+            <h3 style={{ margin: "0 0 1rem 0", color: "#111", fontSize: "1.05rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Clock size={18} /> Recent Check-ins
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              {history.map((h, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "0.75rem", background: "#f9fafb", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+                  <div style={{ fontWeight: 500, color: "#111", fontSize: "0.9rem" }}>{h.name}</div>
+                  <div style={{ color: "#6b7280", fontSize: "0.85rem" }}>
+                    {h.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Confirmation Dialog */}
       {confirmId !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100 }}>
           <div style={{ background: "white", padding: "2rem", borderRadius: "12px", maxWidth: "360px", width: "90%", textAlign: "center" }}>
-            <div style={{ fontSize: "3rem", marginBottom: "1rem", display: "flex", justifyContent: "center" }}><CheckCircle size={56} color="#16a34a" /></div>
-            <h3 style={{ margin: "0 0 0.5rem 0", color: "#111" }}>Confirm Check-in?</h3>
             {(() => {
               const r = results.find(r => r.id === confirmId);
-              return <p style={{ color: "#6b7280", margin: "0 0 1.5rem 0" }}>Check in <strong>{(r?.fullName as string) || `Registration #${confirmId}`}</strong>?</p>;
+              const alreadyCheckedIn = r && isCheckedIn(r);
+              
+              if (alreadyCheckedIn) {
+                return (
+                  <>
+                    <div style={{ fontSize: "3rem", marginBottom: "1rem", display: "flex", justifyContent: "center" }}><AlertTriangle size={56} color="#eab308" /></div>
+                    <h3 style={{ margin: "0 0 0.5rem 0", color: "#111" }}>Already Checked In</h3>
+                    <p style={{ color: "#6b7280", margin: "0 0 1.5rem 0" }}><strong>{(r?.fullName as string) || `Registration #${confirmId}`}</strong> has already been checked in.</p>
+                    <button onClick={() => setConfirmId(null)} style={{ width: "100%", padding: "0.75rem", background: "#eab308", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>Dismiss</button>
+                  </>
+                );
+              }
+              
+              return (
+                <>
+                  <div style={{ fontSize: "3rem", marginBottom: "1rem", display: "flex", justifyContent: "center" }}><CheckCircle size={56} color="#16a34a" /></div>
+                  <h3 style={{ margin: "0 0 0.5rem 0", color: "#111" }}>Confirm Check-in?</h3>
+                  <p style={{ color: "#6b7280", margin: "0 0 1.5rem 0" }}>Check in <strong>{(r?.fullName as string) || `Registration #${confirmId}`}</strong>?</p>
+                  <div style={{ display: "flex", gap: "1rem" }}>
+                    <button onClick={() => setConfirmId(null)} style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer", fontWeight: 600, color: "#111" }}>Cancel</button>
+                    <button onClick={() => handleCheckIn(confirmId)} style={{ flex: 1, padding: "0.75rem", background: "#16a34a", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>Confirm</button>
+                  </div>
+                </>
+              );
             })()}
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <button onClick={() => setConfirmId(null)} style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer", fontWeight: 600, color: "#111" }}>Cancel</button>
-              <button onClick={() => handleCheckIn(confirmId)} style={{ flex: 1, padding: "0.75rem", background: "#16a34a", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>Confirm</button>
-            </div>
           </div>
         </div>
       )}

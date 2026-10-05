@@ -5,8 +5,36 @@ import { registrations } from "../../../../db/schema";
 import { eq, or, ilike, and, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
+import { auth } from "../../../../lib/auth";
+import { headers } from "next/headers";
+import { user } from "../../../../db/schema";
+
 export async function searchRegistrations(query: string, eventId: string) {
   try {
+    const reqHeaders = await headers();
+    const session = await auth.api.getSession({ headers: reqHeaders });
+    
+    let branchIdFilter = null;
+    if (session) {
+      const currentUser = await db.select().from(user).where(eq(user.id, session.user.id)).limit(1);
+      if (currentUser.length > 0 && currentUser[0].role === "branch_head") {
+        branchIdFilter = currentUser[0].branchId;
+      }
+    }
+
+    const conditions = [
+      eq(registrations.eventId, eventId),
+      or(
+        ilike(registrations.fullName, `%${query}%`),
+        ilike(registrations.email, `%${query}%`),
+        ilike(registrations.whatsapp, `%${query}%`)
+      )
+    ];
+
+    if (branchIdFilter) {
+      conditions.push(eq(registrations.branchId, branchIdFilter));
+    }
+
     const results = await db.select({
       id: registrations.id,
       fullName: registrations.fullName,
@@ -15,18 +43,10 @@ export async function searchRegistrations(query: string, eventId: string) {
       branchId: registrations.branchId,
       status: registrations.status,
       eventId: registrations.eventId,
+      customData: registrations.customData,
     })
     .from(registrations)
-    .where(
-      and(
-        eq(registrations.eventId, eventId),
-        or(
-          ilike(registrations.fullName, `%${query}%`),
-          ilike(registrations.email, `%${query}%`),
-          ilike(registrations.whatsapp, `%${query}%`)
-        )
-      )
-    )
+    .where(and(...conditions))
     .limit(10);
 
     return { results };
@@ -59,6 +79,22 @@ export async function getRegistrationById(id: number) {
 
 export async function getAllRegistrations(eventId: string) {
   try {
+    const reqHeaders = await headers();
+    const session = await auth.api.getSession({ headers: reqHeaders });
+    
+    let branchIdFilter = null;
+    if (session) {
+      const currentUser = await db.select().from(user).where(eq(user.id, session.user.id)).limit(1);
+      if (currentUser.length > 0 && currentUser[0].role === "branch_head") {
+        branchIdFilter = currentUser[0].branchId;
+      }
+    }
+
+    const conditions = [eq(registrations.eventId, eventId)];
+    if (branchIdFilter) {
+      conditions.push(eq(registrations.branchId, branchIdFilter));
+    }
+
     const results = await db.select({
       id: registrations.id,
       fullName: registrations.fullName,
@@ -67,9 +103,10 @@ export async function getAllRegistrations(eventId: string) {
       branchId: registrations.branchId,
       status: registrations.status,
       eventId: registrations.eventId,
+      customData: registrations.customData,
     })
     .from(registrations)
-    .where(eq(registrations.eventId, eventId));
+    .where(and(...conditions));
 
     return { results };
   } catch (err: unknown) {

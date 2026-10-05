@@ -106,6 +106,15 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
 
   const openEdit = (r: RegRecord) => {
     setEditRegistration(r);
+    
+    let staffNotes = "";
+    if (r.customData) {
+      try {
+        const custom = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
+        staffNotes = custom._staffNotes || "";
+      } catch { /* ignore */ }
+    }
+
     setEditForm({
       fullName: (r.fullName as string) || "",
       email: (r.email as string) || "",
@@ -113,6 +122,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
       address: (r.address as string) || "",
       ageRange: (r.ageRange as string) || "",
       registrantStatus: (r.registrantStatus as string) || "",
+      _staffNotes: staffNotes,
     });
   };
 
@@ -412,6 +422,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                 { key: "address", label: "Address" },
                 { key: "ageRange", label: "Age Range" },
                 { key: "registrantStatus", label: "Status (Member/Guest/Worker)" },
+                { key: "_staffNotes", label: "VIP / Staff Notes (e.g. Pastor, Wheelchair)" },
               ].map(field => (
                 <div key={field.key}>
                   <label style={{ display: "block", marginBottom: "0.3rem", fontWeight: 500, color: "#374151", fontSize: "0.85rem" }}>{field.label}</label>
@@ -419,7 +430,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                     type="text"
                     value={editForm[field.key] || ""}
                     onChange={e => setEditForm(prev => ({ ...prev, [field.key]: e.target.value }))}
-                    style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "0.9rem", boxSizing: "border-box" }}
+                    style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "0.9rem", boxSizing: "border-box", background: field.key === "_staffNotes" ? "#fef3c7" : "#fff" }}
                   />
                 </div>
               ))}
