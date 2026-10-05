@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import DashboardCharts from "../DashboardCharts";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import pptxgen from "pptxgenjs";
 
 export default function AnalyticsClient({ registrations, events, branches }: { registrations: Record<string, unknown>[], events: Record<string, unknown>[], branches: Record<string, unknown>[] }) {
   const [selectedEventId, setSelectedEventId] = useState<string>((events[0]?.id as string) || "");
@@ -163,20 +166,78 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
     }
   });
 
+  const handleExportPdf = async () => {
+    const input = document.getElementById("analytics-dashboard");
+    if (!input) return;
+    const canvas = await html2canvas(input, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+    
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`${selectedEvent.name}-analytics.pdf`);
+  };
+
+  const handleExportPptx = async () => {
+    const input = document.getElementById("analytics-dashboard");
+    if (!input) return;
+    
+    // Capture the entire dashboard as an image
+    const canvas = await html2canvas(input, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+
+    const pptx = new pptxgen();
+    const slide = pptx.addSlide();
+    
+    // Add image to slide, scaled to fit
+    slide.addImage({
+      data: imgData,
+      x: 0,
+      y: 0,
+      w: "100%",
+      h: "100%",
+      sizing: { type: "contain" }
+    });
+
+    pptx.writeFile({ fileName: `${selectedEvent.name}-analytics.pptx` });
+  };
+
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#111", margin: 0 }}>Select Event</h2>
-        <select 
-          value={selectedEventId} 
-          onChange={e => setSelectedEventId(e.target.value)}
-          style={{ padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", background: "white", fontSize: "0.95rem", minWidth: "250px" }}
-        >
-          {events.map(e => <option key={e.id as string} value={e.id as string}>{e.name as string}</option>)}
-        </select>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#111", margin: 0 }}>Select Event</h2>
+          <select 
+            value={selectedEventId} 
+            onChange={e => setSelectedEventId(e.target.value)}
+            style={{ padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", background: "white", fontSize: "0.95rem", minWidth: "250px" }}
+          >
+            {events.map(e => <option key={e.id as string} value={e.id as string}>{e.name as string}</option>)}
+          </select>
+        </div>
+        
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button 
+            onClick={handleExportPdf}
+            style={{ padding: "0.6rem 1rem", background: "#f3f4f6", border: "1px solid #e5e7eb", borderRadius: "6px", fontSize: "0.85rem", fontWeight: 600, color: "#374151", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Export PDF
+          </button>
+          <button 
+            onClick={handleExportPptx}
+            style={{ padding: "0.6rem 1rem", background: "#f3f4f6", border: "1px solid #e5e7eb", borderRadius: "6px", fontSize: "0.85rem", fontWeight: 600, color: "#374151", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            Export PPTX
+          </button>
+        </div>
       </div>
 
-      <div style={{ background: "white", padding: "1.5rem", borderRadius: "12px", border: "1px solid #eaeaea", marginBottom: "2rem" }}>
+      <div id="analytics-dashboard">
+        <div style={{ background: "white", padding: "1.5rem", borderRadius: "12px", border: "1px solid #eaeaea", marginBottom: "2rem" }}>
         <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
           <div>
             <p style={{ margin: 0, fontSize: "0.85rem", color: "#666", textTransform: "uppercase", fontWeight: 600 }}>Total Registrations</p>
@@ -202,6 +263,7 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
         firstTimerData={firstTimerData}
         checkinsOverTime={checkinsOverTime}
       />
+      </div>
     </div>
   );
 }
