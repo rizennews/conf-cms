@@ -81,7 +81,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     setIsSubmitting(true);
     
     const res = await submitRegistration({
-      eventId: event?.id,
+      eventId: event?.id ? String(event.id) : undefined,
       ...formData,
       customData
     });
