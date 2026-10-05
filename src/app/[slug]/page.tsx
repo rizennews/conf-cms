@@ -7,8 +7,7 @@ import { eq, and } from "drizzle-orm";
 import { Metadata, ResolvingMetadata } from "next";
 
 export async function generateMetadata(
-  { params }: { params: Promise<{ slug: string }> },
-  parent: ResolvingMetadata
+  { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
   const resolvedParams = await params;
   

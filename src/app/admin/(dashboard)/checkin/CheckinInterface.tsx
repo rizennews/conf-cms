@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useMemo } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { searchRegistrations, checkInById, getAllRegistrations, bulkCheckIn } from "./actions";
 import { Search, CheckCircle, UserCheck, QrCode, UserPlus, RefreshCw, AlertTriangle, Clock } from "lucide-react";
 import RegistrationModal from "../../../../components/RegistrationModal";
@@ -35,25 +35,23 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
     });
   }, []);
 
-  const loadStats = async () => {
-    if (!selectedEvent) return;
-    const localData: Record<string, unknown>[] = await get(`event_${selectedEvent}_registrations`) || [];
-    if (localData.length > 0) {
-      setTotalRegs(localData.length);
-      setCheckedInCount(localData.filter(r => r.status === "checked-in").length);
-    } else {
-      const { results: res } = await getAllRegistrations(selectedEvent);
-      if (res) {
-        setTotalRegs(res.length);
-        setCheckedInCount(res.filter(r => r.status === "checked-in").length);
-      }
-    }
-  };
-
   useEffect(() => {
+    const loadStats = async () => {
+      if (!selectedEvent) return;
+      const localData: Record<string, unknown>[] = await get(`event_${selectedEvent}_registrations`) || [];
+      if (localData.length > 0) {
+        setTotalRegs(localData.length);
+        setCheckedInCount(localData.filter(r => r.status === "checked-in").length);
+      } else {
+        const { results: res } = await getAllRegistrations(selectedEvent);
+        if (res) {
+          setTotalRegs(res.length);
+          setCheckedInCount(res.filter(r => r.status === "checked-in").length);
+        }
+      }
+    };
+    
     loadStats();
-    setHistory([]);
-    setCheckedInIds(new Set());
   }, [selectedEvent]);
 
   useEffect(() => {
@@ -177,7 +175,13 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
             <label style={{ display: "block", fontWeight: 600, marginBottom: "0.5rem", color: "#111" }}>Select Event</label>
             <select 
               value={selectedEvent} 
-              onChange={e => { setSelectedEvent(e.target.value); setResults([]); setSearched(false); }}
+              onChange={e => { 
+                setSelectedEvent(e.target.value); 
+                setResults([]); 
+                setSearched(false); 
+                setHistory([]);
+                setCheckedInIds(new Set());
+              }}
               style={{ width: "100%", padding: "0.75rem", borderRadius: "8px", border: "1px solid #d1d5db", fontSize: "1rem", color: "#111", background: "#fff" }}
             >
               {events.map(e => <option key={e.id} value={e.id}>{e.name || e.id}</option>)}
