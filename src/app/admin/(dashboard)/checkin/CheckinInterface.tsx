@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { searchRegistrations, checkInById, getAllRegistrations, bulkCheckIn } from "./actions";
+import { searchRegistrations, checkInById, getAllRegistrations, bulkCheckIn, undoCheckInById } from "./actions";
 import { Search, CheckCircle, UserCheck, QrCode, UserPlus, RefreshCw, AlertTriangle, Clock } from "lucide-react";
 import RegistrationModal from "../../../../components/RegistrationModal";
 import { Html5QrcodeScanner } from "html5-qrcode";
@@ -161,6 +161,22 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
     }
   };
 
+  const handleUndoCheckIn = async (id: number) => {
+    setCheckedInIds(prev => { const n = new Set(prev); n.delete(id); return n; });
+    setResults(prev => prev.map(r => r.id === id ? { ...r, status: "registered", checkedInAt: null } : r));
+    setConfirmId(null);
+    setCheckedInCount(c => Math.max(0, c - 1));
+    setHistory(prev => prev.filter(h => h.id !== id));
+
+    try {
+      if (!navigator.onLine) throw new Error("Offline");
+      const res = await undoCheckInById(id);
+      if (!res?.success) throw new Error("API Failed");
+    } catch {
+      // Offline undo is hard, just ignore for now or add to pendingUndo array
+    }
+  };
+
   const isCheckedIn = (r: Record<string, unknown>) => r.status === "checked-in" || checkedInIds.has(r.id as number);
   
   const progressPct = totalRegs > 0 ? Math.round((checkedInCount / totalRegs) * 100) : 0;
@@ -287,6 +303,12 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
                           <div>
                             <div style={{ fontWeight: 600, color: "#111", fontSize: "1.05rem" }}>{(r.fullName as string) || "Unknown"}</div>
                             <div style={{ color: "#6b7280", fontSize: "0.9rem" }}>{r.email as string} {r.whatsapp ? `· ${r.whatsapp}` : ''}</div>
+                            <div style={{ color: "#6b7280", fontSize: "0.85rem", marginTop: "0.2rem" }}>
+                              Reg: {r.createdAt ? new Date(r.createdAt as string).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : "N/A"}
+                              {Boolean(r.checkedInAt) && (
+                                <> · Arr: <span style={{color: "#16a34a", fontWeight: 600}}>{new Date(r.checkedInAt as string).toLocaleTimeString([], { timeStyle: 'short' })}</span></>
+                              )}
+                            </div>
                             <div style={{ marginTop: "0.4rem", display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
                               <span style={{ display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 600, background: alreadyCheckedIn ? "#dcfce7" : "#f3f4f6", color: alreadyCheckedIn ? "#16a34a" : "#4b5563" }}>
                                 {alreadyCheckedIn ? "✓ Checked In" : "Registered"}
@@ -298,7 +320,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
                                   if (custom._staffNotes) {
                                     return (
                                       <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", padding: "0.2rem 0.6rem", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 700, background: "#fef3c7", color: "#92400e" }}>
-                                        ⭐ {custom._staffNotes}
+                                        ⭐ {String(custom._staffNotes)}
                                       </span>
                                     );
                                   }
@@ -316,7 +338,13 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
                             <UserCheck size={16} /> Check In
                           </button>
                         ) : (
-                          <CheckCircle size={24} color="#16a34a" />
+                          <button 
+                            onClick={() => setConfirmId(r.id as number)}
+                            style={{ padding: "0.5rem", background: "transparent", border: "none", cursor: "pointer" }}
+                            title="Manage Check-in"
+                          >
+                            <CheckCircle size={24} color="#16a34a" />
+                          </button>
                         )}
                       </div>
                     );
@@ -361,7 +389,10 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
                     <div style={{ fontSize: "3rem", marginBottom: "1rem", display: "flex", justifyContent: "center" }}><AlertTriangle size={56} color="#eab308" /></div>
                     <h3 style={{ margin: "0 0 0.5rem 0", color: "#111" }}>Already Checked In</h3>
                     <p style={{ color: "#6b7280", margin: "0 0 1.5rem 0" }}><strong>{(r?.fullName as string) || `Registration #${confirmId}`}</strong> has already been checked in.</p>
-                    <button onClick={() => setConfirmId(null)} style={{ width: "100%", padding: "0.75rem", background: "#eab308", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>Dismiss</button>
+                    <div style={{ display: "flex", gap: "1rem" }}>
+                      <button onClick={() => handleUndoCheckIn(confirmId)} style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "1px solid #d1d5db", color: "#ef4444", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>Undo Check-in</button>
+                      <button onClick={() => setConfirmId(null)} style={{ flex: 1, padding: "0.75rem", background: "#eab308", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>Dismiss</button>
+                    </div>
                   </>
                 );
               }

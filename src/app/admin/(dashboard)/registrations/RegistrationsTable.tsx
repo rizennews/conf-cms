@@ -11,7 +11,7 @@ type SortDir = "asc" | "desc";
 
 const PAGE_SIZE = 20;
 
-export default function RegistrationsTable({ data, events, branches = [], canBulkUpload }: { data: RegRecord[]; events: RegRecord[]; branches?: RegRecord[]; canBulkUpload?: boolean }) {
+export default function RegistrationsTable({ data, events, branches = [], canBulkUpload, isSuperAdmin }: { data: RegRecord[]; events: RegRecord[]; branches?: RegRecord[]; canBulkUpload?: boolean; isSuperAdmin?: boolean }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterEvent, setFilterEvent] = useState("");
   const [filterBranch, setFilterBranch] = useState("");
@@ -356,9 +356,11 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                         <button onClick={() => openEdit(r)} title="Edit" style={{ padding: "0.35rem", background: "white", color: "#f59e0b", border: "1px solid #fde68a", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center" }}>
                           <Pencil size={13} />
                         </button>
-                        <button onClick={() => setDeleteConfirm(r.id as number)} title="Delete" style={{ padding: "0.35rem", background: "white", color: "#ef4444", border: "1px solid #fecaca", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center" }}>
-                          <Trash2 size={13} />
-                        </button>
+                        {isSuperAdmin && (
+                          <button onClick={() => setDeleteConfirm(r.id as number)} title="Delete" style={{ padding: "0.35rem", background: "white", color: "#ef4444", border: "1px solid #fecaca", borderRadius: "6px", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                            <Trash2 size={13} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -398,7 +400,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
       {/* Delete Confirmation */}
       {deleteConfirm !== null && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100 }}>
-          <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+          <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "95vw", maxWidth: "1200px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
               <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Trash2 size={20} color="#ef4444" />
@@ -419,7 +421,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
       {/* Edit Modal */}
       {editRegistration && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100 }}>
-          <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "100%", maxWidth: "500px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+          <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "95vw", maxWidth: "1200px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
             <h2 style={{ marginTop: 0, color: "#111", fontSize: "1.15rem", marginBottom: "1.5rem" }}>Edit Registration</h2>
             <div style={{ display: "grid", gap: "1rem" }}>
               {[
@@ -503,7 +505,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
       {/* Print Modal */}
       {showPrintModal && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100 }}>
-          <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+          <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "95vw", maxWidth: "1200px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
             <h2 style={{ marginTop: 0, color: "#111", fontSize: "1.25rem", marginBottom: "1rem" }}>Print Nametags</h2>
             <p style={{ color: "#4b5563", fontSize: "0.95rem", marginBottom: "1.5rem" }}>Select the event to print nametags for.</p>
             <select value={printEventId} onChange={e => setPrintEventId(e.target.value)} style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", color: "#111", background: "#fff", marginBottom: "1.5rem" }}>
@@ -521,44 +523,62 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
       {/* View Details Modal */}
       {viewRegistration && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100 }}>
-          <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "100%", maxWidth: "500px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)", maxHeight: "90vh", overflowY: "auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <h2 style={{ margin: 0, color: "#111", fontSize: "1.25rem" }}>Registration Details</h2>
-              <button onClick={() => setViewRegistration(null)} style={{ background: "transparent", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "#6b7280" }}>&times;</button>
+          <div style={{ background: "white", padding: "2.5rem", borderRadius: "16px", width: "95vw", maxWidth: "1200px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)", maxHeight: "90vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+                <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: "#e0e7ff", color: "#3730a3", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.5rem", fontWeight: 700, flexShrink: 0 }}>
+                  {((viewRegistration.fullName as string) || "U").split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()}
+                </div>
+                <div>
+                  <h2 style={{ margin: "0 0 0.25rem 0", color: "#111", fontSize: "1.75rem" }}>{(viewRegistration.fullName as string) || "Unknown"}</h2>
+                  <div style={{ color: "#6b7280", fontSize: "1rem" }}>
+                    {(viewRegistration.email as string) || "No Email"} · {(viewRegistration.whatsapp as string) || "No Phone"}
+                  </div>
+                  <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
+                    <span style={{ display: "inline-block", padding: "0.25rem 0.75rem", borderRadius: "99px", fontSize: "0.85rem", fontWeight: 600, background: viewRegistration.status === 'checked-in' ? "#dcfce7" : "#f3f4f6", color: viewRegistration.status === 'checked-in' ? "#16a34a" : "#4b5563" }}>
+                      {viewRegistration.status === 'checked-in' ? "✓ Checked In" : "Registered"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button onClick={() => setViewRegistration(null)} style={{ background: "transparent", border: "none", fontSize: "2.5rem", cursor: "pointer", color: "#9ca3af", lineHeight: 1 }}>&times;</button>
             </div>
-            <div style={{ display: "grid", gap: "1rem", color: "#374151", fontSize: "0.95rem" }}>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Name:</strong> {(viewRegistration.fullName as string) || "—"}</div>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Email:</strong> {(viewRegistration.email as string) || "—"}</div>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Phone/WhatsApp:</strong> {(viewRegistration.whatsapp as string) || "—"}</div>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Address:</strong> {(viewRegistration.address as string) || "—"}</div>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Age Range:</strong> {(viewRegistration.ageRange as string) || "—"}</div>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Registrant Status:</strong> {(viewRegistration.registrantStatus as string) || "—"}</div>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Check-in Status:</strong> {viewRegistration.status === 'checked-in' ? "Checked In" : "Registered"}</div>
-              {viewRegistration.customData ? (() => {
-                try {
-                  const custom = typeof viewRegistration.customData === 'string' ? JSON.parse(viewRegistration.customData as string) : viewRegistration.customData;
-                  const keys = Object.keys(custom as Record<string, unknown>);
-                  if (keys.length === 0) return null;
-                  return (
-                    <div style={{ marginTop: "1rem", borderTop: "1px solid #e5e7eb", paddingTop: "1rem" }}>
-                      <h3 style={{ fontSize: "1rem", color: "#111", marginBottom: "1rem", marginTop: 0 }}>Custom Fields</h3>
-                      <div style={{ display: "grid", gap: "1rem" }}>
-                        {keys.map(k => (
-                          <div key={k}>
-                            <strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>{k}:</strong>
-                            {(custom as Record<string, string>)[k] || "—"}
-                          </div>
-                        ))}
-                      </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem", color: "#374151", fontSize: "1rem", background: "#f9fafb", padding: "1.5rem", borderRadius: "12px", border: "1px solid #e5e7eb" }}>
+              <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Address</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.address as string) || "—"}</div></div>
+              <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Age Range</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.ageRange as string) || "—"}</div></div>
+              <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Registrant Status</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.registrantStatus as string) || "—"}</div></div>
+              <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Member?</strong> <div style={{ fontWeight: 500, color: "#111" }}>{viewRegistration.isMember ? "Yes" : "No"}</div></div>
+              <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>First Time?</strong> <div style={{ fontWeight: 500, color: "#111" }}>{viewRegistration.isFirstTime ? "Yes" : "No"}</div></div>
+              <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Heard From</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.heardFrom as string) || "—"}</div></div>
+              <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Invitees</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.invitees as string) || "—"}</div></div>
+            </div>
+
+            {viewRegistration.customData ? (() => {
+              try {
+                const custom = typeof viewRegistration.customData === 'string' ? JSON.parse(viewRegistration.customData as string) : viewRegistration.customData;
+                const keys = Object.keys(custom as Record<string, unknown>);
+                if (keys.length === 0) return null;
+                return (
+                  <div style={{ marginTop: "2rem" }}>
+                    <h3 style={{ fontSize: "1.1rem", color: "#111", marginBottom: "1.25rem", borderBottom: "1px solid #e5e7eb", paddingBottom: "0.5rem" }}>Custom Fields</h3>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
+                      {keys.map(k => (
+                        <div key={k} style={{ background: k === "_staffNotes" ? "#fef3c7" : "white", padding: k === "_staffNotes" ? "1rem" : "0", borderRadius: "8px", border: k === "_staffNotes" ? "1px solid #fde68a" : "none" }}>
+                          <strong style={{ color: k === "_staffNotes" ? "#92400e" : "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{k === "_staffNotes" ? "VIP / Staff Notes" : k}</strong>
+                          <div style={{ fontWeight: 500, color: k === "_staffNotes" ? "#92400e" : "#111" }}>{String((custom as Record<string, string>)[k] || "—")}</div>
+                        </div>
+                      ))}
                     </div>
-                  );
-                } catch {
-                  return <div>Error parsing custom fields.</div>;
-                }
-              })() : null}
-            </div>
-            <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
-              <button onClick={() => setViewRegistration(null)} style={{ padding: "0.75rem 1.5rem", background: "#111", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
+                  </div>
+                );
+              } catch {
+                return <div style={{ marginTop: "1rem", color: "#ef4444" }}>Error parsing custom fields.</div>;
+              }
+            })() : null}
+            
+            <div style={{ marginTop: "3rem", display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => setViewRegistration(null)} style={{ padding: "0.85rem 2.5rem", background: "#111", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "1.05rem" }}>
                 Close
               </button>
             </div>

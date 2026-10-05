@@ -46,6 +46,7 @@ export default async function RegistrationsPage() {
           events={allEvents} 
           branches={allBranches}
           canBulkUpload={role === "super_admin" || role === "admin"} 
+          isSuperAdmin={role === "super_admin"}
         />
       </div>
     </div>

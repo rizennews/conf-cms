@@ -44,6 +44,8 @@ export async function searchRegistrations(query: string, eventId: string) {
       status: registrations.status,
       eventId: registrations.eventId,
       customData: registrations.customData,
+      createdAt: registrations.createdAt,
+      checkedInAt: registrations.checkedInAt,
     })
     .from(registrations)
     .where(and(...conditions))
@@ -67,6 +69,29 @@ export async function checkInById(registrationId: number) {
       await db.insert(activityLogs).values({
         userId: session.user.id,
         action: "check-in",
+        details: JSON.stringify({ registrationId }),
+      });
+    }
+
+    revalidatePath("/admin/checkin");
+    return { success: true };
+  } catch (err: unknown) {
+    return { error: (err as Error).message };
+  }
+}
+
+export async function undoCheckInById(registrationId: number) {
+  try {
+    await db.update(registrations)
+      .set({ status: "registered", checkedInAt: null })
+      .where(eq(registrations.id, registrationId));
+
+    const reqHeaders = await headers();
+    const session = await auth.api.getSession({ headers: reqHeaders });
+    if (session?.user?.id) {
+      await db.insert(activityLogs).values({
+        userId: session.user.id,
+        action: "undo-check-in",
         details: JSON.stringify({ registrationId }),
       });
     }
@@ -114,6 +139,8 @@ export async function getAllRegistrations(eventId: string) {
       status: registrations.status,
       eventId: registrations.eventId,
       customData: registrations.customData,
+      createdAt: registrations.createdAt,
+      checkedInAt: registrations.checkedInAt,
     })
     .from(registrations)
     .where(and(...conditions));

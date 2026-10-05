@@ -19,6 +19,17 @@ const InputLabel = ({ children, required }: { children: React.ReactNode, require
   </label>
 );
 
+const COUNTRIES = [
+  { code: "gh", dial: "+233", name: "Ghana" },
+  { code: "ng", dial: "+234", name: "Nigeria" },
+  { code: "ke", dial: "+254", name: "Kenya" },
+  { code: "za", dial: "+27", name: "South Africa" },
+  { code: "us", dial: "+1", name: "United States" },
+  { code: "gb", dial: "+44", name: "United Kingdom" },
+  { code: "tg", dial: "+228", name: "Togo" },
+  { code: "ci", dial: "+225", name: "Ivory Coast" },
+];
+
 export default function RegistrationModal({ isOpen, onClose, branches = [], event }: Props) {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,6 +50,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     invitees: "",
     registrantStatus: "",
   });
+  const [countryCode, setCountryCode] = useState("gh");
   const [customData, setCustomData] = useState<Record<string, string>>({});
 
   let parsedCustomFields: Record<string, unknown>[] = [];
@@ -79,10 +91,16 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     
     setIsSubmitting(true);
     
+    const dialCode = COUNTRIES.find(c => c.code === countryCode)?.dial || "";
+    
     const res = await submitRegistration({
       eventId: event?.id ? String(event.id) : undefined,
       ...formData,
-      customData
+      whatsapp: `${dialCode} ${formData.whatsapp}`.trim(),
+      customData: {
+        ...customData,
+        _countryCode: countryCode
+      }
     });
 
     setIsSubmitting(false);
@@ -190,7 +208,28 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
                 </div>
                 <div className={styles.inputGroup}>
                   <InputLabel required>Phone / WhatsApp</InputLabel>
-                  <input type="tel" required value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} placeholder="+233..." style={inputStyle} />
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', background: '#f9fafb', border: '1px solid #d1d5db', borderRadius: '8px', padding: '0 0.5rem' }}>
+                      <img src={`https://flagcdn.com/w20/${countryCode}.png`} alt={countryCode} width="20" style={{ borderRadius: '2px' }} />
+                      <select 
+                        value={countryCode} 
+                        onChange={e => setCountryCode(e.target.value)}
+                        style={{ border: 'none', background: 'transparent', padding: '0.85rem 0.5rem', outline: 'none', color: '#111', cursor: 'pointer' }}
+                      >
+                        {COUNTRIES.map(c => (
+                          <option key={c.code} value={c.code}>{c.dial}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <input 
+                      type="tel" 
+                      required 
+                      value={formData.whatsapp} 
+                      onChange={e => setFormData({...formData, whatsapp: e.target.value})} 
+                      placeholder="Phone Number" 
+                      style={{ ...inputStyle, flex: 1 }} 
+                    />
+                  </div>
                 </div>
                 <div className={styles.inputGroup}>
                   <InputLabel required>Address / Location</InputLabel>
