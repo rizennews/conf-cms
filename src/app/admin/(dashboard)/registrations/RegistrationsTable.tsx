@@ -19,8 +19,8 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
   const [viewRegistration, setViewRegistration] = useState<Record<string, unknown> | null>(null);
 
   const filteredData = data.filter(r => {
-    const matchesSearch = (r.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (r.email || "").toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = ((r.fullName as string) || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          ((r.email as string) || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesEvent = filterEvent ? r.eventId === filterEvent : true;
     const matchesBranch = filterBranch ? r.branchId === filterBranch : true;
     return matchesSearch && matchesEvent && matchesBranch;
@@ -52,7 +52,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     }).filter(r => r.fullName || r.email || r.customData !== "{}");
     
     const { bulkInsertRegistrations } = await import("./actions");
-    const result = await bulkInsertRegistrations(rows, uploadEvent);
+    const result = await bulkInsertRegistrations(rows, uploadEvent as string);
     setUploadResult(result);
     setUploading(false);
   };
@@ -63,7 +63,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     
     if (targetEvent?.customFields) {
       try {
-        const fields = JSON.parse(targetEvent.customFields);
+        const fields = JSON.parse(targetEvent.customFields as string);
         fields.forEach((f: Record<string, unknown>) => {
           if (!headers.includes(f.label as string)) {
             headers.push(f.label as string);
@@ -203,11 +203,11 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                         <span style={{ display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: "99px", fontSize: "0.75rem", fontWeight: 600, background: isCheckedIn ? "#dcfce7" : "#fef9c3", color: isCheckedIn ? "#16a34a" : "#854d0e" }}>
                           {isCheckedIn ? "✓ Checked In" : "Pending"}
                         </span>
-                        {r.registrantStatus && r.registrantStatus !== "Unknown" && (
+                        {r.registrantStatus && r.registrantStatus !== "Unknown" ? (
                           <span style={{ fontSize: "0.75rem", color: "#6b7280", background: "#f3f4f6", padding: "0.1rem 0.5rem", borderRadius: "4px" }}>
                             {r.registrantStatus as React.ReactNode}
                           </span>
-                        )}
+                        ) : null}
                       </div>
                     </td>
                     <td style={{ padding: "1rem 1.5rem", color: "#6b7280", fontSize: "0.85rem" }}>
@@ -239,7 +239,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
             </div>
             <div style={{ marginBottom: "1.5rem" }}>
               <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, color: "#111" }}>Target Event</label>
-              <select value={uploadEvent} onChange={e => setUploadEvent(e.target.value)} style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", color: "#111", background: "#fff" }}>
+              <select value={uploadEvent as string} onChange={e => setUploadEvent(e.target.value)} style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", color: "#111", background: "#fff" }}>
                 {events.map(e => <option key={e.id as string} value={e.id as string}>{(e.name as string) || (e.id as string)}</option>)}
               </select>
             </div>
@@ -317,7 +317,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
               <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Registrant Status:</strong> {(viewRegistration.registrantStatus as React.ReactNode) || "—"}</div>
               <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Check-in Status:</strong> {viewRegistration.status === 'checked-in' ? "Checked In" : "Registered"}</div>
               
-              {viewRegistration.customData && (() => {
+              {viewRegistration.customData ? (() => {
                 try {
                   const custom = typeof viewRegistration.customData === 'string' ? JSON.parse(viewRegistration.customData) : viewRegistration.customData;
                   const keys = Object.keys(custom);
