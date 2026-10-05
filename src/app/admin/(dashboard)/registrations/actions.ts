@@ -12,12 +12,10 @@ export async function bulkInsertRegistrations(rows: Record<string, unknown>[], e
 
     for (const row of rows) {
       try {
-        // Ensure branch exists, create if not
         const branchId = (row.branchId as string) || "unknown";
         if (branchId !== "unknown") {
           const existing = await db.select().from(branches).where(eq(branches.id, branchId)).limit(1);
           if (existing.length === 0) {
-            // Auto-create branch with a readable name from the ID
             const branchName = branchId.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
             await db.insert(branches).values({ id: branchId, name: branchName });
           }
@@ -48,6 +46,35 @@ export async function bulkInsertRegistrations(rows: Record<string, unknown>[], e
 
     revalidatePath("/admin/registrations");
     return { success: true, inserted, errors };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { error: msg };
+  }
+}
+
+export async function deleteRegistration(id: number) {
+  try {
+    await db.delete(registrations).where(eq(registrations.id, id));
+    revalidatePath("/admin/registrations");
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { error: msg };
+  }
+}
+
+export async function updateRegistration(id: number, data: Record<string, unknown>) {
+  try {
+    await db.update(registrations).set({
+      fullName: (data.fullName as string) || null,
+      email: (data.email as string) || null,
+      whatsapp: (data.whatsapp as string) || null,
+      address: (data.address as string) || null,
+      ageRange: (data.ageRange as string) || null,
+      registrantStatus: (data.registrantStatus as string) || null,
+    }).where(eq(registrations.id, id));
+    revalidatePath("/admin/registrations");
+    return { success: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     return { error: msg };
