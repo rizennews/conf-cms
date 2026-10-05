@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getRegistrationById, checkInById, searchRegistrations } from "../(dashboard)/checkin/actions";
 import { Html5Qrcode } from "html5-qrcode";
-import { CheckCircle, AlertTriangle, XCircle, QrCode, Search, UserCheck, Camera } from "lucide-react";
+import { CheckCircle, AlertTriangle, XCircle, QrCode, Search, UserCheck, Camera, Maximize, Minimize } from "lucide-react";
 import Link from "next/link";
 
 type ScanState = "IDLE" | "SUCCESS" | "ALREADY_CHECKED_IN" | "INVALID";
@@ -23,6 +23,19 @@ export default function KioskClient({ events, branches }: { events: any[], branc
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [cameraError, setCameraError] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(e => console.warn(e));
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    }
+  };
 
   const lastScannedIdRef = useRef<number | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -271,6 +284,25 @@ export default function KioskClient({ events, branches }: { events: any[], branc
           font-weight: 400;
           letter-spacing: 0;
         }
+
+        .scanning-laser {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 2px;
+          background: #2b3ff2;
+          box-shadow: 0 0 10px 2px rgba(43, 63, 242, 0.8);
+          animation: scan 2.5s infinite linear;
+          z-index: 10;
+        }
+
+        @keyframes scan {
+          0% { top: 0%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
       `}</style>
       
       {/* Top Bar (Light Mode Minimal) */}
@@ -281,14 +313,25 @@ export default function KioskClient({ events, branches }: { events: any[], branc
             {events.find(e => e.id === selectedEvent)?.name || "Event Kiosk"}
           </h2>
         </div>
-        <button 
-          onClick={() => { setIsStarted(false); setScanState("IDLE"); setIsSearchMode(false); }} 
-          style={{ background: "transparent", border: "1px solid #eaeaea", padding: "0.5rem 1rem", borderRadius: "99px", color: "#666", fontWeight: 500, cursor: "pointer", fontSize: "0.85rem", transition: "all 0.2s" }}
-          onMouseOver={e => { e.currentTarget.style.borderColor = "#ccc"; e.currentTarget.style.color = "#111"; }}
-          onMouseOut={e => { e.currentTarget.style.borderColor = "#eaeaea"; e.currentTarget.style.color = "#666"; }}
-        >
-          Exit Kiosk
-        </button>
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <button 
+            onClick={toggleFullscreen} 
+            style={{ background: "transparent", border: "1px solid #eaeaea", padding: "0.5rem", borderRadius: "50%", color: "#666", cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", justifyContent: "center" }}
+            onMouseOver={e => { e.currentTarget.style.borderColor = "#ccc"; e.currentTarget.style.color = "#111"; }}
+            onMouseOut={e => { e.currentTarget.style.borderColor = "#eaeaea"; e.currentTarget.style.color = "#666"; }}
+            title="Toggle Fullscreen"
+          >
+            {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+          </button>
+          <button 
+            onClick={() => { setIsStarted(false); setScanState("IDLE"); setIsSearchMode(false); }} 
+            style={{ background: "transparent", border: "1px solid #eaeaea", padding: "0.5rem 1rem", borderRadius: "99px", color: "#666", fontWeight: 500, cursor: "pointer", fontSize: "0.85rem", transition: "all 0.2s" }}
+            onMouseOver={e => { e.currentTarget.style.borderColor = "#ccc"; e.currentTarget.style.color = "#111"; }}
+            onMouseOut={e => { e.currentTarget.style.borderColor = "#eaeaea"; e.currentTarget.style.color = "#666"; }}
+          >
+            Exit Kiosk
+          </button>
+        </div>
       </div>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", position: "relative", padding: "2rem" }}>
@@ -321,7 +364,10 @@ export default function KioskClient({ events, branches }: { events: any[], branc
                       </button>
                     </div>
                   ) : (
-                    <div id="kiosk-reader"></div>
+                    <>
+                      <div className="scanning-laser"></div>
+                      <div id="kiosk-reader"></div>
+                    </>
                   )}
                 </div>
                 
@@ -446,6 +492,25 @@ export default function KioskClient({ events, branches }: { events: any[], branc
           </div>
         )}
         
+        
+        {/* Recent Check-ins Ticker/Sidebar */}
+        {recentCheckins.length > 0 && scanState === "IDLE" && (
+          <div style={{ position: "absolute", bottom: "3rem", width: "100%", maxWidth: "600px", padding: "0 2rem" }}>
+            <h3 style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "#a1a1aa", margin: "0 0 1rem 0", textAlign: "left", fontWeight: 600 }}>Recent Arrivals</h3>
+            <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "0.5rem", scrollbarWidth: "none" }}>
+              {recentCheckins.map((rc, i) => (
+                <div key={i} style={{ background: "#fafafa", border: "1px solid #eaeaea", padding: "0.75rem 1.25rem", borderRadius: "99px", display: "flex", alignItems: "center", gap: "0.5rem", whiteSpace: "nowrap", animation: "fadeIn 0.3s ease" }}>
+                  <UserCheck size={16} color="#16a34a" />
+                  <span style={{ fontWeight: 500, color: "#111", fontSize: "0.9rem" }}>{rc.name}</span>
+                  <span style={{ color: "#a1a1aa", fontSize: "0.8rem", marginLeft: "0.25rem" }}>
+                    {rc.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }`}</style>
+          </div>
+        )}
       </div>
     </div>
   );
