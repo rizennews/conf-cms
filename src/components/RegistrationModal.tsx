@@ -195,7 +195,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
         </div>
         
         <form onSubmit={handleSubmit} className={styles.formContainer}>
-          <div className={styles.stepContainer} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className={styles.stepContainer}>
             
             {step === 1 && (
               <>
