@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Download, Upload, Printer } from "lucide-react";
 import Link from "next/link";
 
-export default function RegistrationsTable({ data, events, branches = [], canBulkUpload }: { data: Record<string, unknown>[]; events: Record<string, unknown>[]; branches?: Record<string, unknown>[]; canBulkUpload?: boolean }) {
+export default function RegistrationsTable({ data, events, branches = [], canBulkUpload }: { data: any[]; events: any[]; branches?: any[]; canBulkUpload?: boolean }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterEvent, setFilterEvent] = useState("");
   const [filterBranch, setFilterBranch] = useState("");
@@ -12,11 +12,11 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
   const [uploadEvent, setUploadEvent] = useState(events[0]?.id || "");
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<Record<string, unknown> | null>(null);
+  const [uploadResult, setUploadResult] = useState<any>(null);
 
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printEventId, setPrintEventId] = useState("");
-  const [viewRegistration, setViewRegistration] = useState<Record<string, unknown> | null>(null);
+  const [viewRegistration, setViewRegistration] = useState<any>(null);
 
   const filteredData = data.filter(r => {
     const matchesSearch = (r.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -36,8 +36,8 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     const rows = lines.slice(1).map(line => {
       // Basic CSV splitting (doesn't handle quotes with commas inside perfectly, but good enough for simple uploads)
       const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
-      const row: Record<string, unknown> = {};
-      const customData: Record<string, string> = {};
+      const row: any = {};
+      const customData: any = {};
       const standardFields = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange", "registrantStatus"];
       
       headers.forEach((h, i) => {
@@ -64,9 +64,9 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     if (targetEvent?.customFields) {
       try {
         const fields = JSON.parse(targetEvent.customFields);
-        fields.forEach((f: Record<string, unknown>) => {
-          if (!headers.includes(f.label as string)) {
-            headers.push(f.label as string);
+        fields.forEach((f: any) => {
+          if (!headers.includes(f.label)) {
+            headers.push(f.label);
           }
         });
       } catch { /* ignore */ }
