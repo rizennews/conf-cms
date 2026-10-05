@@ -83,6 +83,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
         checkInPct={checkInPct}
         events={allEvents}
         selectedEventId={eventId || ""}
+        userRole={userRole}
       />
 
 

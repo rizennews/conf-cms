@@ -11,9 +11,10 @@ interface Props {
   checkInPct: number;
   events?: { id: string; name: string }[];
   selectedEventId?: string;
+  userRole?: string;
 }
 
-export default function DashboardStats({ totalRegs, checkedIn, totalBranches, externalChurches, checkInPct, events = [], selectedEventId = "" }: Props) {
+export default function DashboardStats({ totalRegs, checkedIn, totalBranches, externalChurches, checkInPct, events = [], selectedEventId = "", userRole = "branch_head" }: Props) {
   const router = useRouter();
   
   const [showToast, setShowToast] = useState<string | null>(null);
@@ -36,9 +37,14 @@ export default function DashboardStats({ totalRegs, checkedIn, totalBranches, ex
   const stats = [
     { label: "Total Registrations", value: totalRegs },
     { label: "Checked In", value: checkedIn },
-    { label: "Church Branches", value: totalBranches },
-    { label: "External Churches", value: externalChurches },
   ];
+
+  if (userRole !== "branch_head") {
+    stats.push(
+      { label: "Church Branches", value: totalBranches },
+      { label: "External Churches", value: externalChurches }
+    );
+  }
 
   return (
     <div>

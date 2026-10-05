@@ -26,7 +26,7 @@ const NAV_ITEMS = [
   { href: "/admin/registrations", label: "Registrations", icon: ClipboardList, roles: ["super_admin", "admin", "data_team", "branch_head"] },
   { href: "/admin/checkin", label: "Check-in", icon: DoorOpen, roles: ["super_admin", "admin", "data_team", "branch_head"] },
   { href: "/admin/kiosk", label: "Kiosk Mode", icon: MonitorPlay, roles: ["super_admin", "admin", "data_team", "branch_head"] },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart, roles: ["super_admin", "admin", "data_team"] },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart, roles: ["super_admin", "admin", "data_team", "branch_head"] },
   { href: "/admin/evangelists", label: "Evangelists", icon: Users, roles: ["super_admin", "admin", "data_team", "branch_head"] },
   { href: "/admin/branches", label: "Branches", icon: Building2, roles: ["super_admin"] },
   { href: "/admin/staff", label: "Staff & Users", icon: Users, roles: ["super_admin"] },
