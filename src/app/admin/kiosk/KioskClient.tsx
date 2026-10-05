@@ -4,11 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import { getRegistrationById, checkInById, searchRegistrations } from "../(dashboard)/checkin/actions";
 import { Html5Qrcode } from "html5-qrcode";
 import { CheckCircle, AlertTriangle, XCircle, QrCode, Search, UserCheck, Camera, Maximize, Minimize } from "lucide-react";
-import Link from "next/link";
+import { CheckCircle, AlertTriangle, XCircle, QrCode, Search, UserCheck, Camera, Maximize, Minimize } from "lucide-react";
 
 type ScanState = "IDLE" | "SUCCESS" | "ALREADY_CHECKED_IN" | "INVALID";
 
-export default function KioskClient({ events, branches }: { events: any[], branches: any[] }) {
+export default function KioskClient({ events, branches }: { events: Record<string, unknown>[], branches: Record<string, unknown>[] }) {
   const [selectedEvent, setSelectedEvent] = useState(events[0]?.id || "");
   const [isStarted, setIsStarted] = useState(false);
   const [scanState, setScanState] = useState<ScanState>("IDLE");
@@ -20,7 +20,7 @@ export default function KioskClient({ events, branches }: { events: any[], branc
   // Search Fallback State
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<Record<string, unknown>[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [cameraError, setCameraError] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -43,11 +43,11 @@ export default function KioskClient({ events, branches }: { events: any[], branc
   // Use a singleton AudioContext so the browser doesn't block it
   const playSound = (type: 'success' | 'error' | 'warn') => {
     try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (!(window as any).kioskAudioCtx) {
-        (window as any).kioskAudioCtx = new AudioContext();
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!(window as unknown as { kioskAudioCtx: AudioContext }).kioskAudioCtx) {
+        (window as unknown as { kioskAudioCtx: AudioContext }).kioskAudioCtx = new AudioContextClass();
       }
-      const ctx = (window as any).kioskAudioCtx;
+      const ctx = (window as unknown as { kioskAudioCtx: AudioContext }).kioskAudioCtx;
       
       if (ctx.state === 'suspended') {
         ctx.resume();
@@ -85,12 +85,14 @@ export default function KioskClient({ events, branches }: { events: any[], branc
   const startKiosk = () => {
     // Initialize audio context on first click to satisfy browser policies
     try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (!(window as any).kioskAudioCtx) {
-        (window as any).kioskAudioCtx = new AudioContext();
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!(window as unknown as { kioskAudioCtx: AudioContext }).kioskAudioCtx) {
+        (window as unknown as { kioskAudioCtx: AudioContext }).kioskAudioCtx = new AudioContextClass();
       }
-      (window as any).kioskAudioCtx.resume();
-    } catch (e) {}
+      (window as unknown as { kioskAudioCtx: AudioContext }).kioskAudioCtx.resume();
+    } catch {
+      // ignore
+    }
     
     setIsStarted(true);
   };
@@ -142,7 +144,7 @@ export default function KioskClient({ events, branches }: { events: any[], branc
                 }
               }
             },
-            (error) => {} // ignore frame errors
+            (error: unknown) => { if(error){} } // ignore frame errors
           );
         } catch (err) {
           console.warn("Camera permission denied or not available.", err);
@@ -160,7 +162,7 @@ export default function KioskClient({ events, branches }: { events: any[], branc
     }
   }, [isStarted, scanState, isProcessing, selectedEvent, isSearchMode, branches]);
 
-  const handleResult = (state: ScanState, msg: string, sub: string) => {
+  function handleResult(state: ScanState, msg: string, sub: string) {
     setScanState(state);
     setMessage(msg);
     setSubMessage(sub);
@@ -179,7 +181,7 @@ export default function KioskClient({ events, branches }: { events: any[], branc
       setSubMessage("");
       lastScannedIdRef.current = null;
     }, 3500);
-  };
+  }
 
   const handleManualSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -189,7 +191,7 @@ export default function KioskClient({ events, branches }: { events: any[], branc
     setIsSearching(false);
   };
 
-  const handleManualCheckIn = async (reg: any) => {
+  const handleManualCheckIn = async (reg: Record<string, unknown>) => {
     if (reg.status === "checked-in") {
       handleResult("ALREADY_CHECKED_IN", `${reg.fullName || 'Guest'}`, "Already checked in!");
       return;
@@ -412,7 +414,7 @@ export default function KioskClient({ events, branches }: { events: any[], branc
                 <div style={{ maxHeight: "300px", overflowY: "auto", marginTop: "3rem", textAlign: "left" }}>
                   {searchResults.length === 0 && searchQuery && !isSearching ? (
                     <div style={{ padding: "3rem", textAlign: "center", color: "#ef4444", fontSize: "1.1rem", fontWeight: 500, background: "#fef2f2", borderRadius: "16px" }}>
-                      We couldn't find any registration matching "{searchQuery}".
+                      We couldn&apos;t find any registration matching &quot;{searchQuery}&quot;.
                     </div>
                   ) : (
                     searchResults.map(r => (
