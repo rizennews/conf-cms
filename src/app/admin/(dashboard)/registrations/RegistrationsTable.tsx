@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Download, Upload, Printer } from "lucide-react";
+import Link from "next/link";
 
-export default function RegistrationsTable({ data, events, branches = [], canBulkUpload }: { data: any[]; events: any[]; branches?: any[]; canBulkUpload?: boolean }) {
+export default function RegistrationsTable({ data, events, branches = [], canBulkUpload }: { data: Record<string, unknown>[]; events: Record<string, unknown>[]; branches?: Record<string, unknown>[]; canBulkUpload?: boolean }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterEvent, setFilterEvent] = useState("");
   const [filterBranch, setFilterBranch] = useState("");
@@ -11,11 +12,11 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
   const [uploadEvent, setUploadEvent] = useState(events[0]?.id || "");
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<any>(null);
+  const [uploadResult, setUploadResult] = useState<Record<string, unknown> | null>(null);
 
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printEventId, setPrintEventId] = useState("");
-  const [viewRegistration, setViewRegistration] = useState<any>(null);
+  const [viewRegistration, setViewRegistration] = useState<Record<string, unknown> | null>(null);
 
   const filteredData = data.filter(r => {
     const matchesSearch = (r.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -35,8 +36,8 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     const rows = lines.slice(1).map(line => {
       // Basic CSV splitting (doesn't handle quotes with commas inside perfectly, but good enough for simple uploads)
       const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
-      const row: any = {};
-      const customData: any = {};
+      const row: Record<string, unknown> = {};
+      const customData: Record<string, string> = {};
       const standardFields = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange", "registrantStatus"];
       
       headers.forEach((h, i) => {
@@ -57,18 +58,18 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
   };
 
   const downloadTemplate = () => {
-    let headers = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange", "registrantStatus"];
+    const headers = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange", "registrantStatus"];
     const targetEvent = events.find(e => e.id === uploadEvent);
     
     if (targetEvent?.customFields) {
       try {
         const fields = JSON.parse(targetEvent.customFields);
-        fields.forEach((f: any) => {
-          if (!headers.includes(f.label)) {
-            headers.push(f.label);
+        fields.forEach((f: Record<string, unknown>) => {
+          if (!headers.includes(f.label as string)) {
+            headers.push(f.label as string);
           }
         });
-      } catch (e) {}
+      } catch { /* ignore */ }
     }
 
     const csv = headers.join(",") + "\n" + headers.map(h => {
@@ -111,9 +112,9 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
               {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
           )}
-          <a href="/api/export-csv" style={{ padding: "0.75rem 1.25rem", borderRadius: "6px", border: "1px solid #d1d5db", fontWeight: 600, textDecoration: "none", color: "#111", background: "white", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <Link href="/api/export-csv" style={{ padding: "0.75rem 1.25rem", borderRadius: "6px", border: "1px solid #d1d5db", fontWeight: 600, textDecoration: "none", color: "#111", background: "white", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Download size={16} /> Download CSV
-          </a>
+          </Link>
           
           <button 
             onClick={() => {
@@ -168,7 +169,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                     if (custom.specifiedBranch) {
                       displayBranch = `Other (${custom.specifiedBranch})`;
                     }
-                  } catch (e) {}
+                  } catch { /* ignore */ }
                 }
 
                 return (
@@ -335,7 +336,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                       </div>
                     </div>
                   );
-                } catch (e) {
+                } catch {
                   return <div>Error parsing custom fields.</div>;
                 }
               })()}
