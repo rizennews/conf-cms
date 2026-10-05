@@ -4,7 +4,7 @@ import { db } from "../../db";
 import { events, branches } from "../../db/schema";
 import { eq, and } from "drizzle-orm";
 
-import { Metadata, ResolvingMetadata } from "next";
+import { Metadata } from "next";
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
