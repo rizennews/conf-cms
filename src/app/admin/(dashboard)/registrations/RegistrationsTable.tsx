@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Download, Upload, Printer } from "lucide-react";
 import Link from "next/link";
 
-export default function RegistrationsTable({ data, events, branches = [], canBulkUpload }: { data: any[]; events: any[]; branches?: any[]; canBulkUpload?: boolean }) {
+export default function RegistrationsTable({ data, events, branches = [], canBulkUpload }: { data: Record<string, unknown>[]; events: Record<string, unknown>[]; branches?: Record<string, unknown>[]; canBulkUpload?: boolean }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterEvent, setFilterEvent] = useState("");
   const [filterBranch, setFilterBranch] = useState("");
@@ -12,11 +12,11 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
   const [uploadEvent, setUploadEvent] = useState(events[0]?.id || "");
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<any>(null);
+  const [uploadResult, setUploadResult] = useState<Record<string, unknown> | null>(null);
 
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printEventId, setPrintEventId] = useState("");
-  const [viewRegistration, setViewRegistration] = useState<any>(null);
+  const [viewRegistration, setViewRegistration] = useState<Record<string, unknown> | null>(null);
 
   const filteredData = data.filter(r => {
     const matchesSearch = (r.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -36,8 +36,8 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     const rows = lines.slice(1).map(line => {
       // Basic CSV splitting (doesn't handle quotes with commas inside perfectly, but good enough for simple uploads)
       const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
-      const row: any = {};
-      const customData: any = {};
+      const row: Record<string, unknown> = {};
+      const customData: Record<string, string> = {};
       const standardFields = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange", "registrantStatus"];
       
       headers.forEach((h, i) => {
@@ -64,9 +64,9 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     if (targetEvent?.customFields) {
       try {
         const fields = JSON.parse(targetEvent.customFields);
-        fields.forEach((f: any) => {
-          if (!headers.includes(f.label)) {
-            headers.push(f.label);
+        fields.forEach((f: Record<string, unknown>) => {
+          if (!headers.includes(f.label as string)) {
+            headers.push(f.label as string);
           }
         });
       } catch { /* ignore */ }
@@ -104,12 +104,12 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
           />
           <select value={filterEvent} onChange={e => setFilterEvent(e.target.value)} style={{ padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", minWidth: "200px", flex: 1 }}>
             <option value="">All Events</option>
-            {events.map(e => <option key={e.id} value={e.id}>{e.name || e.id}</option>)}
+            {events.map(e => <option key={e.id as string} value={e.id as string}>{(e.name as string) || (e.id as string)}</option>)}
           </select>
           {branches && branches.length > 0 && (
             <select value={filterBranch} onChange={e => setFilterBranch(e.target.value)} style={{ padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", minWidth: "200px", flex: 1 }}>
               <option value="">All Branches</option>
-              {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              {branches.map(b => <option key={b.id as string} value={b.id as string}>{b.name as string}</option>)}
             </select>
           )}
           <Link href="/api/export-csv" style={{ padding: "0.75rem 1.25rem", borderRadius: "6px", border: "1px solid #d1d5db", fontWeight: 600, textDecoration: "none", color: "#111", background: "white", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -173,30 +173,30 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                 }
 
                 return (
-                  <tr key={r.id} style={{ borderBottom: "1px solid #f3f4f6", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.backgroundColor = "#f9fafb"} onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}>
+                  <tr key={r.id as string} style={{ borderBottom: "1px solid #f3f4f6", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.backgroundColor = "#f9fafb"} onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}>
                     <td style={{ padding: "1rem 1.5rem" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                         <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)", color: "#3730a3", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "1.1rem" }}>
-                          {(r.fullName as string || "?").charAt(0).toUpperCase()}
+                          {((r.fullName as string) || "?").charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>{r.fullName || "—"}</div>
-                          <div style={{ color: "#6b7280", fontSize: "0.85rem" }}>{r.email || "No Email"}</div>
+                          <div style={{ fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>{(r.fullName as React.ReactNode) || "—"}</div>
+                          <div style={{ color: "#6b7280", fontSize: "0.85rem" }}>{(r.email as React.ReactNode) || "No Email"}</div>
                         </div>
                       </div>
                     </td>
                     <td style={{ padding: "1rem 1.5rem", color: "#4b5563", fontSize: "0.9rem" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                        <span style={{ fontSize: "1.1rem" }}>📱</span> {r.whatsapp || "—"}
+                        <span style={{ fontSize: "1.1rem" }}>📱</span> {(r.whatsapp as React.ReactNode) || "—"}
                       </div>
                     </td>
                     <td style={{ padding: "1rem 1.5rem" }}>
                       <span style={{ display: "inline-block", background: "#f1f5f9", padding: "0.25rem 0.6rem", borderRadius: "6px", fontSize: "0.8rem", color: "#475569", fontWeight: 500, border: "1px solid #e2e8f0" }}>
-                        {displayBranch}
+                        {displayBranch as React.ReactNode}
                       </span>
                     </td>
                     <td style={{ padding: "1rem 1.5rem", color: "#4b5563", fontSize: "0.9rem", fontWeight: 500 }}>
-                      {event?.name || r.eventId || "—"}
+                      {(event?.name as React.ReactNode) || (r.eventId as React.ReactNode) || "—"}
                     </td>
                     <td style={{ padding: "1rem 1.5rem" }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", alignItems: "flex-start" }}>
@@ -205,7 +205,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                         </span>
                         {r.registrantStatus && r.registrantStatus !== "Unknown" && (
                           <span style={{ fontSize: "0.75rem", color: "#6b7280", background: "#f3f4f6", padding: "0.1rem 0.5rem", borderRadius: "4px" }}>
-                            {r.registrantStatus}
+                            {r.registrantStatus as React.ReactNode}
                           </span>
                         )}
                       </div>
@@ -240,7 +240,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
             <div style={{ marginBottom: "1.5rem" }}>
               <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, color: "#111" }}>Target Event</label>
               <select value={uploadEvent} onChange={e => setUploadEvent(e.target.value)} style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", color: "#111", background: "#fff" }}>
-                {events.map(e => <option key={e.id} value={e.id}>{e.name || e.id}</option>)}
+                {events.map(e => <option key={e.id as string} value={e.id as string}>{(e.name as string) || (e.id as string)}</option>)}
               </select>
             </div>
             <div style={{ marginBottom: "1.5rem" }}>
@@ -274,7 +274,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
               style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", color: "#111", background: "#fff", marginBottom: "1.5rem" }}
             >
               <option value="">Select Event...</option>
-              {events.map(e => <option key={e.id} value={e.id}>{e.name || e.id}</option>)}
+              {events.map(e => <option key={e.id as string} value={e.id as string}>{(e.name as string) || (e.id as string)}</option>)}
             </select>
             <div style={{ display: "flex", gap: "1rem" }}>
               <button 
@@ -310,11 +310,11 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
             </div>
             
             <div style={{ display: "grid", gap: "1rem", color: "#374151", fontSize: "0.95rem" }}>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Name:</strong> {viewRegistration.fullName || "—"}</div>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Email:</strong> {viewRegistration.email || "—"}</div>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Phone/WhatsApp:</strong> {viewRegistration.whatsapp || "—"}</div>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Age Range:</strong> {viewRegistration.ageRange || "—"}</div>
-              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Registrant Status:</strong> {viewRegistration.registrantStatus || "—"}</div>
+              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Name:</strong> {(viewRegistration.fullName as React.ReactNode) || "—"}</div>
+              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Email:</strong> {(viewRegistration.email as React.ReactNode) || "—"}</div>
+              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Phone/WhatsApp:</strong> {(viewRegistration.whatsapp as React.ReactNode) || "—"}</div>
+              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Age Range:</strong> {(viewRegistration.ageRange as React.ReactNode) || "—"}</div>
+              <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Registrant Status:</strong> {(viewRegistration.registrantStatus as React.ReactNode) || "—"}</div>
               <div><strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>Check-in Status:</strong> {viewRegistration.status === 'checked-in' ? "Checked In" : "Registered"}</div>
               
               {viewRegistration.customData && (() => {
@@ -330,7 +330,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                         {keys.map(k => (
                           <div key={k}>
                             <strong style={{ color: "#111", display: "block", marginBottom: "0.2rem" }}>{k}:</strong> 
-                            {custom[k] || "—"}
+                            {(custom as Record<string, string>)[k] || "—"}
                           </div>
                         ))}
                       </div>
