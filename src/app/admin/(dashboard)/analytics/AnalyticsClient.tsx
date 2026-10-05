@@ -182,34 +182,54 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
     const canvas = await html2canvas(input, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
     
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    const pdf = new jsPDF("l", "mm", "a4"); // Landscape for better fit
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
     
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+    const margin = 10;
+    const maxW = pageWidth - margin * 2;
+    const maxH = pageHeight - margin * 2;
+    
+    let imgW = maxW;
+    let imgH = (canvas.height * imgW) / canvas.width;
+    
+    if (imgH > maxH) {
+      imgH = maxH;
+      imgW = (canvas.width * imgH) / canvas.height;
+    }
+    
+    const x = (pageWidth - imgW) / 2;
+    const y = (pageHeight - imgH) / 2;
+    
+    pdf.addImage(imgData, "PNG", x, y, imgW, imgH);
     pdf.save(`${selectedEvent.name}-analytics.pdf`);
   };
 
   const handleExportPptx = async () => {
-    const input = document.getElementById("analytics-dashboard");
-    if (!input) return;
-    
-    // Capture the entire dashboard as an image
-    const canvas = await html2canvas(input, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-
     const pptx = new pptxgen();
+    pptx.layout = "LAYOUT_16x9";
     const slide = pptx.addSlide();
     
-    // Add image to slide, scaled to fit
-    slide.addImage({
-      data: imgData,
-      x: 0,
-      y: 0,
-      w: "100%",
-      h: "100%",
-      sizing: { type: "contain", w: "100%", h: "100%" }
-    });
+    slide.addText(`${selectedEvent.name} - Analytics`, { x: 0.5, y: 0.5, w: "90%", h: 0.5, fontSize: 24, bold: true, color: "111111" });
+
+    slide.addText(`Total Registrations: ${totalRegs}`, { x: 0.5, y: 1.2, w: 4, h: 0.5, fontSize: 16, color: "666666" });
+    slide.addText(`Total Checked In: ${checkedIn}`, { x: 5, y: 1.2, w: 4, h: 0.5, fontSize: 16, color: "666666" });
+
+    if (attendanceData.length > 0) {
+      slide.addChart(pptx.ChartType.pie, [{
+        name: "Attendance",
+        labels: attendanceData.map(d => d.name),
+        values: attendanceData.map(d => d.value)
+      }], { x: 0.5, y: 2, w: 4.5, h: 4, showLegend: true, legendPos: 'b', title: "Check-in Status", showTitle: true });
+    }
+
+    if (registrantStatuses.length > 0) {
+      slide.addChart(pptx.ChartType.bar, [{
+        name: "Status",
+        labels: registrantStatuses.map(d => d.name),
+        values: registrantStatuses.map(d => d.value)
+      }], { x: 5.5, y: 2, w: 4.5, h: 4, showLegend: false, title: "Registrant Status", showTitle: true });
+    }
 
     pptx.writeFile({ fileName: `${selectedEvent.name}-analytics.pptx` });
   };
