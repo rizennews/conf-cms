@@ -91,7 +91,6 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
   const ageMap: Record<string, number> = {};
   filteredRegs.forEach(r => {
     let age = (r.ageRange as string) || "Unknown";
-    // Check custom fields
     if (r.customData) {
       try {
         const custom = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
@@ -103,6 +102,38 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
     ageMap[age] = (ageMap[age] || 0) + 1;
   });
   const ageDemographics = Object.entries(ageMap).map(([name, value]) => ({ name, value }));
+
+  // First Timer Breakdown
+  let firstTimerCount = 0;
+  let returningCount = 0;
+  filteredRegs.forEach(r => {
+    if (r.isFirstTime === true || String(r.isFirstTime) === 'true') firstTimerCount++;
+    else if (r.isFirstTime === false || String(r.isFirstTime) === 'false') returningCount++;
+  });
+  const firstTimerData = [
+    { name: "First Timer", value: firstTimerCount },
+    { name: "Returning", value: returningCount }
+  ].filter(d => d.value > 0);
+
+  // Check-ins over time
+  const checkinHourMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    if (r.status === "checked-in" && r.checkedInAt) {
+      const d = new Date(r.checkedInAt as string);
+      const hourStr = d.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
+      checkinHourMap[hourStr] = (checkinHourMap[hourStr] || 0) + 1;
+    }
+  });
+  // Sort by time roughly
+  const checkinsOverTime = Object.entries(checkinHourMap)
+    .map(([time, count]) => ({ time, count }))
+    .sort((a, b) => {
+      const isPm1 = a.time.includes('PM');
+      const isPm2 = b.time.includes('PM');
+      if (isPm1 && !isPm2) return 1;
+      if (!isPm1 && isPm2) return -1;
+      return a.time.localeCompare(b.time); // naive sort
+    });
 
   // Dynamic Custom Charts
   let eventCustomFields: Record<string, unknown>[] = [];
@@ -168,6 +199,8 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
         topBranches={topBranches}
         attendanceData={attendanceData}
         dynamicCharts={dynamicCharts}
+        firstTimerData={firstTimerData}
+        checkinsOverTime={checkinsOverTime}
       />
     </div>
   );

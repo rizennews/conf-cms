@@ -11,11 +11,13 @@ interface Props {
   topBranches: { name: string; value: number }[];
   attendanceData: { name: string; value: number }[];
   dynamicCharts?: { title: string; data: { name: string; value: number }[] }[];
+  firstTimerData?: { name: string; value: number }[];
+  checkinsOverTime?: { time: string; count: number }[];
 }
 
 const COLORS = ['#111111', '#2b3ff2', '#f59e0b', '#10b981', '#6366f1', '#ec4899', '#8b5cf6'];
 
-export default function DashboardCharts({ registrationsByDate, ageDemographics, registrantStatuses, topInviters, referralSources, topBranches, attendanceData, dynamicCharts = [] }: Props) {
+export default function DashboardCharts({ registrationsByDate, ageDemographics, registrantStatuses, topInviters, referralSources, topBranches, attendanceData, dynamicCharts = [], firstTimerData = [], checkinsOverTime = [] }: Props) {
   return (
     <div style={{ marginTop: "3rem" }}>
       <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#111", margin: "0 0 1rem 0" }}>Analytics</h2>
@@ -45,6 +47,29 @@ export default function DashboardCharts({ registrationsByDate, ageDemographics, 
           </div>
         </div>
 
+        {/* Check-ins Over Time */}
+        <div style={{ background: "#fff", border: "1px solid #eaeaea", borderRadius: "8px", padding: "1.5rem", gridColumn: "1 / -1" }}>
+          <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "0.95rem", color: "#666" }}>Check-in Velocity (Day-Of)</h3>
+          <div style={{ width: "100%", height: 300 }}>
+            {checkinsOverTime.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={checkinsOverTime} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eaeaea" />
+                  <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} allowDecimals={false} />
+                  <RechartsTooltip 
+                    contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                    cursor={{ stroke: '#eaeaea', strokeWidth: 2 }}
+                  />
+                  <Line type="monotone" dataKey="count" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: "#10b981", strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: "0.9rem" }}>No check-ins yet</div>
+            )}
+          </div>
+        </div>
+
         {/* Age Demographics */}
         <div style={{ background: "#fff", border: "1px solid #eaeaea", borderRadius: "8px", padding: "1.5rem" }}>
           <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "0.95rem", color: "#666" }}>Age Demographics</h3>
@@ -63,6 +88,36 @@ export default function DashboardCharts({ registrationsByDate, ageDemographics, 
                   >
                     {ageDemographics.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: "0.85rem" }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", fontSize: "0.9rem" }}>No data</div>
+            )}
+          </div>
+        </div>
+
+        {/* First-Timers */}
+        <div style={{ background: "#fff", border: "1px solid #eaeaea", borderRadius: "8px", padding: "1.5rem" }}>
+          <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "0.95rem", color: "#666" }}>First-Timers vs Returning</h3>
+          <div style={{ width: "100%", height: 250 }}>
+            {firstTimerData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={firstTimerData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {firstTimerData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.name === "First Timer" ? "#8b5cf6" : "#2b3ff2"} />
                     ))}
                   </Pie>
                   <RechartsTooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} />
