@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
-import { db } from '../../../db';
-import { events } from '../../../db/schema';
+import { db } from '../../db';
+import { events } from '../../db/schema';
 import { eq, and } from 'drizzle-orm';
 
 export const runtime = 'edge';
@@ -35,7 +35,7 @@ export default async function Image(
         eventDate = `Register by ${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
       }
     }
-  } catch (e) {
+  } catch {
     // Silently fall back to default text on DB error
   }
 
