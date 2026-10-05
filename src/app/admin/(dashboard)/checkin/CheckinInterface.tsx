@@ -22,6 +22,11 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
   const [showScanner, setShowScanner] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCheckins, setPendingCheckins] = useState<number[]>([]);
+  const [showCheckedIn, setShowCheckedIn] = useState(true);
+  const [flashCardId, setFlashCardId] = useState<number | null>(null);
+  
+  const [batchMode, setBatchMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const [totalRegs, setTotalRegs] = useState(0);
   const [checkedInCount, setCheckedInCount] = useState(0);
@@ -139,6 +144,29 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
     });
   };
 
+  const playSuccessSound = () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.2);
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
   const handleCheckIn = async (id: number) => {
     const r = results.find(x => x.id === id);
     const name = (r?.fullName as string) || `ID #${id}`;
@@ -149,6 +177,9 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
     setCheckedInCount(c => c + 1);
     
     setHistory(prev => [{ id, name, time: new Date() }, ...prev].slice(0, 50));
+    playSuccessSound();
+    setFlashCardId(id);
+    setTimeout(() => setFlashCardId(null), 1000);
 
     try {
       if (!navigator.onLine) throw new Error("Offline");
@@ -156,6 +187,39 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
       if (!res?.success) throw new Error("API Failed");
     } catch {
       const pending = [...pendingCheckins, id];
+      setPendingCheckins(pending);
+      await set("pendingCheckins", pending);
+    }
+  };
+
+  const handleBatchCheckIn = async () => {
+    if (selectedIds.size === 0) return;
+    
+    const idsToProcess = Array.from(selectedIds);
+    
+    setCheckedInIds(prev => new Set([...prev, ...idsToProcess]));
+    setResults(prev => prev.map(r => idsToProcess.includes(r.id as number) ? { ...r, status: "checked-in" } : r));
+    setCheckedInCount(c => c + idsToProcess.length);
+    
+    const now = new Date();
+    setHistory(prev => {
+      const newHistory = idsToProcess.map(id => {
+        const r = results.find(x => x.id === id);
+        return { id, name: (r?.fullName as string) || `ID #${id}`, time: now };
+      });
+      return [...newHistory, ...prev].slice(0, 50);
+    });
+    
+    playSuccessSound();
+    setBatchMode(false);
+    setSelectedIds(new Set());
+    
+    try {
+      if (!navigator.onLine) throw new Error("Offline");
+      const res = await bulkCheckIn(idsToProcess);
+      if (!res?.success) throw new Error("API Failed");
+    } catch {
+      const pending = [...pendingCheckins, ...idsToProcess];
       setPendingCheckins(pending);
       await set("pendingCheckins", pending);
     }
@@ -288,16 +352,44 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
                 </div>
               ) : (
                 <>
-                  <div style={{ padding: "1rem 1.5rem", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", color: "#6b7280", fontSize: "0.9rem" }}>
-                    Found <strong>{results.length}</strong> result{results.length !== 1 ? "s" : ""}
+                  <div style={{ padding: "1rem 1.5rem", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", color: "#6b7280", fontSize: "0.9rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>Found <strong>{results.length}</strong> result{results.length !== 1 ? "s" : ""}</span>
+                    <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", fontWeight: 500, color: "#111" }}>
+                        <input type="checkbox" checked={batchMode} onChange={e => {
+                          setBatchMode(e.target.checked);
+                          if (!e.target.checked) setSelectedIds(new Set());
+                        }} />
+                        Batch Mode
+                      </label>
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", fontWeight: 500, color: "#111" }}>
+                        <input type="checkbox" checked={showCheckedIn} onChange={e => setShowCheckedIn(e.target.checked)} />
+                        Show Checked-in
+                      </label>
+                    </div>
                   </div>
-                  {results.map(r => {
+                  {results.filter(r => showCheckedIn || !isCheckedIn(r)).map(r => {
                     const alreadyCheckedIn = isCheckedIn(r);
+                    const isFlashing = flashCardId === r.id;
+                    const isSelected = selectedIds.has(r.id as number);
                     const initials = ((r.fullName as string) || "U").split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
                     return (
-                      <div key={r.id as number} style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+                      <div key={r.id as number} style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", background: isFlashing || isSelected ? "#dcfce7" : "white", transition: "background 0.5s ease" }}>
                         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                          <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "#e0e7ff", color: "#3730a3", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", fontWeight: 700, flexShrink: 0 }}>
+                          {batchMode && !alreadyCheckedIn && (
+                            <input 
+                              type="checkbox" 
+                              checked={isSelected}
+                              onChange={(e) => {
+                                const newSet = new Set(selectedIds);
+                                if (e.target.checked) newSet.add(r.id as number);
+                                else newSet.delete(r.id as number);
+                                setSelectedIds(newSet);
+                              }}
+                              style={{ width: "20px", height: "20px", accentColor: "#16a34a", cursor: "pointer" }}
+                            />
+                          )}
+                          <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: batchMode ? "#f3f4f6" : "#e0e7ff", color: batchMode ? "#9ca3af" : "#3730a3", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", fontWeight: 700, flexShrink: 0 }}>
                             {initials}
                           </div>
                           <div>
@@ -330,27 +422,44 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
                             </div>
                           </div>
                         </div>
-                        {!alreadyCheckedIn ? (
-                          <button 
-                            onClick={() => setConfirmId(r.id as number)}
-                            style={{ padding: "0.75rem 1.25rem", background: "#16a34a", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.5rem" }}
-                          >
-                            <UserCheck size={16} /> Check In
-                          </button>
-                        ) : (
-                          <button 
-                            onClick={() => setConfirmId(r.id as number)}
-                            style={{ padding: "0.5rem", background: "transparent", border: "none", cursor: "pointer" }}
-                            title="Manage Check-in"
-                          >
-                            <CheckCircle size={24} color="#16a34a" />
-                          </button>
-                        )}
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                          {!alreadyCheckedIn ? (
+                            !batchMode && (
+                              <button 
+                                onClick={() => setConfirmId(r.id as number)}
+                                style={{ padding: "0.75rem 1.25rem", background: "#16a34a", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.5rem" }}
+                              >
+                                <UserCheck size={16} /> Check In
+                              </button>
+                            )
+                          ) : (
+                            <button 
+                              onClick={() => setConfirmId(r.id as number)}
+                              style={{ padding: "0.5rem", background: "transparent", border: "none", cursor: "pointer" }}
+                              title="Manage Check-in"
+                            >
+                              <CheckCircle size={24} color="#16a34a" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
                 </>
               )}
+            </div>
+          )}
+          
+          {batchMode && selectedIds.size > 0 && (
+            <div style={{ position: "fixed", bottom: "2rem", left: "50%", transform: "translateX(-50%)", zIndex: 50, background: "white", padding: "1rem 2rem", borderRadius: "99px", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.3)", display: "flex", alignItems: "center", gap: "1.5rem" }}>
+              <span style={{ fontWeight: 600, color: "#111" }}>{selectedIds.size} Selected</span>
+              <button 
+                onClick={handleBatchCheckIn}
+                style={{ background: "#16a34a", color: "white", border: "none", padding: "0.75rem 1.5rem", borderRadius: "99px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                <CheckCircle size={18} />
+                Check-in All
+              </button>
             </div>
           )}
         </div>
