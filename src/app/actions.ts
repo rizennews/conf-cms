@@ -2,7 +2,7 @@
 
 import { db } from "../db";
 import { registrations, branches } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 interface RegistrationInput {
   fullName?: string;
@@ -40,6 +40,18 @@ export async function submitRegistration(data: RegistrationInput) {
     } = data;
 
     let branchId = "";
+
+    // Duplicate check
+    if (eventId) {
+      if (email) {
+        const existingEmail = await db.select().from(registrations).where(and(eq(registrations.eventId, eventId), eq(registrations.email, email))).limit(1);
+        if (existingEmail.length > 0) return { error: "This email has already been used to register for this event." };
+      }
+      if (whatsapp) {
+        const existingPhone = await db.select().from(registrations).where(and(eq(registrations.eventId, eventId), eq(registrations.whatsapp, whatsapp))).limit(1);
+        if (existingPhone.length > 0) return { error: "This phone number has already been used to register for this event." };
+      }
+    }
     
     if (branchName === "Other") {
       branchId = "other";
