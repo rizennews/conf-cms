@@ -190,7 +190,7 @@ export default function DashboardCharts({ registrationsByDate, ageDemographics, 
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={referralSources} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eaeaea" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} dy={10} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} dy={10} interval={0} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} allowDecimals={false} />
                   <RechartsTooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} cursor={{ fill: '#f9fafb' }} />
                   <Bar name="Registrations" dataKey="value" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
@@ -210,7 +210,7 @@ export default function DashboardCharts({ registrationsByDate, ageDemographics, 
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={topBranches} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eaeaea" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} dy={10} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} dy={10} interval={0} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} allowDecimals={false} />
                   <RechartsTooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} cursor={{ fill: '#f9fafb' }} />
                   <Bar name="Registrations" dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={40} />
@@ -230,7 +230,7 @@ export default function DashboardCharts({ registrationsByDate, ageDemographics, 
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={topExternalBranches} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eaeaea" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} dy={10} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} dy={10} interval={0} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} allowDecimals={false} />
                   <RechartsTooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }} cursor={{ fill: '#f9fafb' }} />
                   <Bar name="Registrations" dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
