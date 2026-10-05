@@ -39,8 +39,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     invitees: "",
     registrantStatus: "",
   });
-
-  const [customData, setCustomData] = useState<Record<string, any>>({});
+  const [customData, setCustomData] = useState<Record<string, string>>({});
 
   let parsedCustomFields: Record<string, unknown>[] = [];
   try {
