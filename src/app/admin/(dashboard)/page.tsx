@@ -4,6 +4,7 @@ import { db } from "../../../db";
 import { registrations, events, branches, user } from "../../../db/schema";
 import { eq, count, desc, not } from "drizzle-orm";
 import DashboardStats from "./DashboardStats";
+import DashboardCharts from "./DashboardCharts";
 
 export default async function AdminDashboardPage({ searchParams }: { searchParams: Promise<{ eventId?: string }> }) {
   const reqHeaders = await headers();
@@ -50,6 +51,29 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
   const allEvents = await db.select().from(events);
   const eventMap = Object.fromEntries(allEvents.map(e => [e.id, e.name]));
 
+  // Data for Charts
+  const dateMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    if (!r.createdAt) return;
+    const date = new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    dateMap[date] = (dateMap[date] || 0) + 1;
+  });
+  const registrationsByDate = Object.entries(dateMap).map(([date, count]) => ({ date, count })).slice(-14);
+
+  const ageMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    const age = r.ageRange || "Unknown";
+    ageMap[age] = (ageMap[age] || 0) + 1;
+  });
+  const ageDemographics = Object.entries(ageMap).map(([name, value]) => ({ name, value })).filter(d => d.name !== "Unknown");
+
+  const statusMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    const status = r.registrantStatus || "Unknown";
+    statusMap[status] = (statusMap[status] || 0) + 1;
+  });
+  const registrantStatuses = Object.entries(statusMap).map(([name, value]) => ({ name, value })).filter(d => d.name !== "Unknown");
+
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto", paddingBottom: "4rem" }}>
       <div style={{ marginBottom: "2.5rem" }}>
@@ -65,6 +89,12 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
         checkInPct={checkInPct}
         events={allEvents}
         selectedEventId={eventId || ""}
+      />
+
+      <DashboardCharts 
+        registrationsByDate={registrationsByDate}
+        ageDemographics={ageDemographics}
+        registrantStatuses={registrantStatuses}
       />
 
       <div style={{ marginTop: "3rem" }}>
