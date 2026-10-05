@@ -161,7 +161,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
           </p>
           
           <div style={{ background: "#f9fafb", padding: "1.5rem", borderRadius: "12px", border: "1px dashed #d1d5db", marginBottom: "2rem", display: "inline-block" }}>
-            <QRCodeSVG id="registration-qr-code" value={registrationId} size={160} level="H" />
+            <QRCodeSVG id="registration-qr-code" value={registrationId} size={160} level="H" aria-label={`QR Code for ${formData.fullName}`} />
           </div>
 
           <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
@@ -184,7 +184,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
   return (
     <div className={styles.overlay} onClick={onClose} style={{ zIndex: 100 }}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
-        <button className={styles.closeButton} onClick={onClose}>×</button>
+        <button className={styles.closeButton} onClick={onClose} aria-label="Close registration form">×</button>
         <h2 className={styles.title}>{event?.name || 'Registration Form'}</h2>
         <p className={styles.subtitle}>Step {step} of {totalSteps}</p>
         
@@ -229,6 +229,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
                         value={countryCode} 
                         onChange={e => setCountryCode(e.target.value)}
                         style={{ border: 'none', background: 'transparent', padding: '0.85rem 0.5rem', outline: 'none', color: '#111', cursor: 'pointer' }}
+                        aria-label="Country code"
                       >
                         {COUNTRIES.map(c => (
                           <option key={c.code} value={c.code}>{c.dial}</option>
