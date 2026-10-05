@@ -40,14 +40,7 @@ const images = [
   "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54136042295_df4c84fcb2_b.jpg",
 ];
 
-const videos = [
-  "gLRgfTc9Juw" // Extracting the video ID from the provided link
-];
-
-const media = [
-  ...videos.map(id => ({ type: 'video' as const, id, url: `https://img.youtube.com/vi/${id}/maxresdefault.jpg` })),
-  ...images.map(url => ({ type: 'image' as const, url }))
-];
+const media = images.map(url => ({ type: 'image' as const, url }));
 
 export default function Gallery({ branches, event, autoOpen = false }: { branches?: { id: string | number; name: string }[], event?: { id?: string | number; name?: string; isActive?: boolean; deadline?: string | Date | null } | null, autoOpen?: boolean }) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -150,7 +143,6 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
             {/* Custom Manual Blur Placeholder */}
             <div className={`${styles.blurPlaceholder} ${loadedImages.has(idx) ? styles.loaded : ''}`} />
             
-            {item.type === 'image' ? (
               <Image
                 src={item.url}
                 alt={`Event Media ${idx + 1}`}
@@ -162,22 +154,6 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
                 unoptimized={true}
                 onLoad={() => handleImageLoad(idx)}
               />
-            ) : (
-              <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', overflow: 'hidden', zIndex: 1, borderRadius: '8px' }}>
-                <iframe
-                  src={`https://www.youtube.com/embed/${item.id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${item.id}&rel=0&modestbranding=1&playsinline=1`}
-                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', pointerEvents: 'none', transform: 'scale(1.35)' }}
-                  allow="autoplay; encrypted-media"
-                  onLoad={() => handleImageLoad(idx)}
-                />
-              </div>
-            )}
-
-            {item.type === 'video' && (
-              <div className={styles.playOverlay}>
-                <div className={styles.playButton}>▶</div>
-              </div>
-            )}
           </div>
         ))}
       </div>
@@ -193,16 +169,6 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
         <div className={styles.lightbox} onClick={() => setSelectedIndex(null)}>
           
           <div className={styles.lightboxImageContainer} onClick={(e) => e.stopPropagation()}>
-            {media[selectedIndex].type === 'video' ? (
-              <iframe
-                src={`https://www.youtube.com/embed/${(media[selectedIndex] as { type: 'video', id: string }).id}?autoplay=1`}
-                title="Multiply Sunday Video"
-                className={styles.lightboxImage}
-                style={{ border: 'none', backgroundColor: '#000', width: '90vw', maxWidth: '1200px', aspectRatio: '16/9' }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : (
               <Image 
                 key={selectedIndex}
                 src={media[selectedIndex].url}
@@ -213,7 +179,6 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
                 style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '90vh', width: 'auto', height: 'auto' }}
                 unoptimized
               />
-            )}
 
             {/* Controls are now INSIDE the image container, overlaying the image */}
             <button 
@@ -226,19 +191,17 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
             </button>
 
-            {media[selectedIndex].type === 'image' && (
-              <a 
-                href={media[selectedIndex].url}
-                download={`Multiply_Sunday_Photo_${selectedIndex + 1}.jpg`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.downloadButton}
-                onClick={(e) => e.stopPropagation()}
-                title="Download Image"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              </a>
-            )}
+            <a 
+              href={media[selectedIndex].url}
+              download={`Multiply_Sunday_Photo_${selectedIndex + 1}.jpg`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.downloadButton}
+              onClick={(e) => e.stopPropagation()}
+              title="Download Image"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </a>
             
             <button className={styles.lightboxPrev} onClick={prevImage}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"></path></svg>
@@ -258,11 +221,6 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
                 onClick={() => setSelectedIndex(idx)}
               >
                 <Image src={item.url} alt={`Thumb ${idx + 1}`} fill style={{ objectFit: 'cover' }} sizes="80px" unoptimized={true} />
-                {item.type === 'video' && (
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
-                    <div style={{ color: '#fff', fontSize: '1rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>▶</div>
-                  </div>
-                )}
               </div>
             ))}
           </div>

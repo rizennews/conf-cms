@@ -20,6 +20,9 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<RegRecord | null>(null);
+  
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printEventId, setPrintEventId] = useState("");
@@ -90,6 +93,17 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     const result = await deleteRegistration(id);
     if (result.success) {
       setDeleteConfirm(null);
+      window.location.reload();
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    const { bulkDeleteRegistrations } = await import("./actions");
+    const result = await bulkDeleteRegistrations(selectedIds);
+    if (result.success) {
+      setShowBulkDeleteConfirm(false);
+      setSelectedIds([]);
       window.location.reload();
     }
   };
@@ -272,6 +286,11 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
               <Upload size={15} /> Bulk Upload
             </button>
           )}
+          {isSuperAdmin && selectedIds.length > 0 && (
+            <button onClick={() => setShowBulkDeleteConfirm(true)} style={{ padding: "0.65rem 1rem", background: "#ef4444", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem" }}>
+              <Trash2 size={15} /> Delete Selected ({selectedIds.length})
+            </button>
+          )}
         </div>
 
         {/* Summary bar */}
@@ -285,6 +304,20 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1000px" }}>
             <thead>
               <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb", textAlign: "left" }}>
+                <th style={{ ...thStyle(), width: "40px" }}>
+                  <input 
+                    type="checkbox" 
+                    checked={paginatedData.length > 0 && selectedIds.length === paginatedData.length}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setSelectedIds(paginatedData.map(r => r.id as number));
+                      } else {
+                        setSelectedIds([]);
+                      }
+                    }}
+                    style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                  />
+                </th>
                 <th style={thStyle("fullName")} onClick={() => handleSort("fullName")}>
                   <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>Registrant {renderSortIcon("fullName")}</span>
                 </th>
@@ -319,7 +352,21 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                 }
 
                 return (
-                  <tr key={r.id as string} style={{ borderBottom: "1px solid #f3f4f6", transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.backgroundColor = "#fafbfc"} onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}>
+                  <tr key={r.id as string} style={{ borderBottom: "1px solid #f3f4f6", transition: "background 0.15s", background: selectedIds.includes(r.id as number) ? "#eff6ff" : "transparent" }} onMouseEnter={e => { if (!selectedIds.includes(r.id as number)) e.currentTarget.style.backgroundColor = "#fafbfc"; }} onMouseLeave={e => { if (!selectedIds.includes(r.id as number)) e.currentTarget.style.backgroundColor = "transparent"; }}>
+                    <td style={{ padding: "0.85rem 1.25rem" }}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedIds.includes(r.id as number)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setSelectedIds(prev => [...prev, r.id as number]);
+                          } else {
+                            setSelectedIds(prev => prev.filter(id => id !== r.id));
+                          }
+                        }}
+                        style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                      />
+                    </td>
                     <td style={{ padding: "0.85rem 1.25rem" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                         <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)", color: "#3730a3", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.95rem", flexShrink: 0 }}>
@@ -439,6 +486,27 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
             <div style={{ display: "flex", gap: "1rem" }}>
               <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer", fontWeight: 600, color: "#111" }}>Cancel</button>
               <button onClick={() => handleDelete(deleteConfirm)} style={{ flex: 1, padding: "0.75rem", background: "#ef4444", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation */}
+      {showBulkDeleteConfirm && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100 }}>
+          <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "95vw", maxWidth: "1200px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+              <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Trash2 size={20} color="#ef4444" />
+              </div>
+              <h2 style={{ margin: 0, color: "#111", fontSize: "1.15rem" }}>Delete {selectedIds.length} Registrations</h2>
+            </div>
+            <p style={{ color: "#4b5563", fontSize: "0.95rem", marginBottom: "1.5rem" }}>
+              Are you sure you want to permanently delete {selectedIds.length} registrations? This action cannot be undone.
+            </p>
+            <div style={{ display: "flex", gap: "1rem" }}>
+              <button onClick={() => setShowBulkDeleteConfirm(false)} style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer", fontWeight: 600, color: "#111" }}>Cancel</button>
+              <button onClick={handleBulkDelete} style={{ flex: 1, padding: "0.75rem", background: "#ef4444", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>Delete Selected</button>
             </div>
           </div>
         </div>
@@ -568,7 +636,12 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                           ccode = (c as Record<string, string>)._countryCode;
                         } catch { /* ignore */ }
                       }
-                      return ccode ? <img src={`https://flagcdn.com/w20/${ccode}.png`} alt={ccode} width="16" style={{ borderRadius: '2px' }} /> : null;
+                      return ccode ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={`https://flagcdn.com/w20/${ccode}.png`} alt={ccode} width="16" style={{ borderRadius: '2px' }} />
+                        </>
+                      ) : null;
                     })()}
                     <span>{(viewRegistration.whatsapp as string) || "No Phone"}</span>
                   </div>

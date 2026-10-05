@@ -2,7 +2,7 @@
 
 import { db } from "../../../../db";
 import { registrations, branches, activityLogs } from "../../../../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../../../lib/auth";
 import { headers } from "next/headers";
@@ -65,6 +65,29 @@ export async function deleteRegistration(id: number) {
         userId: session.user.id,
         action: "delete-registration",
         details: JSON.stringify({ registrationId: id }),
+      });
+    }
+
+    revalidatePath("/admin/registrations");
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { error: msg };
+  }
+}
+
+export async function bulkDeleteRegistrations(ids: number[]) {
+  if (!ids || ids.length === 0) return { success: true };
+  try {
+    await db.delete(registrations).where(inArray(registrations.id, ids));
+    
+    const reqHeaders = await headers();
+    const session = await auth.api.getSession({ headers: reqHeaders });
+    if (session?.user?.id) {
+      await db.insert(activityLogs).values({
+        userId: session.user.id,
+        action: "bulk-delete-registration",
+        details: JSON.stringify({ count: ids.length }),
       });
     }
 
