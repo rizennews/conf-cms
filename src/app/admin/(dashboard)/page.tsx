@@ -60,7 +60,6 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
       <DashboardStats
         totalRegs={totalRegs}
         checkedIn={checkedIn}
-        activeEvents={activeEvents}
         totalBranches={totalBranches}
         externalChurches={externalChurches}
         checkInPct={checkInPct}

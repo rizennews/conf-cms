@@ -27,6 +27,8 @@ const images = [
   "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54977446721_a1ef283de1_b.jpg",
   "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54977452511_36d648a9a6_b.jpg",
   "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54982227412_c4b67939c1_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54136040645_d40513ea87_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54977605343_8f69fc6d58_b.jpg",
 ];
 
 const videos = [

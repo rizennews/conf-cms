@@ -9,11 +9,11 @@ interface Props {
   totalBranches: number;
   externalChurches: number;
   checkInPct: number;
-  events?: any[];
+  events?: { id: string; name: string }[];
   selectedEventId?: string;
 }
 
-export default function DashboardStats({ totalRegs, checkedIn, activeEvents, totalBranches, externalChurches, checkInPct, events = [], selectedEventId = "" }: Props) {
+export default function DashboardStats({ totalRegs, checkedIn, totalBranches, externalChurches, checkInPct, events = [], selectedEventId = "" }: Props) {
   const router = useRouter();
   const stats = [
     { label: "Total Registrations", value: totalRegs },
