@@ -4,11 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import { getRegistrationById, checkInById, searchRegistrations } from "../(dashboard)/checkin/actions";
 import { Html5Qrcode } from "html5-qrcode";
 import { CheckCircle, AlertTriangle, XCircle, QrCode, Search, UserCheck, Camera, Maximize, Minimize } from "lucide-react";
-import { CheckCircle, AlertTriangle, XCircle, QrCode, Search, UserCheck, Camera, Maximize, Minimize } from "lucide-react";
 
 type ScanState = "IDLE" | "SUCCESS" | "ALREADY_CHECKED_IN" | "INVALID";
 
-export default function KioskClient({ events, branches }: { events: Record<string, unknown>[], branches: Record<string, unknown>[] }) {
+interface EventType { id: string; name: string; }
+interface BranchType { id: string; name: string; }
+interface RegistrationType { id: number; fullName?: string | null; email?: string | null; status?: string | null; eventId?: string | null; branchId?: string | null; }
+
+export default function KioskClient({ events, branches }: { events: EventType[], branches: BranchType[] }) {
   const [selectedEvent, setSelectedEvent] = useState(events[0]?.id || "");
   const [isStarted, setIsStarted] = useState(false);
   const [scanState, setScanState] = useState<ScanState>("IDLE");
@@ -20,7 +23,7 @@ export default function KioskClient({ events, branches }: { events: Record<strin
   // Search Fallback State
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Record<string, unknown>[]>([]);
+  const [searchResults, setSearchResults] = useState<RegistrationType[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [cameraError, setCameraError] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -160,6 +163,7 @@ export default function KioskClient({ events, branches }: { events: Record<strin
         }
       };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isStarted, scanState, isProcessing, selectedEvent, isSearchMode, branches]);
 
   function handleResult(state: ScanState, msg: string, sub: string) {
@@ -191,7 +195,7 @@ export default function KioskClient({ events, branches }: { events: Record<strin
     setIsSearching(false);
   };
 
-  const handleManualCheckIn = async (reg: Record<string, unknown>) => {
+  const handleManualCheckIn = async (reg: RegistrationType) => {
     if (reg.status === "checked-in") {
       handleResult("ALREADY_CHECKED_IN", `${reg.fullName || 'Guest'}`, "Already checked in!");
       return;
