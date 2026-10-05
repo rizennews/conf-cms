@@ -32,24 +32,42 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     setUploadResult(null);
     const text = await csvFile.text();
     const lines = text.trim().split("\n");
-    const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
-    const rows = lines.slice(1).map(line => {
-      // Basic CSV splitting (doesn't handle quotes with commas inside perfectly, but good enough for simple uploads)
-      const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
+    const csvHeaders = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
+    const standardFields = [
+      "fullName", "email", "whatsapp", "address", "branchId",
+      "ageRange", "registrantStatus", "isMember", "isFirstTime",
+      "heardFrom", "invitees"
+    ];
+    const rows = lines.slice(1).filter(l => l.trim()).map(line => {
+      // Smart CSV split that respects quoted fields with commas
+      const values: string[] = [];
+      let current = "";
+      let inQuotes = false;
+      for (const ch of line) {
+        if (ch === '"') { inQuotes = !inQuotes; continue; }
+        if (ch === ',' && !inQuotes) { values.push(current.trim()); current = ""; continue; }
+        current += ch;
+      }
+      values.push(current.trim());
+
       const row: Record<string, unknown> = {};
       const customData: Record<string, string> = {};
-      const standardFields = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange", "registrantStatus"];
-      
-      headers.forEach((h, i) => {
+
+      csvHeaders.forEach((h, i) => {
+        const val = values[i] || "";
         if (standardFields.includes(h)) {
-          row[h] = values[i] || null;
+          if (h === "isMember" || h === "isFirstTime") {
+            row[h] = val.toLowerCase() === "yes" || val.toLowerCase() === "true";
+          } else {
+            row[h] = val || null;
+          }
         } else {
-          customData[h] = values[i] || "";
+          if (val) customData[h] = val;
         }
       });
       row.customData = JSON.stringify(customData);
       return row;
-    }).filter(r => r.fullName || r.email || r.customData !== "{}");
+    }).filter(r => r.fullName || r.email);
     
     const { bulkInsertRegistrations } = await import("./actions");
     const result = await bulkInsertRegistrations(rows, uploadEvent as string);
@@ -58,9 +76,15 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
   };
 
   const downloadTemplate = () => {
-    const headers = ["fullName", "email", "whatsapp", "address", "branchId", "ageRange", "registrantStatus"];
     const targetEvent = events.find(e => e.id === uploadEvent);
-    
+
+    // Build headers: standard fields + event-specific custom fields
+    const headers = [
+      "fullName", "email", "whatsapp", "address", "branchId",
+      "ageRange", "registrantStatus", "isMember", "isFirstTime",
+      "heardFrom", "invitees"
+    ];
+
     if (targetEvent?.customFields) {
       try {
         const fields = JSON.parse(targetEvent.customFields as string);
@@ -72,22 +96,43 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
       } catch { /* ignore */ }
     }
 
-    const csv = headers.join(",") + "\n" + headers.map(h => {
-      if (h === "fullName") return "John Doe";
-      if (h === "email") return "john@example.com";
-      if (h === "whatsapp") return "0241234567";
-      if (h === "address") return "Accra";
-      if (h === "branchId") return "main-branch";
-      if (h === "ageRange") return "25-34";
-      if (h === "registrantStatus") return "Member";
-      return "Sample Answer";
-    }).join(",");
+    // Build example rows with realistic data
+    const exampleRows = [
+      {
+        fullName: "John Doe", email: "john@example.com", whatsapp: "0241234567",
+        address: "Accra, Ghana", branchId: "main-branch", ageRange: "25-34",
+        registrantStatus: "Member", isMember: "Yes", isFirstTime: "No",
+        heardFrom: "Church", invitees: "Jane Smith"
+      },
+      {
+        fullName: "Mary Johnson", email: "mary@example.com", whatsapp: "0551234567",
+        address: "Tema, Ghana", branchId: "tema-branch", ageRange: "18-24",
+        registrantStatus: "Guest", isMember: "No", isFirstTime: "Yes",
+        heardFrom: "Friend", invitees: ""
+      },
+      {
+        fullName: "David Mensah", email: "david@example.com", whatsapp: "0201234567",
+        address: "Kumasi, Ghana", branchId: "kumasi-branch", ageRange: "35-44",
+        registrantStatus: "Worker", isMember: "Yes", isFirstTime: "No",
+        heardFrom: "Social Media", invitees: "Grace Mensah, Ama Mensah"
+      }
+    ];
+
+    const csvRows = exampleRows.map(row => {
+      return headers.map(h => {
+        const val = (row as Record<string, string>)[h] || "Sample Answer";
+        // Wrap in quotes if value contains a comma
+        return val.includes(",") ? `"${val}"` : val;
+      }).join(",");
+    });
+
+    const csv = headers.join(",") + "\n" + csvRows.join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `template-${targetEvent?.slug || "registrations"}.csv`;
+    a.download = `template-${(targetEvent?.slug as string) || "registrations"}.csv`;
     a.click();
   };
 
@@ -228,13 +273,20 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
 
       {showUpload && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100 }}>
-          <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "100%", maxWidth: "500px" }}>
+          <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "100%", maxWidth: "550px" }}>
             <h2 style={{ marginTop: 0, color: "#111" }}>Bulk Upload Registrations</h2>
-            <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "8px", padding: "1rem", marginBottom: "1.5rem", fontSize: "0.9rem", color: "#111" }}>
-              <strong>CSV Format:</strong> <code style={{ background: "#e0f2fe", padding: "0.2rem 0.4rem", borderRadius: "4px" }}>fullName, email, whatsapp, address, branchId, ageRange</code>
-              <br/>
+            <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "8px", padding: "1rem", marginBottom: "1.5rem", fontSize: "0.85rem", color: "#334155" }}>
+              <strong style={{ color: "#111", fontSize: "0.9rem" }}>CSV Columns (in order):</strong>
+              <div style={{ marginTop: "0.5rem", display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+                {["fullName", "email", "whatsapp", "address", "branchId", "ageRange", "registrantStatus", "isMember", "isFirstTime", "heardFrom", "invitees"].map(f => (
+                  <code key={f} style={{ background: "#e0f2fe", padding: "0.15rem 0.4rem", borderRadius: "4px", fontSize: "0.8rem" }}>{f}</code>
+                ))}
+              </div>
+              <p style={{ margin: "0.5rem 0 0 0", fontSize: "0.8rem", color: "#64748b" }}>
+                Download the template to see examples with 3 sample rows. Any extra columns will be saved as custom data.
+              </p>
               <button onClick={downloadTemplate} style={{ marginTop: "0.75rem", background: "none", border: "1px solid #7dd3fc", borderRadius: "6px", padding: "0.4rem 0.75rem", color: "#0284c7", cursor: "pointer", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                <Download size={14} /> Download Template
+                <Download size={14} /> Download Template CSV
               </button>
             </div>
             <div style={{ marginBottom: "1.5rem" }}>
@@ -250,6 +302,12 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
             {uploadResult && (
               <div style={{ padding: "1rem", borderRadius: "8px", marginBottom: "1rem", background: uploadResult.error ? "#fef2f2" : "#f0fdf4", color: uploadResult.error ? "#ef4444" : "#16a34a" }}>
                 {uploadResult.error ? `Error: ${uploadResult.error}` : `✓ Inserted ${uploadResult.inserted} registrations!`}
+                {(uploadResult.errors as string[])?.length > 0 && (
+                  <div style={{ marginTop: "0.5rem", fontSize: "0.8rem", color: "#b45309", background: "#fffbeb", padding: "0.5rem", borderRadius: "4px", maxHeight: "100px", overflowY: "auto" }}>
+                    <strong>Warnings:</strong>
+                    {(uploadResult.errors as string[]).map((err, i) => <div key={i}>• {err}</div>)}
+                  </div>
+                )}
               </div>
             )}
             <div style={{ display: "flex", gap: "1rem" }}>
@@ -339,7 +397,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                 } catch {
                   return <div>Error parsing custom fields.</div>;
                 }
-              })()}
+              })() : null}
             </div>
             
             <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
