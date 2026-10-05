@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "../../../../db";
-import { registrations } from "../../../../db/schema";
+import { registrations, activityLogs } from "../../../../db/schema";
 import { eq, or, ilike, and, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -58,8 +58,18 @@ export async function searchRegistrations(query: string, eventId: string) {
 export async function checkInById(registrationId: number) {
   try {
     await db.update(registrations)
-      .set({ status: "checked-in" })
+      .set({ status: "checked-in", checkedInAt: new Date() })
       .where(eq(registrations.id, registrationId));
+
+    const reqHeaders = await headers();
+    const session = await auth.api.getSession({ headers: reqHeaders });
+    if (session?.user?.id) {
+      await db.insert(activityLogs).values({
+        userId: session.user.id,
+        action: "check-in",
+        details: JSON.stringify({ registrationId }),
+      });
+    }
 
     revalidatePath("/admin/checkin");
     return { success: true };
@@ -118,8 +128,18 @@ export async function bulkCheckIn(ids: number[]) {
   if (!ids || ids.length === 0) return { success: true };
   try {
     await db.update(registrations)
-      .set({ status: "checked-in" })
+      .set({ status: "checked-in", checkedInAt: new Date() })
       .where(inArray(registrations.id, ids));
+
+    const reqHeaders = await headers();
+    const session = await auth.api.getSession({ headers: reqHeaders });
+    if (session?.user?.id) {
+      await db.insert(activityLogs).values({
+        userId: session.user.id,
+        action: "bulk-check-in",
+        details: JSON.stringify({ count: ids.length, ids }),
+      });
+    }
 
     revalidatePath("/admin/checkin");
     return { success: true };

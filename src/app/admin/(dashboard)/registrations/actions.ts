@@ -1,9 +1,11 @@
 "use server";
 
 import { db } from "../../../../db";
-import { registrations, branches } from "../../../../db/schema";
+import { registrations, branches, activityLogs } from "../../../../db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { auth } from "../../../../lib/auth";
+import { headers } from "next/headers";
 
 export async function bulkInsertRegistrations(rows: Record<string, unknown>[], eventId: string) {
   try {
@@ -55,6 +57,17 @@ export async function bulkInsertRegistrations(rows: Record<string, unknown>[], e
 export async function deleteRegistration(id: number) {
   try {
     await db.delete(registrations).where(eq(registrations.id, id));
+    
+    const reqHeaders = await headers();
+    const session = await auth.api.getSession({ headers: reqHeaders });
+    if (session?.user?.id) {
+      await db.insert(activityLogs).values({
+        userId: session.user.id,
+        action: "delete-registration",
+        details: JSON.stringify({ registrationId: id }),
+      });
+    }
+
     revalidatePath("/admin/registrations");
     return { success: true };
   } catch (err: unknown) {
@@ -92,6 +105,17 @@ export async function updateRegistration(id: number, data: Record<string, unknow
       registrantStatus: (data.registrantStatus as string) || null,
       customData: updatedCustomData as string | null,
     }).where(eq(registrations.id, id));
+
+    const reqHeaders = await headers();
+    const session = await auth.api.getSession({ headers: reqHeaders });
+    if (session?.user?.id) {
+      await db.insert(activityLogs).values({
+        userId: session.user.id,
+        action: "update-registration",
+        details: JSON.stringify({ registrationId: id, updatedFields: Object.keys(data) }),
+      });
+    }
+
     revalidatePath("/admin/registrations");
     return { success: true };
   } catch (err: unknown) {

@@ -92,4 +92,15 @@ export const registrations = pgTable("registrations", {
   
   // Registrant status (e.g. Member, Guest, Worker)
   registrantStatus: text("registrant_status"),
+  
+  // Track exactly when they were checked in
+  checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+});
+
+export const activityLogs = pgTable("activity_logs", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => user.id), // The admin who performed the action
+  action: text("action").notNull(), // e.g. "login", "check-in", "edit-registration", "bulk-upload"
+  details: text("details"), // JSON string or text with more context (e.g. registration ID)
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
