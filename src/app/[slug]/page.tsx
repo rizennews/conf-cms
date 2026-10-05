@@ -34,20 +34,11 @@ export async function generateMetadata(
       title,
       description,
       type: "website",
-      images: [
-        {
-          url: "https://r2.rizen.link/11c210ab-e9f8-450a-85d1-3957ce6c2438/6ce5beea1e7f60ce9d0ce4684a0d8ff0.png", // Fallback hero image from gallery
-          width: 1200,
-          height: 630,
-          alt: activeEvent.name,
-        },
-      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ["https://r2.rizen.link/11c210ab-e9f8-450a-85d1-3957ce6c2438/6ce5beea1e7f60ce9d0ce4684a0d8ff0.png"],
     },
   };
 }
