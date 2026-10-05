@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 interface Props {
   totalRegs: number;
   checkedIn: number;
-  activeEvents: number;
   totalBranches: number;
   externalChurches: number;
   checkInPct: number;

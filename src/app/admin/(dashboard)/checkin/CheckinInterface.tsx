@@ -79,9 +79,9 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
       if (localData.length > 0 || !navigator.onLine) {
         const q = query.toLowerCase();
         const res = localData.filter(r => 
-          (r.fullName?.toLowerCase().includes(q) || 
-           r.email?.toLowerCase().includes(q) || 
-           r.whatsapp?.toLowerCase().includes(q))
+          (String(r.fullName || "").toLowerCase().includes(q) || 
+           String(r.email || "").toLowerCase().includes(q) || 
+           String(r.whatsapp || "").toLowerCase().includes(q))
         ).slice(0, 10);
         setResults(res);
       } else {
