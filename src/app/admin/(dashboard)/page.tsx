@@ -74,6 +74,53 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
   });
   const registrantStatuses = Object.entries(statusMap).map(([name, value]) => ({ name, value })).filter(d => d.name !== "Unknown");
 
+  const inviterMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    const inviter = r.invitees?.trim();
+    if (inviter) {
+      // Normalize names (e.g., capitalize first letters)
+      const name = inviter.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      inviterMap[name] = (inviterMap[name] || 0) + 1;
+    }
+  });
+  const topInviters = Object.entries(inviterMap)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5); // Top 5
+
+  const referralMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    const source = r.heardFrom?.trim();
+    if (source) {
+      const normalized = source.charAt(0).toUpperCase() + source.slice(1).toLowerCase();
+      referralMap[normalized] = (referralMap[normalized] || 0) + 1;
+    }
+  });
+  const referralSources = Object.entries(referralMap)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
+
+  const allBranchesArray = await db.select().from(branches);
+  const branchMap = Object.fromEntries(allBranchesArray.map(b => [b.id, b.name]));
+
+  const branchCountMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    if (r.branchId !== "other") {
+      const bName = branchMap[r.branchId] || "Unknown";
+      branchCountMap[bName] = (branchCountMap[bName] || 0) + 1;
+    }
+  });
+  const topBranches = Object.entries(branchCountMap)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
+
+  const attendanceData = [
+    { name: "Checked In", value: checkedIn },
+    { name: "Not Arrived", value: totalRegs - checkedIn }
+  ].filter(d => d.value > 0);
+
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto", paddingBottom: "4rem" }}>
       <div style={{ marginBottom: "2.5rem" }}>
@@ -95,6 +142,10 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
         registrationsByDate={registrationsByDate}
         ageDemographics={ageDemographics}
         registrantStatuses={registrantStatuses}
+        topInviters={topInviters}
+        referralSources={referralSources}
+        topBranches={topBranches}
+        attendanceData={attendanceData}
       />
 
       <div style={{ marginTop: "3rem" }}>
