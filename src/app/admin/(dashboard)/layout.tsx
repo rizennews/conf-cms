@@ -3,8 +3,9 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "../../../db";
 import { user } from "../../../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, gte, and, sql } from "drizzle-orm";
 import Sidebar from "./Sidebar";
+import { registrations } from "../../../db/schema";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const reqHeaders = await headers();
@@ -29,6 +30,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     }
   }
 
+  // Get today's registrations count for the badge
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  let newRegistrations = 0;
+  try {
+    let query = db.select({ count: sql<number>`count(*)` }).from(registrations).where(gte(registrations.createdAt, today));
+    if (role === "branch_head" && currentUser[0]?.branchId) {
+      query = db.select({ count: sql<number>`count(*)` }).from(registrations).where(and(gte(registrations.createdAt, today), eq(registrations.branchId, currentUser[0].branchId)));
+    }
+    const [{ count }] = await query;
+    newRegistrations = Number(count);
+  } catch (e) {
+    console.error("Failed to fetch today's registrations:", e);
+  }
+
   return (
     <div className="layout-root">
       <style>{`
@@ -37,7 +54,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           .layout-root { flex-direction: column; }
         }
       `}</style>
-      <Sidebar role={role} userName={session.user.name} />
+      <Sidebar role={role} userName={session.user.name} newRegistrations={newRegistrations} />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         {/* Main content — extra top padding on mobile accounts for the sticky topbar */}

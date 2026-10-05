@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "../../../lib/auth-client";
@@ -32,10 +32,18 @@ const NAV_ITEMS = [
   { href: "/admin/staff", label: "Staff & Users", icon: Users, roles: ["super_admin"] },
 ];
 
-export default function Sidebar({ role, userName }: { role: string; userName: string }) {
+export default function Sidebar({ role, userName, newRegistrations = 0 }: { role: string; userName: string; newRegistrations?: number }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+
+  // Auto-refresh the layout (and current page) every 30s to keep the "New" badge and dashboard real-time
+  useEffect(() => {
+    const interval = setInterval(() => {
+      router.refresh();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [router]);
 
   const visibleItems = NAV_ITEMS.filter(item => item.roles.includes(role));
 
@@ -71,6 +79,7 @@ export default function Sidebar({ role, userName }: { role: string; userName: st
       <nav style={{ flex: 1, padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.15rem", overflowY: "auto" }}>
         {visibleItems.map(({ href, label, icon: Icon }) => {
           const active = isActive(href);
+          const isRegistrations = href === "/admin/registrations";
           return (
             <Link
               key={href}
@@ -93,7 +102,14 @@ export default function Sidebar({ role, userName }: { role: string; userName: st
               onMouseOut={e => { if (!active) e.currentTarget.style.background = "transparent"; }}
             >
               <Icon size={18} strokeWidth={active ? 2.5 : 1.8} color={active ? "#2b3ff2" : "#374151"} />
-              <span style={{ flex: 1 }}>{label}</span>
+              <span style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                {label}
+                {isRegistrations && newRegistrations > 0 && (
+                  <span style={{ background: "#ef4444", color: "white", padding: "0.1rem 0.4rem", borderRadius: "99px", fontSize: "0.7rem", fontWeight: 700 }}>
+                    {newRegistrations} New
+                  </span>
+                )}
+              </span>
               {active && <ChevronRight size={14} color="#2b3ff2" />}
             </Link>
           );

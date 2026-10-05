@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   totalRegs: number;
@@ -14,6 +15,24 @@ interface Props {
 
 export default function DashboardStats({ totalRegs, checkedIn, totalBranches, externalChurches, checkInPct, events = [], selectedEventId = "" }: Props) {
   const router = useRouter();
+  
+  const [showToast, setShowToast] = useState<string | null>(null);
+  const prevRegs = useRef(totalRegs);
+
+  useEffect(() => {
+    const milestones = [50, 100, 200, 500, 1000, 2000, 5000];
+    const prev = prevRegs.current;
+    
+    for (const milestone of milestones) {
+      if (prev < milestone && totalRegs >= milestone) {
+        setShowToast(`🎉 Milestone Reached: ${milestone} Registrations!`);
+        setTimeout(() => setShowToast(null), 8000);
+        break;
+      }
+    }
+    prevRegs.current = totalRegs;
+  }, [totalRegs]);
+
   const stats = [
     { label: "Total Registrations", value: totalRegs },
     { label: "Checked In", value: checkedIn },
@@ -79,5 +98,35 @@ export default function DashboardStats({ totalRegs, checkedIn, totalBranches, ex
       </div>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div style={{
+          position: "fixed",
+          top: "2rem",
+          right: "2rem",
+          background: "#111",
+          color: "#fff",
+          padding: "1rem 1.5rem",
+          borderRadius: "8px",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+          fontWeight: 600,
+          zIndex: 9999,
+          animation: "slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem"
+        }}>
+          {showToast}
+          <button onClick={() => setShowToast(null)} style={{ background: "none", border: "none", color: "#999", cursor: "pointer", marginLeft: "1rem" }}>✕</button>
+          <style>{`
+            @keyframes slideInRight {
+              from { transform: translateX(100%); opacity: 0; }
+              to { transform: translateX(0); opacity: 1; }
+            }
+          `}</style>
+        </div>
+      )}
+    </div>
   );
 }
