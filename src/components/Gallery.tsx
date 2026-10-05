@@ -53,6 +53,7 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(autoOpen);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+  const [visibleCount, setVisibleCount] = useState(12);
 
   useEffect(() => {
     if (selectedIndex !== null) {
@@ -127,7 +128,7 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
         </div>
 
         {/* Media Cards (Videos and Images unified) */}
-        {media.map((item, idx) => (
+        {media.slice(0, visibleCount).map((item, idx) => (
           <div 
             key={idx} 
             className={styles.galleryItem}
@@ -167,6 +168,35 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
           </div>
         ))}
       </div>
+
+      {visibleCount < media.length && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3rem', marginBottom: '4rem' }}>
+          <button 
+            onClick={() => setVisibleCount(prev => Math.min(prev + 12, media.length))}
+            style={{
+              backgroundColor: "transparent",
+              color: "#fff",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              padding: "12px 32px",
+              borderRadius: "8px",
+              fontWeight: "600",
+              fontSize: "0.95rem",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.4)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
+            }}
+          >
+            Load More Photos
+          </button>
+        </div>
+      )}
 
       {/* Lightbox */}
       {selectedIndex !== null && (
