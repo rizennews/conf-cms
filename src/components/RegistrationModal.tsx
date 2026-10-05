@@ -324,8 +324,8 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
                   <input type="text" value={formData.heardFrom} onChange={e => setFormData({...formData, heardFrom: e.target.value})} placeholder="E.g. Social Media, Friend" style={inputStyle} />
                 </div>
                 <div className={styles.inputGroup}>
-                  <InputLabel>Who invited you? (Optional)</InputLabel>
-                  <input type="text" value={formData.invitees} onChange={e => setFormData({...formData, invitees: e.target.value})} placeholder="Name of person" style={inputStyle} />
+                  <InputLabel>Evangelist / Invited By (Optional)</InputLabel>
+                  <input type="text" value={formData.invitees} onChange={e => setFormData({...formData, invitees: e.target.value})} placeholder="Name of Evangelist or Inviter" style={inputStyle} />
                 </div>
               </>
             )}

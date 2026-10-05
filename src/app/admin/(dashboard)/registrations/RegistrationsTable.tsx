@@ -551,7 +551,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
               <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Member?</strong> <div style={{ fontWeight: 500, color: "#111" }}>{viewRegistration.isMember ? "Yes" : "No"}</div></div>
               <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>First Time?</strong> <div style={{ fontWeight: 500, color: "#111" }}>{viewRegistration.isFirstTime ? "Yes" : "No"}</div></div>
               <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Heard From</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.heardFrom as string) || "—"}</div></div>
-              <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Invitees</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.invitees as string) || "—"}</div></div>
+              <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Evangelist / Invited By</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.invitees as string) || "—"}</div></div>
             </div>
 
             {viewRegistration.customData ? (() => {
