@@ -6,70 +6,27 @@ import styles from "./Gallery.module.css";
 import RegistrationModal from "./RegistrationModal";
 
 const images = [
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_3022.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_3015.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_3010.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_3004.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_3003.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_3002.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_2995.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_2993.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_2991.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_2990.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_1282.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_1271.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_1269.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_1268.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_1265.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_1264.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_1260.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_1249.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_1238.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_1192.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_1185.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_1142.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0930.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0888.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0853.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0317.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0322.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0291.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0186.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0119.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0092.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0011.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Z48.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Z4.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Z37.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Z27.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Z23.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Z13.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-95.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-91.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-88.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-80.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-68.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-61.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-52.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-47.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-403.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-172.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-177.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-175.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-18.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-186.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-198.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Vercel_Next_Conference-6.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Z1.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Z2.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Z19.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/2022_Z11.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0017.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0291.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0317.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0322.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0360.jpg",
-  "https://msz8xzwxzifxtllw.public.blob.vercel-storage.com/Sexton_Vercel_0521.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/53737542391_4685d1869a_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/53737737663_a5c46660da_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/53737868339_2022f829ce_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/53737962215_a0efe70b5e_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54079555827_82d6c01fcc_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54080445361_8e7bf159fc_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54080462361_00705057a9_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54080464351_66f303dc31_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54080515346_29bbd55140_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54080726398_a16da1b183_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54080768489_475fc6825e_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54080797854_bc6fbd9825_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54080920550_3ea947064e_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54080940730_9df1601553_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54135871728_34c2f36140_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54135920949_d7e91e7ff1_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54976545077_f369cd2408_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54976550597_bcea8125db_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54977446721_a1ef283de1_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54977452511_36d648a9a6_b.jpg",
+  "https://pub-9fd6b1914c8045a1b81ad2d1ca6b539c.r2.dev/54982227412_c4b67939c1_b.jpg",
 ];
 
 const videos = [
@@ -81,7 +38,7 @@ const media = [
   ...images.map(url => ({ type: 'image' as const, url }))
 ];
 
-export default function Gallery({ branches, event, autoOpen = false }: { branches?: any[], event?: any, autoOpen?: boolean }) {
+export default function Gallery({ branches, event, autoOpen = false }: { branches?: { id: string | number; name: string }[], event?: { id?: string | number; name?: string; isActive?: boolean; deadline?: string | Date | null }, autoOpen?: boolean }) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(autoOpen);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
@@ -207,7 +164,7 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
           <div className={styles.lightboxImageContainer} onClick={(e) => e.stopPropagation()}>
             {media[selectedIndex].type === 'video' ? (
               <iframe
-                src={`https://www.youtube.com/embed/${media[selectedIndex].id}?autoplay=1`}
+                src={`https://www.youtube.com/embed/${(media[selectedIndex] as { type: 'video', id: string }).id}?autoplay=1`}
                 title="Multiply Sunday Video"
                 className={styles.lightboxImage}
                 style={{ border: 'none', backgroundColor: '#000', width: '90vw', maxWidth: '1200px', aspectRatio: '16/9' }}
@@ -215,11 +172,15 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
                 allowFullScreen
               />
             ) : (
-              <img 
+              <Image 
                 key={selectedIndex}
                 src={media[selectedIndex].url}
                 alt="Full size event photo"
                 className={styles.lightboxImage}
+                width={1920}
+                height={1080}
+                style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '90vh', width: 'auto', height: 'auto' }}
+                unoptimized
               />
             )}
 
