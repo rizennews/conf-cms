@@ -557,8 +557,20 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                 </div>
                 <div>
                   <h2 style={{ margin: "0 0 0.25rem 0", color: "#111", fontSize: "1.75rem" }}>{(viewRegistration.fullName as string) || "Unknown"}</h2>
-                  <div style={{ color: "#6b7280", fontSize: "1rem" }}>
-                    {(viewRegistration.email as string) || "No Email"} · {(viewRegistration.whatsapp as string) || "No Phone"}
+                  <div style={{ color: "#6b7280", fontSize: "1rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <span>{(viewRegistration.email as string) || "No Email"}</span>
+                    <span>·</span>
+                    {(() => {
+                      let ccode = null;
+                      if (viewRegistration.customData) {
+                        try {
+                          const c = typeof viewRegistration.customData === 'string' ? JSON.parse(viewRegistration.customData as string) : viewRegistration.customData;
+                          ccode = (c as Record<string, string>)._countryCode;
+                        } catch { /* ignore */ }
+                      }
+                      return ccode ? <img src={`https://flagcdn.com/w20/${ccode}.png`} alt={ccode} width="16" style={{ borderRadius: '2px' }} /> : null;
+                    })()}
+                    <span>{(viewRegistration.whatsapp as string) || "No Phone"}</span>
                   </div>
                   <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
                     <span style={{ display: "inline-block", padding: "0.25rem 0.75rem", borderRadius: "99px", fontSize: "0.85rem", fontWeight: 600, background: viewRegistration.status === 'checked-in' ? "#dcfce7" : "#f3f4f6", color: viewRegistration.status === 'checked-in' ? "#16a34a" : "#4b5563" }}>
@@ -583,7 +595,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
             {viewRegistration.customData ? (() => {
               try {
                 const custom = typeof viewRegistration.customData === 'string' ? JSON.parse(viewRegistration.customData as string) : viewRegistration.customData;
-                const keys = Object.keys(custom as Record<string, unknown>);
+                const keys = Object.keys(custom as Record<string, unknown>).filter(k => k !== '_countryCode');
                 if (keys.length === 0) return null;
                 return (
                   <div style={{ marginTop: "2rem" }}>
