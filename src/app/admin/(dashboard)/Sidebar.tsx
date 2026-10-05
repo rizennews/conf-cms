@@ -49,7 +49,7 @@ export default function Sidebar({ role, userName }: { role: string; userName: st
     router.push("/admin/login");
   };
 
-  const NavContent = () => (
+  const navContent = (
     <>
       {/* Header */}
       <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -158,7 +158,7 @@ export default function Sidebar({ role, userName }: { role: string; userName: st
           flexShrink: 0,
         }}
       >
-        <NavContent />
+        {navContent}
       </aside>
 
       <style>{`

@@ -37,7 +37,7 @@ export default async function EvangelistsPage({ searchParams }: { searchParams: 
   }
 
   // Group by evangelist (invitees)
-  const evangelistMap: Record<string, any[]> = {};
+  const evangelistMap: Record<string, Record<string, unknown>[]> = {};
   
   allRegs.forEach(r => {
     if (r.invitees && r.invitees.trim().length > 0) {
@@ -55,11 +55,11 @@ export default async function EvangelistsPage({ searchParams }: { searchParams: 
       totalInvited: inviteesList.length,
       checkedInCount,
       invitees: inviteesList.map(i => ({
-        id: i.id,
-        fullName: i.fullName,
-        whatsapp: i.whatsapp,
-        status: i.status || "registered",
-        createdAt: i.createdAt
+        id: String(i.id),
+        fullName: String(i.fullName),
+        whatsapp: i.whatsapp ? String(i.whatsapp) : null,
+        status: i.status ? String(i.status) : "registered",
+        createdAt: String(i.createdAt)
       }))
     };
   });

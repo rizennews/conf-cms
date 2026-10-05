@@ -4,8 +4,6 @@ import { db } from "../../../db";
 import { registrations, events, branches, user } from "../../../db/schema";
 import { eq, count, desc, not } from "drizzle-orm";
 import DashboardStats from "./DashboardStats";
-import DashboardCharts from "./DashboardCharts";
-
 export default async function AdminDashboardPage({ searchParams }: { searchParams: Promise<{ eventId?: string }> }) {
   const reqHeaders = await headers();
   const session = await auth.api.getSession({ headers: reqHeaders });
@@ -70,107 +68,6 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
 
   const eventMap = Object.fromEntries(allEvents.map(e => [e.id, e.name]));
 
-  // Data for Charts
-  const dateMap: Record<string, number> = {};
-  filteredRegs.forEach(r => {
-    if (!r.createdAt) return;
-    const date = new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    dateMap[date] = (dateMap[date] || 0) + 1;
-  });
-  const registrationsByDate = Object.entries(dateMap).map(([date, count]) => ({ date, count })).slice(-14);
-
-  const ageMap: Record<string, number> = {};
-  filteredRegs.forEach(r => {
-    const age = r.ageRange || "Unknown";
-    ageMap[age] = (ageMap[age] || 0) + 1;
-  });
-  const ageDemographics = Object.entries(ageMap).map(([name, value]) => ({ name, value })).filter(d => d.name !== "Unknown");
-
-  const statusMap: Record<string, number> = {};
-  filteredRegs.forEach(r => {
-    const status = r.registrantStatus || "Unknown";
-    statusMap[status] = (statusMap[status] || 0) + 1;
-  });
-  const registrantStatuses = Object.entries(statusMap).map(([name, value]) => ({ name, value })).filter(d => d.name !== "Unknown");
-
-  const inviterMap: Record<string, number> = {};
-  filteredRegs.forEach(r => {
-    const inviter = r.invitees?.trim();
-    if (inviter) {
-      // Normalize names (e.g., capitalize first letters)
-      const name = inviter.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-      inviterMap[name] = (inviterMap[name] || 0) + 1;
-    }
-  });
-  const topInviters = Object.entries(inviterMap)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5); // Top 5
-
-  const referralMap: Record<string, number> = {};
-  filteredRegs.forEach(r => {
-    const source = r.heardFrom?.trim();
-    if (source) {
-      const normalized = source.charAt(0).toUpperCase() + source.slice(1).toLowerCase();
-      referralMap[normalized] = (referralMap[normalized] || 0) + 1;
-    }
-  });
-  const referralSources = Object.entries(referralMap)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5);
-
-  const allBranchesArray = await db.select().from(branches);
-  const branchMap = Object.fromEntries(allBranchesArray.map(b => [b.id, b.name]));
-
-  const branchCountMap: Record<string, number> = {};
-  filteredRegs.forEach(r => {
-    if (r.branchId !== "other") {
-      const bName = branchMap[r.branchId] || "Unknown";
-      branchCountMap[bName] = (branchCountMap[bName] || 0) + 1;
-    }
-  });
-  const topBranches = Object.entries(branchCountMap)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5);
-
-  const attendanceData = [
-    { name: "Checked In", value: checkedIn },
-    { name: "Not Arrived", value: totalRegs - checkedIn }
-  ].filter(d => d.value > 0);
-
-  // Dynamic Custom Charts
-  let eventCustomFields: Record<string, unknown>[] = [];
-  if (eventId) {
-    const ev = allEvents.find(e => e.id === eventId);
-    if (ev && ev.customFields) {
-      try { eventCustomFields = JSON.parse(ev.customFields); } catch { /* ignore */ }
-    }
-  }
-  
-  const dynamicCharts: { title: string; data: { name: string; value: number }[] }[] = [];
-  eventCustomFields.forEach(field => {
-    if (field.type === "select" || field.type === "radio") {
-      const fieldCounts: Record<string, number> = {};
-      filteredRegs.forEach(r => {
-        if (r.customData) {
-          try {
-            const cData = typeof r.customData === "string" ? JSON.parse(r.customData) : r.customData;
-            const answer = String(cData[String(field.label)] || "");
-            if (answer) {
-              fieldCounts[answer] = (fieldCounts[answer] || 0) + 1;
-            }
-          } catch { /* ignore */ }
-        }
-      });
-      const data = Object.entries(fieldCounts).map(([name, value]) => ({ name, value }));
-      if (data.length > 0) {
-        dynamicCharts.push({ title: String(field.label), data });
-      }
-    }
-  });
-
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto", paddingBottom: "4rem" }}>
       <div style={{ marginBottom: "2.5rem" }}>
@@ -188,16 +85,6 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
         selectedEventId={eventId || ""}
       />
 
-      <DashboardCharts 
-        registrationsByDate={registrationsByDate}
-        ageDemographics={ageDemographics}
-        registrantStatuses={registrantStatuses}
-        topInviters={topInviters}
-        referralSources={referralSources}
-        topBranches={topBranches}
-        attendanceData={attendanceData}
-        dynamicCharts={dynamicCharts}
-      />
 
       <div style={{ marginTop: "3rem" }}>
         <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#111", margin: "0 0 1rem 0" }}>Recent Sign-ups</h2>

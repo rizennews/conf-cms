@@ -1,84 +1,136 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell
-} from 'recharts';
+import DashboardCharts from "../DashboardCharts";
 
-const COLORS = ['#111111', '#6b7280', '#2b3ff2', '#16a34a', '#eab308'];
-
-export default function AnalyticsClient({ registrations, events, branches }: { registrations: any[], events: any[], branches: any[] }) {
-  const [selectedEventId, setSelectedEventId] = useState<string>(events[0]?.id || "");
-
-  const eventRegs = registrations.filter(r => r.eventId === selectedEventId);
-  const checkedInCount = eventRegs.filter(r => r.status === "checked-in").length;
-  const registeredCount = eventRegs.length;
-
-  // Breakdown by branch
-  const branchCounts: Record<string, { total: number, checkedIn: number }> = {};
-  eventRegs.forEach(r => {
-    const bId = r.branchId || "Unknown";
-    if (!branchCounts[bId]) branchCounts[bId] = { total: 0, checkedIn: 0 };
-    branchCounts[bId].total++;
-    if (r.status === "checked-in") branchCounts[bId].checkedIn++;
-  });
-
-  const branchData = Object.entries(branchCounts)
-    .sort((a, b) => b[1].total - a[1].total)
-    .map(([branchId, stats]) => ({
-      name: branches.find(b => b.id === branchId)?.name || branchId,
-      Registered: stats.total,
-      CheckedIn: stats.checkedIn
-    }));
-
-  // Breakdown by gender
-  let maleCount = 0;
-  let femaleCount = 0;
-  
-  // Breakdown by age
-  const ageCounts: Record<string, number> = {};
-
-  eventRegs.forEach(r => {
-    // Check standard ageRange column first
-    if (r.ageRange) {
-      ageCounts[r.ageRange] = (ageCounts[r.ageRange] || 0) + 1;
-    }
-
-    if (r.customData) {
-      try {
-        const data = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
-        
-        // Gender (Custom Data)
-        const gender = data['Gender'] || data['gender'];
-        if (gender === 'Male') maleCount++;
-        else if (gender === 'Female') femaleCount++;
-
-        // Age Range fallback to custom data if standard column is missing
-        if (!r.ageRange) {
-          const customAge = data['Age Range'] || data['ageRange'] || data['Age'] || data['age'];
-          if (customAge) {
-            ageCounts[customAge] = (ageCounts[customAge] || 0) + 1;
-          }
-        }
-      } catch (e) {}
-    }
-  });
-
-  const genderData = [
-    { name: 'Male', value: maleCount },
-    { name: 'Female', value: femaleCount }
-  ].filter(d => d.value > 0);
-
-  const ageData = Object.entries(ageCounts)
-    .map(([age, count]) => ({ age, count }))
-    .sort((a, b) => b.count - a.count);
+export default function AnalyticsClient({ registrations, events, branches }: { registrations: Record<string, unknown>[], events: Record<string, unknown>[], branches: Record<string, unknown>[] }) {
+  const [selectedEventId, setSelectedEventId] = useState<string>((events[0]?.id as string) || "");
 
   if (events.length === 0) return (
     <div style={{ padding: "3rem", textAlign: "center", color: "#6b7280", background: "white", borderRadius: "8px", border: "1px solid #eaeaea" }}>
       No events available for analytics.
     </div>
   );
+
+  const selectedEvent = events.find(e => e.id === selectedEventId) || events[0];
+  const filteredRegs = registrations.filter(r => r.eventId === selectedEventId);
+
+  // Compute stats for DashboardCharts
+  const totalRegs = filteredRegs.length;
+  const checkedIn = filteredRegs.filter(r => r.status === "checked-in").length;
+  const attendanceData = [
+    { name: "Checked In", value: checkedIn },
+    { name: "Not Arrived", value: totalRegs - checkedIn }
+  ].filter(d => d.value > 0);
+
+  // Status map (Member, Guest, Worker)
+  const statusMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    let stat = r.type || "Guest";
+    // Check custom fields just in case "Type" or "Status" exists
+    if (r.customData) {
+      try {
+        const custom = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
+        if (custom['Type'] || custom['type']) stat = custom['Type'] || custom['type'];
+        if (custom['Are you a']) stat = String(custom['Are you a']);
+      } catch { /* ignore */ }
+    }
+    statusMap[stat] = (statusMap[stat] || 0) + 1;
+  });
+  const registrantStatuses = Object.entries(statusMap).map(([name, value]) => ({ name, value }));
+
+  // Referrals
+  const referralMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    const src = (r.heardFrom as string) || "Other";
+    referralMap[src] = (referralMap[src] || 0) + 1;
+  });
+  const referralSources = Object.entries(referralMap)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
+
+  // Inviters
+  const inviterMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    const inv = r.invitees as string | undefined;
+    if (inv && inv.trim().length > 0) {
+      const trimmedInv = inv.trim();
+      inviterMap[trimmedInv] = (inviterMap[trimmedInv] || 0) + 1;
+    }
+  });
+  const topInviters = Object.entries(inviterMap)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 10);
+
+  // External Branches
+  const branchMap = Object.fromEntries(branches.map(b => [b.id as string, b.name as string]));
+  const branchCountMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    if (r.branchId !== "other") {
+      const bName = branchMap[r.branchId as string] || "Unknown";
+      branchCountMap[bName] = (branchCountMap[bName] || 0) + 1;
+    }
+  });
+  const topBranches = Object.entries(branchCountMap)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
+
+  // Dates
+  const dateMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    if (!r.createdAt) return;
+    const date = new Date(r.createdAt as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    dateMap[date] = (dateMap[date] || 0) + 1;
+  });
+  const registrationsByDate = Object.entries(dateMap).map(([date, count]) => ({ date, count })).slice(-14);
+
+  // Age
+  const ageMap: Record<string, number> = {};
+  filteredRegs.forEach(r => {
+    let age = (r.ageRange as string) || "Unknown";
+    // Check custom fields
+    if (r.customData) {
+      try {
+        const custom = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
+        if (custom['Age Range'] || custom['ageRange'] || custom['Age']) {
+          age = String(custom['Age Range'] || custom['ageRange'] || custom['Age']);
+        }
+      } catch { /* ignore */ }
+    }
+    ageMap[age] = (ageMap[age] || 0) + 1;
+  });
+  const ageDemographics = Object.entries(ageMap).map(([name, value]) => ({ name, value }));
+
+  // Dynamic Custom Charts
+  let eventCustomFields: Record<string, unknown>[] = [];
+  if (selectedEvent.customFields) {
+    try { eventCustomFields = JSON.parse(selectedEvent.customFields as string); } catch { /* ignore */ }
+  }
+  
+  const dynamicCharts: { title: string; data: { name: string; value: number }[] }[] = [];
+  eventCustomFields.forEach(field => {
+    if (field.type === "select" || field.type === "radio") {
+      const fieldCounts: Record<string, number> = {};
+      filteredRegs.forEach(r => {
+        if (r.customData) {
+          try {
+            const cData = typeof r.customData === "string" ? JSON.parse(r.customData) : r.customData;
+            const answer = cData[field.label];
+            if (answer) {
+              fieldCounts[answer] = (fieldCounts[answer] || 0) + 1;
+            }
+          } catch { /* ignore */ }
+        }
+      });
+      const data = Object.entries(fieldCounts).map(([name, value]) => ({ name, value }));
+      if (data.length > 0) {
+        dynamicCharts.push({ title: field.label, data });
+      }
+    }
+  });
 
   return (
     <div>
@@ -89,79 +141,34 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
           onChange={e => setSelectedEventId(e.target.value)}
           style={{ padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", background: "white", fontSize: "0.95rem", minWidth: "250px" }}
         >
-          {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+          {events.map(e => <option key={e.id as string} value={e.id as string}>{e.name as string}</option>)}
         </select>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "1.5rem" }}>
-        
-        {/* Gender Breakdown (Pie Chart) */}
-        <div style={{ background: "white", border: "1px solid #eaeaea", borderRadius: "12px", padding: "1.5rem", height: "350px" }}>
-          <h3 style={{ margin: "0 0 1rem 0", fontSize: "0.95rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>Gender Breakdown</h3>
-          {genderData.length === 0 ? (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "80%", color: "#a1a1aa" }}>No gender data available</div>
-          ) : (
-            <ResponsiveContainer width="100%" height="85%">
-              <PieChart>
-                <Pie
-                  data={genderData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                >
-                  {genderData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <RechartsTooltip contentStyle={{ borderRadius: '8px', border: '1px solid #eaeaea' }} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        {/* Age Demographics (Bar Chart) */}
-        <div style={{ background: "white", border: "1px solid #eaeaea", borderRadius: "12px", padding: "1.5rem", height: "350px" }}>
-          <h3 style={{ margin: "0 0 1rem 0", fontSize: "0.95rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>Age Demographics</h3>
-          {ageData.length === 0 ? (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "80%", color: "#a1a1aa" }}>No age data available</div>
-          ) : (
-            <ResponsiveContainer width="100%" height="85%">
-              <BarChart data={ageData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#eaeaea" />
-                <XAxis type="number" />
-                <YAxis dataKey="age" type="category" width={80} tick={{ fontSize: 12 }} />
-                <RechartsTooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '8px', border: '1px solid #eaeaea' }} />
-                <Bar dataKey="count" fill="#111111" radius={[0, 4, 4, 0]} barSize={24} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
+      <div style={{ background: "white", padding: "1.5rem", borderRadius: "12px", border: "1px solid #eaeaea", marginBottom: "2rem" }}>
+        <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
+          <div>
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "#666", textTransform: "uppercase", fontWeight: 600 }}>Total Registrations</p>
+            <p style={{ margin: 0, fontSize: "2rem", fontWeight: 700, color: "#111" }}>{totalRegs}</p>
+          </div>
+          <div style={{ width: "1px", height: "40px", background: "#eaeaea" }}></div>
+          <div>
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "#666", textTransform: "uppercase", fontWeight: 600 }}>Checked In</p>
+            <p style={{ margin: 0, fontSize: "2rem", fontWeight: 700, color: "#10b981" }}>{checkedIn}</p>
+          </div>
         </div>
       </div>
 
-      {/* Attendance by Branch (Bar Chart) */}
-      <div style={{ background: "white", border: "1px solid #eaeaea", borderRadius: "12px", padding: "1.5rem", height: "450px" }}>
-        <h3 style={{ margin: "0 0 1rem 0", fontSize: "0.95rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>Attendance by Branch</h3>
-        {branchData.length === 0 ? (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "80%", color: "#a1a1aa" }}>No branch data available</div>
-        ) : (
-          <ResponsiveContainer width="100%" height="90%">
-            <BarChart data={branchData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eaeaea" />
-              <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 12 }} />
-              <YAxis />
-              <RechartsTooltip cursor={{ fill: '#f3f4f6' }} contentStyle={{ borderRadius: '8px', border: '1px solid #eaeaea' }} />
-              <Legend verticalAlign="top" height={36} />
-              <Bar dataKey="Registered" fill="#6b7280" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="CheckedIn" name="Checked In" fill="#2b3ff2" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </div>
+      <DashboardCharts 
+        registrationsByDate={registrationsByDate}
+        ageDemographics={ageDemographics}
+        registrantStatuses={registrantStatuses}
+        topInviters={topInviters}
+        referralSources={referralSources}
+        topBranches={topBranches}
+        attendanceData={attendanceData}
+        dynamicCharts={dynamicCharts}
+      />
     </div>
   );
 }
