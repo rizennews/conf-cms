@@ -80,7 +80,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     setCurrentPage(1);
   };
 
-  const SortIcon = ({ col }: { col: SortKey }) => {
+  const renderSortIcon = (col: SortKey) => {
     if (sortKey !== col) return <ChevronUp size={12} style={{ opacity: 0.3 }} />;
     return sortDir === "asc" ? <ChevronUp size={12} /> : <ChevronDown size={12} />;
   };
@@ -260,18 +260,18 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
             <thead>
               <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb", textAlign: "left" }}>
                 <th style={thStyle("fullName")} onClick={() => handleSort("fullName")}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>Registrant <SortIcon col="fullName" /></span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>Registrant {renderSortIcon("fullName")}</span>
                 </th>
                 <th style={thStyle("whatsapp")} onClick={() => handleSort("whatsapp")}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>Contact <SortIcon col="whatsapp" /></span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>Contact {renderSortIcon("whatsapp")}</span>
                 </th>
                 <th style={thStyle()}>Branch</th>
                 <th style={thStyle()}>Event</th>
                 <th style={thStyle("status")} onClick={() => handleSort("status")}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>Status <SortIcon col="status" /></span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>Status {renderSortIcon("status")}</span>
                 </th>
                 <th style={thStyle("createdAt")} onClick={() => handleSort("createdAt")}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>Date <SortIcon col="createdAt" /></span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>Date {renderSortIcon("createdAt")}</span>
                 </th>
                 <th style={{ ...thStyle(), textAlign: "right" }}>Actions</th>
               </tr>
