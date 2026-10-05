@@ -95,7 +95,6 @@ export default function DashboardStats({ totalRegs, checkedIn, totalBranches, ex
             {checkedIn} out of {totalRegs} attendees have checked in.
           </div>
         </div>
-      </div>
         </div>
       </div>
 
