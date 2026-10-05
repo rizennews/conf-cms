@@ -239,7 +239,14 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
               {branches.map(b => <option key={b.id as string} value={b.id as string}>{b.name as string}</option>)}
             </select>
           )}
-          <Link href="/api/export-csv" style={{ padding: "0.65rem 1rem", borderRadius: "8px", border: "1px solid #d1d5db", fontWeight: 600, textDecoration: "none", color: "#111", background: "white", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem" }}>
+          <Link 
+            href={`/api/export-csv?${new URLSearchParams({
+              ...(searchTerm ? { q: searchTerm } : {}),
+              ...(filterEvent ? { eventId: filterEvent } : {}),
+              ...(filterBranch ? { branchId: filterBranch } : {}),
+            }).toString()}`}
+            style={{ padding: "0.65rem 1rem", borderRadius: "8px", border: "1px solid #d1d5db", fontWeight: 600, textDecoration: "none", color: "#111", background: "white", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem" }}
+          >
             <Download size={15} /> Export
           </Link>
           <button

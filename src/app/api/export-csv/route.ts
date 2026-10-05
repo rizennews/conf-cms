@@ -1,8 +1,8 @@
 import { auth } from "../../../lib/auth";
 import { headers } from "next/headers";
 import { db } from "../../../db";
-import { registrations, user, events, branches } from "../../../db/schema";
-import { eq, count, desc } from "drizzle-orm";
+import { registrations, user } from "../../../db/schema";
+import { eq, desc, or, ilike, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -17,6 +17,33 @@ export async function GET(request: Request) {
   if (currentUser.length > 0) {
     role = currentUser[0].role;
     userBranchId = currentUser[0].branchId;
+  }
+
+  const { searchParams } = new URL(request.url);
+  const q = searchParams.get("q");
+  const eventId = searchParams.get("eventId");
+  const branchId = searchParams.get("branchId");
+
+  const conditions = [];
+
+  if (role === "branch_head" && userBranchId) {
+    conditions.push(eq(registrations.branchId, userBranchId));
+  } else if (branchId) {
+    conditions.push(eq(registrations.branchId, branchId));
+  }
+
+  if (eventId) {
+    conditions.push(eq(registrations.eventId, eventId));
+  }
+
+  if (q) {
+    conditions.push(
+      or(
+        ilike(registrations.fullName, `%${q}%`),
+        ilike(registrations.email, `%${q}%`),
+        ilike(registrations.whatsapp, `%${q}%`)
+      )
+    );
   }
 
   // Build query
@@ -38,8 +65,8 @@ export async function GET(request: Request) {
     customData: registrations.customData,
   }).from(registrations).orderBy(desc(registrations.createdAt));
 
-  if (role === "branch_head" && userBranchId) {
-    query = query.where(eq(registrations.branchId, userBranchId)) as any;
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as typeof query;
   }
 
   const allRegs = await query;
@@ -51,7 +78,7 @@ export async function GET(request: Request) {
     "Event", "Status", "Registered At"
   ];
 
-  const escape = (val: any) => {
+  const escape = (val: unknown) => {
     if (val === null || val === undefined) return "";
     const str = String(val);
     if (str.includes(",") || str.includes('"') || str.includes("\n")) {
@@ -60,7 +87,7 @@ export async function GET(request: Request) {
     return str;
   };
 
-  const rows = allRegs.map((r: any) => [
+  const rows = allRegs.map((r: typeof allRegs[0]) => [
     r.id,
     r.fullName,
     r.email,
