@@ -174,6 +174,12 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
   const dynamicCharts: { title: string; data: { name: string; value: number }[] }[] = [];
   eventCustomFields.forEach(field => {
     if (field.type === "select" || field.type === "radio") {
+      const labelStr = field.label as string;
+      const lowerLabel = labelStr.toLowerCase();
+      if (lowerLabel === "branch" || lowerLabel === "age" || lowerLabel === "age range" || lowerLabel === "agerange") {
+        return; // Skip fields that are already covered by main analytics
+      }
+      
       const fieldCounts: Record<string, number> = {};
       filteredRegs.forEach(r => {
         if (r.customData) {
