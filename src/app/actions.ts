@@ -4,7 +4,24 @@ import { db } from "../db";
 import { registrations, branches } from "../db/schema";
 import { eq } from "drizzle-orm";
 
-export async function submitRegistration(data: Record<string, any>) {
+interface RegistrationInput {
+  fullName?: string;
+  email?: string;
+  whatsapp?: string;
+  address?: string;
+  ageRange?: string;
+  isMember?: string;
+  isFirstTime?: string;
+  heardFrom?: string;
+  invitees?: string;
+  registrantStatus?: string;
+  branchName?: string;
+  otherBranch?: string;
+  eventId?: string;
+  customData?: Record<string, unknown>;
+}
+
+export async function submitRegistration(data: RegistrationInput) {
   try {
     const {
       fullName,

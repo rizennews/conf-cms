@@ -13,6 +13,26 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
   const eventId = resolvedParams.eventId;
 
   let allRegs = await db.select().from(registrations).orderBy(desc(registrations.createdAt));
+  const allEvents = await db.select().from(events);
+  
+  // PATCH: Auto-inject Gender field into the first main event if it doesn't exist
+  const mainEvent = allEvents.find(e => e.isMainEvent) || allEvents[0];
+  if (mainEvent) {
+    let fields: Record<string, unknown>[] = [];
+    try { if (mainEvent.customFields) fields = JSON.parse(mainEvent.customFields); } catch { /* ignore */ }
+    
+    if (!fields.find(f => f.label === "Gender")) {
+      fields.push({
+        id: Math.random().toString(36).substring(2, 9),
+        label: "Gender",
+        type: "radio",
+        options: ["Male", "Female"],
+        required: true
+      });
+      await db.update(events).set({ customFields: JSON.stringify(fields) }).where(eq(events.id, mainEvent.id));
+      mainEvent.customFields = JSON.stringify(fields); // update in-memory
+    }
+  }
   const currentUser = await db.select().from(user).where(eq(user.id, session?.user.id as string)).limit(1);
   const userRole = currentUser[0]?.role || "branch_head";
   const userBranchId = currentUser[0]?.branchId;

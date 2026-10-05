@@ -3,11 +3,14 @@ import styles from "./RegistrationModal.module.css";
 import { submitRegistration } from "../app/actions";
 import { QRCodeSVG } from "qrcode.react";
 
+type BranchType = { id: string | number; name: string };
+type EventType = { id?: string | number; name?: string; isActive?: boolean; deadline?: string | Date | null; customFields?: string };
+
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  branches?: Record<string, unknown>[];
-  event?: Record<string, unknown>;
+  branches?: BranchType[];
+  event?: EventType | null;
 };
 
 const InputLabel = ({ children, required }: { children: React.ReactNode, required?: boolean }) => (
@@ -44,7 +47,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     if (event?.customFields && typeof event.customFields === "string") {
       parsedCustomFields = JSON.parse(event.customFields);
     }
-  } catch (e) {}
+  } catch { /* ignore */ }
 
   const hasCustomFields = parsedCustomFields.length > 0;
   const totalSteps = hasCustomFields ? 4 : 3;
