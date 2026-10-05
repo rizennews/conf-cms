@@ -143,13 +143,11 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
             <thead>
               <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb", textAlign: "left" }}>
-                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Name</th>
-                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Email</th>
-                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Phone</th>
-                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Branch</th>
-                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Event</th>
-                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Reg. Status</th>
-                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Check-in</th>
+                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>Registrant</th>
+                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>Contact</th>
+                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>Branch</th>
+                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>Event</th>
+                <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>Status</th>
                 <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Date</th>
                 <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem", textAlign: "right" }}>Actions</th>
               </tr>
@@ -174,24 +172,49 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                 }
 
                 return (
-                  <tr key={r.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                    <td style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#111" }}>{r.fullName || "—"}</td>
-                    <td style={{ padding: "1rem 1.5rem", color: "#4b5563" }}>{r.email || "—"}</td>
-                    <td style={{ padding: "1rem 1.5rem", color: "#4b5563" }}>{r.whatsapp || "—"}</td>
+                  <tr key={r.id} style={{ borderBottom: "1px solid #f3f4f6", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.backgroundColor = "#f9fafb"} onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}>
                     <td style={{ padding: "1rem 1.5rem" }}>
-                      <span style={{ display: "inline-block", background: "#f3f4f6", padding: "0.2rem 0.6rem", borderRadius: "4px", fontSize: "0.85rem", color: "#374151" }}>{displayBranch}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                        <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)", color: "#3730a3", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "1.1rem" }}>
+                          {(r.fullName as string || "?").charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>{r.fullName || "—"}</div>
+                          <div style={{ color: "#6b7280", fontSize: "0.85rem" }}>{r.email || "No Email"}</div>
+                        </div>
+                      </div>
                     </td>
-                    <td style={{ padding: "1rem 1.5rem", color: "#4b5563", fontSize: "0.9rem" }}>{event?.name || r.eventId || "—"}</td>
-                    <td style={{ padding: "1rem 1.5rem", color: "#4b5563", fontSize: "0.9rem" }}>{r.registrantStatus || "—"}</td>
+                    <td style={{ padding: "1rem 1.5rem", color: "#4b5563", fontSize: "0.9rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                        <span style={{ fontSize: "1.1rem" }}>📱</span> {r.whatsapp || "—"}
+                      </div>
+                    </td>
                     <td style={{ padding: "1rem 1.5rem" }}>
-                      <span style={{ display: "inline-block", padding: "0.25rem 0.75rem", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 600, background: isCheckedIn ? "#dcfce7" : "#fef9c3", color: isCheckedIn ? "#16a34a" : "#854d0e" }}>
-                        {isCheckedIn ? "✓ Checked In" : "Registered"}
+                      <span style={{ display: "inline-block", background: "#f1f5f9", padding: "0.25rem 0.6rem", borderRadius: "6px", fontSize: "0.8rem", color: "#475569", fontWeight: 500, border: "1px solid #e2e8f0" }}>
+                        {displayBranch}
                       </span>
                     </td>
-                    <td style={{ padding: "1rem 1.5rem", color: "#4b5563", fontSize: "0.9rem" }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}</td>
+                    <td style={{ padding: "1rem 1.5rem", color: "#4b5563", fontSize: "0.9rem", fontWeight: 500 }}>
+                      {event?.name || r.eventId || "—"}
+                    </td>
+                    <td style={{ padding: "1rem 1.5rem" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", alignItems: "flex-start" }}>
+                        <span style={{ display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: "99px", fontSize: "0.75rem", fontWeight: 600, background: isCheckedIn ? "#dcfce7" : "#fef9c3", color: isCheckedIn ? "#16a34a" : "#854d0e" }}>
+                          {isCheckedIn ? "✓ Checked In" : "Pending"}
+                        </span>
+                        {r.registrantStatus && r.registrantStatus !== "Unknown" && (
+                          <span style={{ fontSize: "0.75rem", color: "#6b7280", background: "#f3f4f6", padding: "0.1rem 0.5rem", borderRadius: "4px" }}>
+                            {r.registrantStatus}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ padding: "1rem 1.5rem", color: "#6b7280", fontSize: "0.85rem" }}>
+                      {r.createdAt ? new Date(r.createdAt as string).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "—"}
+                    </td>
                     <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>
-                      <button onClick={() => setViewRegistration(r)} style={{ padding: "0.4rem 0.75rem", background: "white", color: "#111", border: "1px solid #d1d5db", borderRadius: "6px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
-                        View
+                      <button onClick={() => setViewRegistration(r)} style={{ padding: "0.4rem 0.8rem", background: "white", color: "#2563eb", border: "1px solid #bfdbfe", borderRadius: "6px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { e.currentTarget.style.background = "#eff6ff"; }} onMouseLeave={e => { e.currentTarget.style.background = "white"; }}>
+                        View Details
                       </button>
                     </td>
                   </tr>
