@@ -122,15 +122,15 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
   ].filter(d => d.value > 0);
 
   // Dynamic Custom Charts
-  let eventCustomFields: any[] = [];
+  let eventCustomFields: Record<string, unknown>[] = [];
   if (eventId) {
     const ev = allEvents.find(e => e.id === eventId);
     if (ev && ev.customFields) {
-      try { eventCustomFields = JSON.parse(ev.customFields); } catch(e) {}
+      try { eventCustomFields = JSON.parse(ev.customFields); } catch { /* ignore */ }
     }
   }
   
-  const dynamicCharts: any[] = [];
+  const dynamicCharts: { title: string; data: { name: string; value: number }[] }[] = [];
   eventCustomFields.forEach(field => {
     if (field.type === "select" || field.type === "radio") {
       const fieldCounts: Record<string, number> = {};
@@ -138,16 +138,16 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
         if (r.customData) {
           try {
             const cData = typeof r.customData === "string" ? JSON.parse(r.customData) : r.customData;
-            const answer = cData[field.label];
+            const answer = String(cData[String(field.label)] || "");
             if (answer) {
               fieldCounts[answer] = (fieldCounts[answer] || 0) + 1;
             }
-          } catch(e) {}
+          } catch { /* ignore */ }
         }
       });
       const data = Object.entries(fieldCounts).map(([name, value]) => ({ name, value }));
       if (data.length > 0) {
-        dynamicCharts.push({ title: field.label, data });
+        dynamicCharts.push({ title: String(field.label), data });
       }
     }
   });

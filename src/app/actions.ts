@@ -4,7 +4,7 @@ import { db } from "../db";
 import { registrations, branches } from "../db/schema";
 import { eq } from "drizzle-orm";
 
-export async function submitRegistration(data: any) {
+export async function submitRegistration(data: Record<string, any>) {
   try {
     const {
       fullName,
@@ -32,7 +32,7 @@ export async function submitRegistration(data: any) {
         await db.insert(branches).values({ id: "other", name: "Other (External)" });
       }
     } else {
-      let finalBranchName = branchName || "Unknown";
+      const finalBranchName = branchName || "Unknown";
       const existing = await db.select().from(branches).where(eq(branches.name, finalBranchName)).limit(1);
       
       if (existing.length > 0) {
@@ -63,7 +63,7 @@ export async function submitRegistration(data: any) {
     }).returning({ id: registrations.id });
 
     return { success: true, id: inserted.id };
-  } catch (err: any) {
-    return { error: "Failed to submit registration: " + err.message };
+  } catch (err: unknown) {
+    return { error: "Failed to submit registration: " + (err instanceof Error ? err.message : String(err)) };
   }
 }

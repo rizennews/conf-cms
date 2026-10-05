@@ -6,9 +6,15 @@ import { QRCodeSVG } from "qrcode.react";
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  branches?: any[];
-  event?: any;
+  branches?: Record<string, unknown>[];
+  event?: Record<string, unknown>;
 };
+
+const InputLabel = ({ children, required }: { children: React.ReactNode, required?: boolean }) => (
+  <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>
+    {children} {required && <span style={{ color: "#ef4444" }}>*</span>}
+  </label>
+);
 
 export default function RegistrationModal({ isOpen, onClose, branches = [], event }: Props) {
   const [step, setStep] = useState(1);
@@ -33,9 +39,9 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
 
   const [customData, setCustomData] = useState<Record<string, any>>({});
 
-  let parsedCustomFields: any[] = [];
+  let parsedCustomFields: Record<string, unknown>[] = [];
   try {
-    if (event?.customFields) {
+    if (event?.customFields && typeof event.customFields === "string") {
       parsedCustomFields = JSON.parse(event.customFields);
     }
   } catch (e) {}
@@ -150,11 +156,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
     );
   }
 
-  const InputLabel = ({ children, required }: { children: React.ReactNode, required?: boolean }) => (
-    <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>
-      {children} {required && <span style={{ color: "#ef4444" }}>*</span>}
-    </label>
-  );
+
 
   const inputStyle = { width: "100%", padding: "0.85rem", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f9fafb", fontSize: "1rem" };
 
@@ -276,48 +278,55 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
             {step === 4 && hasCustomFields && (
               <>
                 <p style={{ color: "#666", fontSize: "0.95rem", marginBottom: "1rem" }}>Additional Information</p>
-                {parsedCustomFields.map((field: any) => (
-                  <div key={field.id} className={styles.inputGroup}>
-                    <InputLabel required={field.required}>{field.label}</InputLabel>
+                {parsedCustomFields.map((field: Record<string, unknown>) => {
+                  const fieldId = String(field.id);
+                  const fieldLabel = String(field.label);
+                  const fieldType = String(field.type);
+                  const fieldRequired = Boolean(field.required);
+                  const fieldOptions = (field.options as string[]) || [];
+
+                  return (
+                  <div key={fieldId} className={styles.inputGroup}>
+                    <InputLabel required={fieldRequired}>{fieldLabel}</InputLabel>
                     
-                    {field.type === "text" || field.type === "email" || field.type === "tel" || field.type === "url" || field.type === "fullname" ? (
+                    {fieldType === "text" || fieldType === "email" || fieldType === "tel" || fieldType === "url" || fieldType === "fullname" ? (
                       <input 
-                        type={field.type === "fullname" ? "text" : field.type} 
-                        required={field.required} 
-                        value={customData[field.label] || ""} 
-                        onChange={e => setCustomData({...customData, [field.label]: e.target.value})} 
+                        type={fieldType === "fullname" ? "text" : fieldType} 
+                        required={fieldRequired} 
+                        value={customData[fieldLabel] || ""} 
+                        onChange={e => setCustomData({...customData, [fieldLabel]: e.target.value})} 
                         style={inputStyle} 
                       />
-                    ) : field.type === "textarea" ? (
+                    ) : fieldType === "textarea" ? (
                       <textarea 
-                        required={field.required} 
-                        value={customData[field.label] || ""} 
-                        onChange={e => setCustomData({...customData, [field.label]: e.target.value})} 
+                        required={fieldRequired} 
+                        value={customData[fieldLabel] || ""} 
+                        onChange={e => setCustomData({...customData, [fieldLabel]: e.target.value})} 
                         style={{ ...inputStyle, minHeight: "80px" }} 
                       />
-                    ) : field.type === "select" ? (
+                    ) : fieldType === "select" ? (
                       <select 
-                        required={field.required} 
-                        value={customData[field.label] || ""} 
-                        onChange={e => setCustomData({...customData, [field.label]: e.target.value})} 
+                        required={fieldRequired} 
+                        value={customData[fieldLabel] || ""} 
+                        onChange={e => setCustomData({...customData, [fieldLabel]: e.target.value})} 
                         style={inputStyle}
                       >
                         <option value="">Select an option...</option>
-                        {(field.options || []).map((opt: string) => (
+                        {fieldOptions.map((opt: string) => (
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
                       </select>
-                    ) : field.type === "radio" ? (
+                    ) : fieldType === "radio" ? (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: "0.5rem" }}>
-                        {(field.options || []).map((opt: string) => (
+                        {fieldOptions.map((opt: string) => (
                           <label key={opt} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "1rem" }}>
                             <input 
                               type="radio" 
-                              name={`custom_${field.id}`} 
+                              name={`custom_${fieldId}`} 
                               value={opt} 
-                              required={field.required} 
-                              checked={customData[field.label] === opt} 
-                              onChange={e => setCustomData({...customData, [field.label]: e.target.value})} 
+                              required={fieldRequired} 
+                              checked={customData[fieldLabel] === opt} 
+                              onChange={e => setCustomData({...customData, [fieldLabel]: e.target.value})} 
                               style={{ width: "18px", height: "18px", accentColor: "#111" }} 
                             />
                             {opt}
@@ -326,7 +335,7 @@ export default function RegistrationModal({ isOpen, onClose, branches = [], even
                       </div>
                     ) : null}
                   </div>
-                ))}
+                )})}
               </>
             )}
 
