@@ -40,7 +40,7 @@ export default async function RegistrationsPage() {
         <p style={{ color: "#666", margin: 0, fontSize: "0.95rem" }}>View, search, export, and bulk import all event sign-ups.</p>
       </div>
 
-      <div style={{ borderTop: "1px solid #eaeaea", paddingTop: "2rem" }}>
+      <div style={{ borderTop: "1px solid #eaeaea", paddingTop: "2rem", overflowX: "auto" }}>
         <RegistrationsTable 
           data={allRegs} 
           events={allEvents} 

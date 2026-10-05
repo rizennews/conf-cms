@@ -27,7 +27,7 @@ export default async function StaffPage() {
         <p style={{ color: "#666", margin: 0, fontSize: "0.95rem" }}>Manage system access, roles, and branch assignments.</p>
       </div>
 
-      <div style={{ borderTop: "1px solid #eaeaea", paddingTop: "2rem" }}>
+      <div style={{ borderTop: "1px solid #eaeaea", paddingTop: "2rem", overflowX: "auto" }}>
         <StaffTable users={allUsers} branches={allBranches} />
       </div>
     </div>

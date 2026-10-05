@@ -23,8 +23,8 @@ export default async function BranchesPage() {
             No branches yet. Add your first church branch to start managing local data.
           </div>
         ) : (
-          <div style={{ border: "1px solid #eaeaea", borderRadius: "8px", background: "#fff", overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+          <div style={{ border: "1px solid #eaeaea", borderRadius: "8px", background: "#fff", overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", minWidth: "600px" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid #eaeaea", background: "#fafafa" }}>
                   <th style={{ padding: "1rem 1.5rem", fontWeight: 500, color: "#111", fontSize: "0.85rem" }}>Name</th>

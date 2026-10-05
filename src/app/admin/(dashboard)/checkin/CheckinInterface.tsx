@@ -10,7 +10,7 @@ import { get, set } from "idb-keyval";
 export default function CheckinInterface({ events }: { events: { id: string; name?: string }[] }) {
   const [selectedEvent, setSelectedEvent] = useState(events[0]?.id || "");
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Record<string, any>[]>([]);
+  const [results, setResults] = useState<Record<string, unknown>[]>([]);
   const [searched, setSearched] = useState(false);
   const [checkedInIds, setCheckedInIds] = useState<Set<number>>(new Set());
   const [isPending, startTransition] = useTransition();
@@ -66,7 +66,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
         await set(`event_${selectedEvent}_registrations`, results);
         alert("Device synced! You can now search and check-in offline.");
       }
-    } catch (err) {
+    } catch {
       alert("Failed to sync. Please check your connection.");
     }
     setIsSyncing(false);
@@ -75,7 +75,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
   const handleSearch = () => {
     if (!query.trim() || !selectedEvent) return;
     startTransition(async () => {
-      const localData: any[] = await get(`event_${selectedEvent}_registrations`) || [];
+      const localData: Record<string, unknown>[] = await get(`event_${selectedEvent}_registrations`) || [];
       if (localData.length > 0 || !navigator.onLine) {
         const q = query.toLowerCase();
         const res = localData.filter(r => 
@@ -108,7 +108,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
     }
   };
 
-  const isCheckedIn = (r: Record<string, any>) => r.status === "checked-in" || checkedInIds.has(r.id);
+  const isCheckedIn = (r: Record<string, unknown>) => r.status === "checked-in" || checkedInIds.has(r.id as number);
 
   return (
     <div style={{ maxWidth: "640px", margin: "0 auto", padding: "0 1rem" }}>
@@ -199,10 +199,10 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
                 Found <strong>{results.length}</strong> result{results.length !== 1 ? "s" : ""}
               </div>
               {results.map(r => (
-                <div key={r.id} style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+                <div key={r.id as number} style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
                   <div>
-                    <div style={{ fontWeight: 600, color: "#111", fontSize: "1.05rem" }}>{r.fullName || "Unknown"}</div>
-                    <div style={{ color: "#6b7280", fontSize: "0.9rem" }}>{r.email} · {r.whatsapp}</div>
+                    <div style={{ fontWeight: 600, color: "#111", fontSize: "1.05rem" }}>{(r.fullName as string) || "Unknown"}</div>
+                    <div style={{ color: "#6b7280", fontSize: "0.9rem" }}>{r.email as string} · {r.whatsapp as string}</div>
                     <div style={{ marginTop: "0.4rem" }}>
                       <span style={{ display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 600, background: isCheckedIn(r) ? "#dcfce7" : "#f3f4f6", color: isCheckedIn(r) ? "#16a34a" : "#4b5563" }}>
                         {isCheckedIn(r) ? "✓ Checked In" : "Registered"}
@@ -211,7 +211,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
                   </div>
                   {!isCheckedIn(r) ? (
                     <button 
-                      onClick={() => setConfirmId(r.id)}
+                      onClick={() => setConfirmId(r.id as number)}
                       style={{ padding: "0.75rem 1.25rem", background: "#16a34a", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.5rem" }}
                     >
                       <UserCheck size={16} /> Check In
@@ -234,7 +234,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
             <h3 style={{ margin: "0 0 0.5rem 0", color: "#111" }}>Confirm Check-in?</h3>
             {(() => {
               const r = results.find(r => r.id === confirmId);
-              return <p style={{ color: "#6b7280", margin: "0 0 1.5rem 0" }}>Check in <strong>{r?.fullName || `Registration #${confirmId}`}</strong>?</p>;
+              return <p style={{ color: "#6b7280", margin: "0 0 1.5rem 0" }}>Check in <strong>{(r?.fullName as string) || `Registration #${confirmId}`}</strong>?</p>;
             })()}
             <div style={{ display: "flex", gap: "1rem" }}>
               <button onClick={() => setConfirmId(null)} style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer", fontWeight: 600, color: "#111" }}>Cancel</button>
