@@ -77,16 +77,33 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
     .sort((a, b) => b.value - a.value)
     .slice(0, 10);
 
-  // External Branches
+  // Internal vs External Branches
   const branchMap = Object.fromEntries(branches.map(b => [b.id as string, b.name as string]));
   const branchCountMap: Record<string, number> = {};
+  const externalBranchCountMap: Record<string, number> = {};
+
   filteredRegs.forEach(r => {
-    if (r.branchId !== "other") {
+    if (r.branchId === "other") {
+      let extName = "Other";
+      if (r.customData) {
+        try {
+          const custom = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
+          if (custom.specifiedBranch) extName = custom.specifiedBranch;
+        } catch { /* ignore */ }
+      }
+      externalBranchCountMap[extName] = (externalBranchCountMap[extName] || 0) + 1;
+    } else {
       const bName = branchMap[r.branchId as string] || "Unknown";
       branchCountMap[bName] = (branchCountMap[bName] || 0) + 1;
     }
   });
+
   const topBranches = Object.entries(branchCountMap)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
+
+  const topExternalBranches = Object.entries(externalBranchCountMap)
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
@@ -288,6 +305,7 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
         topInviters={topInviters}
         referralSources={referralSources}
         topBranches={topBranches}
+        topExternalBranches={topExternalBranches}
         attendanceData={attendanceData}
         dynamicCharts={dynamicCharts}
         firstTimerData={firstTimerData}
