@@ -71,7 +71,7 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
     const dialCode = COUNTRIES.find(c => c.code === countryCode)?.dial || "";
 
     // Map dynamic fields to standard schemas
-    let fullName = "", email = "", whatsapp = "", address = "", ageRange = "", isMember = "", isFirstTime = "", branchName = "", heardFrom = "", invitees = "", registrantStatus = "";
+    let fullName = "", email = "", whatsapp = "", address = "", ageRange = "", isMember = "", isFirstTime = "", branchName = "", otherBranch = "", heardFrom = "", invitees = "", registrantStatus = "";
 
     parsedCustomFields.forEach((field: Record<string, unknown>) => {
       const fieldLabel = String(field.label || "");
@@ -90,13 +90,16 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
         if (!whatsapp) whatsapp = val;
       }
       if (lowerLabel.includes("address") || lowerLabel.includes("home") || lowerLabel.includes("residence") || lowerLabel.includes("location")) {
-        if (!address) address = val;
+        if (!address && !lowerLabel.includes("email")) address = val;
       }
       if (lowerLabel.includes("age")) {
         if (!ageRange) ageRange = val;
       }
       if (lowerLabel.includes("branch")) {
         if (!branchName) branchName = val;
+      }
+      if (lowerLabel.includes("specify") || lowerLabel.includes("other church") || lowerLabel.includes("other branch") || lowerLabel.includes("if other")) {
+        if (!otherBranch) otherBranch = val;
       }
       if (lowerLabel.includes("first time") || lowerLabel.includes("first-time")) {
         if (!isFirstTime) isFirstTime = val;
@@ -125,6 +128,7 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
       isMember,
       isFirstTime,
       branchName,
+      otherBranch,
       heardFrom,
       invitees,
       registrantStatus,
