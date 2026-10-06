@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.12",
     "@supabase/supabase-js": "^2.117.1",
     "better-auth": "^1.7.5",
     "drizzle-orm": "^0.45.3",
@@ -24,7 +25,8 @@
     "qrcode.react": "^4.2.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "recharts": "^3.10.1"
+    "recharts": "^3.10.1",
+    "resend": "^6.32.0"
   },
   "devDependencies": {
     "@types/node": "^20",

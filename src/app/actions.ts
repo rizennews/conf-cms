@@ -1,8 +1,13 @@
 "use server";
 
 import { db } from "../db";
-import { registrations, branches, activityLogs } from "../db/schema";
+import { registrations, branches, activityLogs, events } from "../db/schema";
 import { eq, and } from "drizzle-orm";
+import { Resend } from "resend";
+import { TicketEmail } from "../emails/TicketEmail";
+
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 interface RegistrationInput {
   fullName?: string;
@@ -129,6 +134,32 @@ export async function submitRegistration(data: RegistrationInput) {
       action: "public-registration",
       details: JSON.stringify({ name: fullName, eventId, data: { fullName, email, whatsapp, address, ageRange, branchId, isMember, isFirstTime, heardFrom, invitees, registrantStatus, customData: data.customData } }),
     });
+
+    // Send automated QR Ticket email via Resend
+    if (resend && email) {
+      try {
+        const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+        let eventTitle = "Multiply Sunday";
+        if (eventId) {
+          const eventInfo = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
+          if (eventInfo.length > 0) eventTitle = eventInfo[0].name;
+        }
+
+        await resend.emails.send({
+          from: `Conf CMS <${fromEmail}>`,
+          to: email,
+          subject: `Your Ticket for ${eventTitle}`,
+          react: TicketEmail({
+            fullName: fullName || "Attendee",
+            eventName: eventTitle,
+            registrationId: String(inserted.id)
+          }),
+        });
+      } catch (emailErr) {
+        console.error("Failed to send ticket email:", emailErr);
+        // We don't want to fail the registration if the email fails
+      }
+    }
 
     return { success: true, id: inserted.id };
   } catch (err: unknown) {
