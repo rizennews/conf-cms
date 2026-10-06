@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Activity, User, Clock, Info, Filter, ChevronDown, ChevronUp, RotateCcw, AlertCircle } from "lucide-react";
+import { Search, Activity, User, Clock, Info, Filter, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import { recoverRegistration } from "./actions";
 
 interface LogData {
