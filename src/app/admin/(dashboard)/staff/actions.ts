@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "../../../../db";
-import { user } from "../../../../db/schema";
+import { user, activityLogs } from "../../../../db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../../../lib/auth";
@@ -21,6 +21,12 @@ export async function updateUserRole(userId: string, role: string, branchId: str
       role,
       branchId: role === "branch_head" ? branchId : null
     }).where(eq(user.id, userId));
+
+    await db.insert(activityLogs).values({
+      userId: session.user.id,
+      action: "edit-staff-role",
+      details: JSON.stringify({ targetUserId: userId, newRole: role, newBranchId: branchId })
+    });
     
     revalidatePath("/admin/staff");
     return { success: true };
@@ -43,11 +49,20 @@ export async function addUser(data: { name: string, email: string, password: str
     });
 
     if (res?.user?.id) {
-      // 2. Immediately update their role and branch in the database
       await db.update(user).set({
         role: data.role,
         branchId: data.role === "branch_head" ? (data.branchId || null) : null
       }).where(eq(user.id, res.user.id));
+      
+      const reqHeaders = await headers();
+      const session = await auth.api.getSession({ headers: reqHeaders });
+      if (session) {
+        await db.insert(activityLogs).values({
+          userId: session.user.id,
+          action: "create-staff",
+          details: JSON.stringify({ newUserId: res.user.id, role: data.role })
+        });
+      }
       
       revalidatePath("/admin/staff");
       return { success: true };
@@ -78,6 +93,12 @@ export async function deleteUser(userId: string) {
     // Delete user
     await db.delete(user).where(eq(user.id, userId));
     
+    await db.insert(activityLogs).values({
+      userId: session.user.id,
+      action: "delete-staff",
+      details: JSON.stringify({ deletedUserId: userId })
+    });
+
     revalidatePath("/admin/staff");
     return { success: true };
   } catch (err: unknown) {

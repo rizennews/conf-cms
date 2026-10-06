@@ -1,8 +1,8 @@
 import { auth } from "../../../lib/auth";
 import { headers } from "next/headers";
 import { db } from "../../../db";
-import { registrations, user } from "../../../db/schema";
-import { eq, desc, or, ilike, and } from "drizzle-orm";
+import { registrations, user, activityLogs } from "../../../db/schema";
+import { eq, desc, or, ilike } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -105,6 +105,17 @@ export async function GET(request: Request) {
   ].map(escape).join(","));
 
   const csv = [csvHeaders.join(","), ...rows].join("\n");
+
+  // Audit Log the Export action for Security Compliance
+  try {
+    await db.insert(activityLogs).values({
+      userId: session.user.id,
+      action: "data-export",
+      details: JSON.stringify({ recordsExported: allRegs.length, filters: { q, eventId, branchId } })
+    });
+  } catch (e) {
+    console.error("Failed to log export action", e);
+  }
 
   return new Response(csv, {
     headers: {
