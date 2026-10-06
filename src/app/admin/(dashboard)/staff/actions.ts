@@ -5,9 +5,18 @@ import { user } from "../../../../db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../../../lib/auth";
+import { headers } from "next/headers";
 
 export async function updateUserRole(userId: string, role: string, branchId: string | null) {
   try {
+    const reqHeaders = await headers();
+    const session = await auth.api.getSession({ headers: reqHeaders });
+    if (!session) return { error: "Unauthorized" };
+
+    if (session.user.id === userId) {
+      return { error: "You cannot change your own role." };
+    }
+
     await db.update(user).set({
       role,
       branchId: role === "branch_head" ? branchId : null
@@ -15,8 +24,8 @@ export async function updateUserRole(userId: string, role: string, branchId: str
     
     revalidatePath("/admin/staff");
     return { success: true };
-  } catch (err: any) {
-    return { error: err.message };
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : String(err) };
   }
 }
 
@@ -45,17 +54,25 @@ export async function addUser(data: { name: string, email: string, password: str
     }
     
     return { error: "Failed to create user. Email may already be in use." };
-  } catch (err: any) {
-    return { error: err.message || "An error occurred creating the user." };
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : "An error occurred creating the user." };
   }
 }
 
 export async function deleteUser(userId: string) {
   try {
-    const { session, account } = await import("../../../../db/schema");
+    const reqHeaders = await headers();
+    const session = await auth.api.getSession({ headers: reqHeaders });
+    if (!session) return { error: "Unauthorized" };
+
+    if (session.user.id === userId) {
+      return { error: "You cannot delete yourself." };
+    }
+
+    const { session: sessionSchema, account } = await import("../../../../db/schema");
     
     // Delete related records first to avoid foreign key constraints
-    await db.delete(session).where(eq(session.userId, userId));
+    await db.delete(sessionSchema).where(eq(sessionSchema.userId, userId));
     await db.delete(account).where(eq(account.userId, userId));
     
     // Delete user
@@ -63,7 +80,7 @@ export async function deleteUser(userId: string) {
     
     revalidatePath("/admin/staff");
     return { success: true };
-  } catch (err: any) {
-    return { error: err.message || "An error occurred deleting the user." };
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : "An error occurred deleting the user." };
   }
 }

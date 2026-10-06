@@ -2,9 +2,19 @@
 
 import { useState } from "react";
 import { updateUserRole, addUser, deleteUser } from "./actions";
-import { Trash2 } from "lucide-react";
+import { Trash2, CheckCircle2 } from "lucide-react";
 
-export default function StaffTable({ users, branches }: { users: any[]; branches: any[] }) {
+const ROLE_DEFINITIONS = [
+  { id: "super_admin", label: "Super Admin", desc: "Full system access. Can manage staff, branches, and global settings.", color: "#7e22ce", bg: "#f3e8ff" },
+  { id: "admin", label: "Admin", desc: "Manage events and view all registrations. Cannot manage staff.", color: "#1d4ed8", bg: "#dbeafe" },
+  { id: "data_team", label: "Data Team", desc: "Global read-only access for analytics and exports.", color: "#047857", bg: "#d1fae5" },
+  { id: "branch_head", label: "Branch Head", desc: "Local access only. Manages registrations for a specific branch.", color: "#c2410c", bg: "#ffedd5" }
+];
+
+type UserType = { id: string, name: string, email: string, role: string, branchId: string | null };
+type BranchType = { id: string, name: string };
+
+export default function StaffTable({ users, branches }: { users: UserType[]; branches: BranchType[] }) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,17 +94,30 @@ export default function StaffTable({ users, branches }: { users: any[]; branches
                   {u.email}
                 </td>
                 <td style={{ padding: "1rem 1.5rem" }}>
-                  <select 
-                    value={u.role} 
-                    onChange={e => handleRoleChange(u.id, e.target.value, u.branchId)}
-                    disabled={loadingId === u.id}
-                    style={{ padding: "0.5rem", borderRadius: "6px", border: "1px solid #d1d5db", background: "white", fontSize: "0.9rem", color: "#111" }}
-                  >
-                    <option value="super_admin">Super Admin (Full Access)</option>
-                    <option value="admin">Admin (Events & Regs)</option>
-                    <option value="data_team">Data Team (Read Only)</option>
-                    <option value="branch_head">Branch Head (Local Only)</option>
-                  </select>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span style={{
+                      background: ROLE_DEFINITIONS.find(r => r.id === u.role)?.bg || "#f3f4f6",
+                      color: ROLE_DEFINITIONS.find(r => r.id === u.role)?.color || "#374151",
+                      padding: "0.25rem 0.75rem",
+                      borderRadius: "999px",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.02em"
+                    }}>
+                      {ROLE_DEFINITIONS.find(r => r.id === u.role)?.label || u.role}
+                    </span>
+                    <select 
+                      value={u.role} 
+                      onChange={e => handleRoleChange(u.id, e.target.value, u.branchId)}
+                      disabled={loadingId === u.id}
+                      style={{ padding: "0.25rem", borderRadius: "4px", border: "1px solid transparent", background: "transparent", fontSize: "0.85rem", color: "#6b7280", cursor: "pointer", outline: "none" }}
+                      onMouseOver={e => e.currentTarget.style.border = "1px solid #d1d5db"}
+                      onMouseOut={e => e.currentTarget.style.border = "1px solid transparent"}
+                    >
+                      {ROLE_DEFINITIONS.map(r => <option key={r.id} value={r.id}>Change to {r.label}</option>)}
+                    </select>
+                  </div>
                 </td>
                 <td style={{ padding: "1rem 1.5rem" }}>
                   {u.role === "branch_head" ? (
@@ -153,13 +176,34 @@ export default function StaffTable({ users, branches }: { users: any[]; branches
             </div>
 
             <div>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, fontSize: "0.9rem", color: "#111" }}>Role</label>
-              <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} style={{ width: "100%", padding: "0.75rem", borderRadius: "6px", border: "1px solid #d1d5db", color: "#111", background: "#fff" }}>
-                <option value="super_admin">Super Admin (Full Access)</option>
-                <option value="admin">Admin (Events & Regs)</option>
-                <option value="data_team">Data Team (Read Only)</option>
-                <option value="branch_head">Branch Head (Local Only)</option>
-              </select>
+              <label style={{ display: "block", marginBottom: "0.75rem", fontWeight: 600, fontSize: "0.95rem", color: "#111" }}>Access Level (Role)</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.5rem" }}>
+                {ROLE_DEFINITIONS.map((r) => (
+                  <div 
+                    key={r.id}
+                    onClick={() => setFormData({...formData, role: r.id})}
+                    style={{
+                      border: formData.role === r.id ? `2px solid ${r.color}` : "1px solid #e5e7eb",
+                      background: formData.role === r.id ? r.bg : "#fff",
+                      padding: "0.75rem 1rem",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "0.75rem",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    <div style={{ marginTop: "0.15rem", color: formData.role === r.id ? r.color : "#d1d5db" }}>
+                      <CheckCircle2 size={18} fill={formData.role === r.id ? r.color : "transparent"} stroke={formData.role === r.id ? "#fff" : "currentColor"} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, color: formData.role === r.id ? r.color : "#374151", fontSize: "0.95rem" }}>{r.label}</div>
+                      <div style={{ fontSize: "0.8rem", color: formData.role === r.id ? r.color : "#6b7280", opacity: 0.9, marginTop: "0.1rem" }}>{r.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {formData.role === "branch_head" && (
