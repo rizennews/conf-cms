@@ -244,53 +244,58 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
     <>
       <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e5e7eb", overflow: "hidden" }}>
         {/* Toolbar */}
-        <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #e5e7eb", display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
-          <input
-            type="text"
-            placeholder="Search name, email, or phone..."
-            value={searchTerm}
-            onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            style={{ padding: "0.65rem 1rem", borderRadius: "8px", border: "1px solid #d1d5db", flex: 1, minWidth: "220px", fontSize: "0.9rem" }}
-          />
-          <select value={filterEvent} onChange={e => { setFilterEvent(e.target.value); setCurrentPage(1); }} style={{ padding: "0.65rem", borderRadius: "8px", border: "1px solid #d1d5db", minWidth: "180px", fontSize: "0.9rem" }}>
-            <option value="">All Events</option>
-            {events.map(e => <option key={e.id as string} value={e.id as string}>{(e.name as string) || (e.id as string)}</option>)}
-          </select>
-          {branches && branches.length > 0 && (
-            <select value={filterBranch} onChange={e => { setFilterBranch(e.target.value); setCurrentPage(1); }} style={{ padding: "0.65rem", borderRadius: "8px", border: "1px solid #d1d5db", minWidth: "180px", fontSize: "0.9rem" }}>
-              <option value="">All Branches</option>
-              {branches.map(b => <option key={b.id as string} value={b.id as string}>{b.name as string}</option>)}
+        <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #e5e7eb", display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", flex: "1 1 300px" }}>
+            <input
+              type="text"
+              placeholder="Search name, email, or phone..."
+              value={searchTerm}
+              onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              style={{ padding: "0.65rem 1rem", borderRadius: "8px", border: "1px solid #d1d5db", flex: "1 1 220px", fontSize: "0.9rem" }}
+            />
+            <select value={filterEvent} onChange={e => { setFilterEvent(e.target.value); setCurrentPage(1); }} style={{ padding: "0.65rem", borderRadius: "8px", border: "1px solid #d1d5db", flex: "1 1 180px", fontSize: "0.9rem" }}>
+              <option value="">All Events</option>
+              {events.map(e => <option key={e.id as string} value={e.id as string}>{(e.name as string) || (e.id as string)}</option>)}
             </select>
-          )}
-          <Link 
-            href={`/api/export-csv?${new URLSearchParams({
-              ...(searchTerm ? { q: searchTerm } : {}),
-              ...(filterEvent ? { eventId: filterEvent } : {}),
-              ...(filterBranch ? { branchId: filterBranch } : {}),
-            }).toString()}`}
-            style={{ padding: "0.65rem 1rem", borderRadius: "8px", border: "1px solid #d1d5db", fontWeight: 600, textDecoration: "none", color: "#111", background: "white", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem" }}
-          >
-            <Download size={15} /> Export
-          </Link>
-          <button
-            onClick={() => {
-              if (filterEvent) { window.open(`/admin/print-nametags?eventId=${filterEvent}`, '_blank'); }
-              else { setShowPrintModal(true); }
-            }}
-            style={{ padding: "0.65rem 1rem", background: "white", color: "#111", border: "1px solid #d1d5db", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem" }}
-          >
-            <Printer size={15} /> Print
-          </button>
-          {canBulkUpload && (
-            <button onClick={() => setShowUpload(true)} style={{ padding: "0.65rem 1rem", background: "#2b3ff2", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem" }}>
-              <Upload size={15} /> Bulk Upload
+            {branches && branches.length > 0 && (
+              <select value={filterBranch} onChange={e => { setFilterBranch(e.target.value); setCurrentPage(1); }} style={{ padding: "0.65rem", borderRadius: "8px", border: "1px solid #d1d5db", flex: "1 1 180px", fontSize: "0.9rem" }}>
+                <option value="">All Branches</option>
+                {branches.map(b => <option key={b.id as string} value={b.id as string}>{b.name as string}</option>)}
+              </select>
+            )}
+          </div>
+          
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <Link 
+              href={`/api/export-csv?${new URLSearchParams({
+                ...(searchTerm ? { q: searchTerm } : {}),
+                ...(filterEvent ? { eventId: filterEvent } : {}),
+                ...(filterBranch ? { branchId: filterBranch } : {}),
+              }).toString()}`}
+              style={{ padding: "0.65rem 1rem", borderRadius: "8px", border: "1px solid #d1d5db", fontWeight: 600, textDecoration: "none", color: "#111", background: "white", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem", flex: "1 1 auto", justifyContent: "center" }}
+            >
+              <Download size={15} /> Export
+            </Link>
+            <button
+              onClick={() => {
+                if (filterEvent) { window.open(`/admin/print-nametags?eventId=${filterEvent}`, '_blank'); }
+                else { setShowPrintModal(true); }
+              }}
+              style={{ padding: "0.65rem 1rem", background: "white", color: "#111", border: "1px solid #d1d5db", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem", flex: "1 1 auto", justifyContent: "center" }}
+            >
+              <Printer size={15} /> Print
             </button>
-          )}
-          {isSuperAdmin && selectedIds.length > 0 && (
-            <button onClick={() => setShowBulkDeleteConfirm(true)} style={{ padding: "0.65rem 1rem", background: "#ef4444", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem" }}>
-              <Trash2 size={15} /> Delete Selected ({selectedIds.length})
-            </button>
-          )}
+            {canBulkUpload && (
+              <button onClick={() => setShowUpload(true)} style={{ padding: "0.65rem 1rem", background: "#2b3ff2", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem", flex: "1 1 auto", justifyContent: "center" }}>
+                <Upload size={15} /> Bulk Upload
+              </button>
+            )}
+            {isSuperAdmin && selectedIds.length > 0 && (
+              <button onClick={() => setShowBulkDeleteConfirm(true)} style={{ padding: "0.65rem 1rem", background: "#ef4444", color: "white", border: "none", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem", flex: "1 1 auto", justifyContent: "center" }}>
+                <Trash2 size={15} /> Delete Selected ({selectedIds.length})
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Summary bar */}
@@ -369,8 +374,8 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                     </td>
                     <td style={{ padding: "0.85rem 1.25rem" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                        <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)", color: "#3730a3", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.95rem", flexShrink: 0 }}>
-                          {((r.fullName as string) || "?").charAt(0).toUpperCase()}
+                        <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#2b3ff2", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.95rem", flexShrink: 0, border: "1px solid rgba(43,63,242,0.2)" }}>
+                          {((r.fullName as string) || "?").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
                         </div>
                         <div>
                           <div style={{ fontWeight: 600, color: "#111", fontSize: "0.9rem", lineHeight: 1.3 }}>{(r.fullName as string) || "—"}</div>
@@ -620,7 +625,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
           <div style={{ background: "white", padding: "2.5rem", borderRadius: "16px", width: "95vw", maxWidth: "1200px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: "#e0e7ff", color: "#3730a3", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.5rem", fontWeight: 700, flexShrink: 0 }}>
+                <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: "#2b3ff2", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.5rem", fontWeight: 700, flexShrink: 0, border: "1px solid rgba(43,63,242,0.2)", boxShadow: "0 4px 6px -1px rgba(43,63,242,0.2)" }}>
                   {((viewRegistration.fullName as string) || "U").split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()}
                 </div>
                 <div>
@@ -657,12 +662,32 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
             
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem", color: "#374151", fontSize: "1rem", background: "#f9fafb", padding: "1.5rem", borderRadius: "12px", border: "1px solid #e5e7eb" }}>
               <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Address</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.address as string) || "—"}</div></div>
+              
+              {(() => {
+                let countryName = "—";
+                if (viewRegistration.customData) {
+                  try {
+                    const c = typeof viewRegistration.customData === 'string' ? JSON.parse(viewRegistration.customData as string) : viewRegistration.customData;
+                    const code = (c as Record<string, string>)._countryCode;
+                    if (code) {
+                      countryName = new Intl.DisplayNames(['en'], { type: 'region' }).of(code.toUpperCase()) || code.toUpperCase();
+                    }
+                  } catch { /* ignore */ }
+                }
+                return (
+                  <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Country</strong> <div style={{ fontWeight: 500, color: "#111" }}>{countryName}</div></div>
+                );
+              })()}
+
               <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Age Range</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.ageRange as string) || "—"}</div></div>
               <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Registrant Status</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.registrantStatus as string) || "—"}</div></div>
               <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Member?</strong> <div style={{ fontWeight: 500, color: "#111" }}>{viewRegistration.isMember ? "Yes" : "No"}</div></div>
               <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>First Time?</strong> <div style={{ fontWeight: 500, color: "#111" }}>{viewRegistration.isFirstTime ? "Yes" : "No"}</div></div>
               <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Heard From</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.heardFrom as string) || "—"}</div></div>
               <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Invitees</strong> <div style={{ fontWeight: 500, color: "#111" }}>{(viewRegistration.invitees as string) || "—"}</div></div>
+              
+              <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Registered At</strong> <div style={{ fontWeight: 500, color: "#111" }}>{viewRegistration.createdAt ? new Date(viewRegistration.createdAt as string | Date).toLocaleString() : "—"}</div></div>
+              <div><strong style={{ color: "#6b7280", display: "block", marginBottom: "0.3rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Checked-In At</strong> <div style={{ fontWeight: 500, color: "#111" }}>{viewRegistration.checkedInAt ? new Date(viewRegistration.checkedInAt as string | Date).toLocaleString() : "—"}</div></div>
             </div>
 
             {viewRegistration.customData ? (() => {

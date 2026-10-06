@@ -389,7 +389,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
                               style={{ width: "20px", height: "20px", accentColor: "#16a34a", cursor: "pointer" }}
                             />
                           )}
-                          <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: batchMode ? "#f3f4f6" : "#e0e7ff", color: batchMode ? "#9ca3af" : "#3730a3", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", fontWeight: 700, flexShrink: 0 }}>
+                          <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: batchMode ? "#f3f4f6" : "#2b3ff2", color: batchMode ? "#9ca3af" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", fontWeight: 700, flexShrink: 0, border: batchMode ? "1px solid #e5e7eb" : "1px solid rgba(43,63,242,0.2)" }}>
                             {initials}
                           </div>
                           <div>
