@@ -99,7 +99,7 @@ export const registrations = pgTable("registrations", {
 
 export const activityLogs = pgTable("activity_logs", {
   id: serial("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => user.id), // The admin who performed the action
+  userId: text("user_id").references(() => user.id), // Nullable for public actions (e.g. self-registration)
   action: text("action").notNull(), // e.g. "login", "check-in", "edit-registration", "bulk-upload"
   details: text("details"), // JSON string or text with more context (e.g. registration ID)
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

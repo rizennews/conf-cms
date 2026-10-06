@@ -56,6 +56,9 @@ export async function bulkInsertRegistrations(rows: Record<string, unknown>[], e
 
 export async function deleteRegistration(id: number) {
   try {
+    const record = await db.select().from(registrations).where(eq(registrations.id, id)).limit(1);
+    if (!record.length) return { error: "Registration not found" };
+
     await db.delete(registrations).where(eq(registrations.id, id));
     
     const reqHeaders = await headers();
@@ -64,7 +67,7 @@ export async function deleteRegistration(id: number) {
       await db.insert(activityLogs).values({
         userId: session.user.id,
         action: "delete-registration",
-        details: JSON.stringify({ registrationId: id }),
+        details: JSON.stringify({ name: record[0].fullName || "Unknown", data: record[0] }),
       });
     }
 
@@ -79,15 +82,19 @@ export async function deleteRegistration(id: number) {
 export async function bulkDeleteRegistrations(ids: number[]) {
   if (!ids || ids.length === 0) return { success: true };
   try {
+    const records = await db.select().from(registrations).where(inArray(registrations.id, ids));
+    if (!records.length) return { success: true };
+
     await db.delete(registrations).where(inArray(registrations.id, ids));
     
     const reqHeaders = await headers();
     const session = await auth.api.getSession({ headers: reqHeaders });
     if (session?.user?.id) {
+      const names = records.map(r => r.fullName).filter(Boolean).join(", ");
       await db.insert(activityLogs).values({
         userId: session.user.id,
         action: "bulk-delete-registration",
-        details: JSON.stringify({ count: ids.length }),
+        details: JSON.stringify({ name: names, count: ids.length, data: records }),
       });
     }
 

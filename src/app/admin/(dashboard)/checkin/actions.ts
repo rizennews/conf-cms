@@ -59,17 +59,19 @@ export async function searchRegistrations(query: string, eventId: string) {
 
 export async function checkInById(registrationId: number) {
   try {
+    const record = await db.select().from(registrations).where(eq(registrations.id, registrationId)).limit(1);
+    
     await db.update(registrations)
       .set({ status: "checked-in", checkedInAt: new Date() })
       .where(eq(registrations.id, registrationId));
 
     const reqHeaders = await headers();
     const session = await auth.api.getSession({ headers: reqHeaders });
-    if (session?.user?.id) {
+    if (session?.user?.id && record.length > 0) {
       await db.insert(activityLogs).values({
         userId: session.user.id,
         action: "check-in",
-        details: JSON.stringify({ registrationId }),
+        details: JSON.stringify({ name: record[0].fullName || "Unknown", registrationId }),
       });
     }
 
@@ -82,17 +84,19 @@ export async function checkInById(registrationId: number) {
 
 export async function undoCheckInById(registrationId: number) {
   try {
+    const record = await db.select().from(registrations).where(eq(registrations.id, registrationId)).limit(1);
+
     await db.update(registrations)
       .set({ status: "registered", checkedInAt: null })
       .where(eq(registrations.id, registrationId));
 
     const reqHeaders = await headers();
     const session = await auth.api.getSession({ headers: reqHeaders });
-    if (session?.user?.id) {
+    if (session?.user?.id && record.length > 0) {
       await db.insert(activityLogs).values({
         userId: session.user.id,
         action: "undo-check-in",
-        details: JSON.stringify({ registrationId }),
+        details: JSON.stringify({ name: record[0].fullName || "Unknown", registrationId }),
       });
     }
 

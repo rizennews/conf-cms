@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "../db";
-import { registrations, branches } from "../db/schema";
+import { registrations, branches, activityLogs } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 
 interface RegistrationInput {
@@ -96,6 +96,12 @@ export async function submitRegistration(data: RegistrationInput) {
         ...(data.customData || {})
       })
     }).returning({ id: registrations.id });
+
+    // Log the public registration
+    await db.insert(activityLogs).values({
+      action: "public-registration",
+      details: JSON.stringify({ name: fullName, eventId }),
+    });
 
     return { success: true, id: inserted.id };
   } catch (err: unknown) {
