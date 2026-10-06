@@ -103,7 +103,7 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
               alt="LCC Logo" 
               width={100} 
               height={100} 
-              style={{ objectFit: 'contain' }}
+              style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
               unoptimized 
             />
           </div>
