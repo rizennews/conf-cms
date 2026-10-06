@@ -142,8 +142,8 @@ export default function LogsTable({ initialLogs }: { initialLogs: LogData[] }) {
                     >
                       <td style={{ padding: "1.25rem" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
-                             <User size={16} color="#4b5563" />
+                          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#2b3ff2", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(43,63,242,0.2)", fontSize: "0.85rem", fontWeight: 700 }}>
+                             {log.userName ? log.userName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : "S"}
                           </div>
                           <div>
                             <div style={{ fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>{log.userName || "System"}</div>
