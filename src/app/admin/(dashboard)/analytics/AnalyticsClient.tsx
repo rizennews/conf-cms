@@ -7,7 +7,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import pptxgen from "pptxgenjs";
 
-export default function AnalyticsClient({ registrations, events, branches }: { registrations: Record<string, unknown>[], events: Record<string, unknown>[], branches: Record<string, unknown>[] }) {
+export default function AnalyticsClient({ registrations, events, branches, effectiveBranchId }: { registrations: Record<string, unknown>[], events: Record<string, unknown>[], branches: Record<string, unknown>[], effectiveBranchId?: string | null }) {
   const [selectedEventId, setSelectedEventId] = useState<string>((events[0]?.id as string) || "");
   const router = useRouter();
 
@@ -316,6 +316,7 @@ export default function AnalyticsClient({ registrations, events, branches }: { r
         dynamicCharts={dynamicCharts}
         firstTimerData={firstTimerData}
         checkinsOverTime={checkinsOverTime}
+        isBranchScoped={!!effectiveBranchId}
       />
       </div>
     </div>

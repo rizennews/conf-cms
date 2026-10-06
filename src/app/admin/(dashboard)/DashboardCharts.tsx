@@ -13,14 +13,18 @@ interface Props {
   dynamicCharts?: { title: string; data: { name: string; value: number }[] }[];
   firstTimerData?: { name: string; value: number }[];
   checkinsOverTime?: { time: string; count: number }[];
+  isBranchScoped?: boolean;
 }
 
 const COLORS = ['#111111', '#2b3ff2', '#f59e0b', '#10b981', '#6366f1', '#ec4899', '#8b5cf6'];
 
-export default function DashboardCharts({ registrationsByDate, ageDemographics, registrantStatuses, topInviters, referralSources, topBranches, topExternalBranches = [], attendanceData, dynamicCharts = [], firstTimerData = [], checkinsOverTime = [] }: Props) {
+export default function DashboardCharts({ registrationsByDate, ageDemographics, registrantStatuses, topInviters, referralSources, topBranches, topExternalBranches = [], attendanceData, dynamicCharts = [], firstTimerData = [], checkinsOverTime = [], isBranchScoped = false }: Props) {
   const [activeTab, setActiveTab] = useState("Overview");
 
-  const tabs = ["Overview", "Demographics", "Acquisition", "Branches"];
+  const tabs = ["Overview", "Demographics", "Acquisition"];
+  if (!isBranchScoped) {
+    tabs.push("Branches");
+  }
   if (dynamicCharts && dynamicCharts.length > 0) {
     tabs.push("Custom Data");
   }
