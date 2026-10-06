@@ -13,7 +13,7 @@ export default async function CheckinPage() {
   }).from(events).where(eq(events.isActive, true));
 
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", paddingBottom: "4rem" }}>
+    <div style={{ maxWidth: "1100px", margin: "0 auto", paddingBottom: "4rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2.5rem" }}>
         <div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 600, color: "#111", margin: "0 0 0.5rem 0", letterSpacing: "-0.02em" }}>D-Day Check-in</h1>

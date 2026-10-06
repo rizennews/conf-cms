@@ -246,7 +246,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
   const progressPct = totalRegs > 0 ? Math.round((checkedInCount / totalRegs) * 100) : 0;
 
   return (
-    <div style={{ maxWidth: "640px", margin: "0 auto", padding: "0 1rem" }}>
+    <div style={{ width: "100%", margin: "0 auto" }}>
       
       {/* Event Selector & Actions */}
       <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e5e7eb", padding: "1.5rem", marginBottom: "1.5rem" }}>
