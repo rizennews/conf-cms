@@ -7,7 +7,17 @@ import { QRCodeSVG } from "qrcode.react";
 
 type CustomField = { id: string; label: string; description?: string; type: string; options?: string[]; required?: boolean };
 
-export default function FormBuilder({ initialEvent }: { initialEvent?: any }) {
+type EventType = {
+  id?: number | string;
+  name?: string;
+  slug?: string;
+  deadline?: string | Date | null;
+  isActive?: boolean;
+  isMainEvent?: boolean;
+  customFields?: string;
+};
+
+export default function FormBuilder({ initialEvent }: { initialEvent?: EventType | null }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showQR, setShowQR] = useState(false);
@@ -21,17 +31,17 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: any }) {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
   const eventUrl = `${origin}/${slug}`;
   
-  let initialFields: CustomField[] = [];
-  try {
-      if (initialEvent?.customFields) {
-        initialFields = JSON.parse(initialEvent.customFields).map((f: any) => ({
+  const [fields, setFields] = useState<CustomField[]>(() => {
+    try {
+      if (initialEvent?.customFields && typeof initialEvent.customFields === "string") {
+        return JSON.parse(initialEvent.customFields).map((f: Record<string, unknown>) => ({
           ...f,
           id: f.id || Math.random().toString(36).substring(2, 9)
-        }));
+        })) as CustomField[];
       }
-  } catch(e) {}
-  
-  const [fields, setFields] = useState<CustomField[]>(initialFields);
+    } catch { /* ignore */ }
+    return [];
+  });
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
@@ -41,7 +51,7 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: any }) {
   const handleSave = async () => {
     setLoading(true);
     await saveEvent({
-      id: initialEvent?.id,
+      id: initialEvent?.id ? String(initialEvent.id) : undefined,
       name,
       slug,
       deadline: deadline ? new Date(deadline) : null,
@@ -80,7 +90,7 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: any }) {
     // Automatically save so the deletion persists immediately
     setLoading(true);
     await saveEvent({
-      id: initialEvent?.id,
+      id: initialEvent?.id ? String(initialEvent.id) : undefined,
       name,
       slug,
       deadline: deadline ? new Date(deadline) : null,
