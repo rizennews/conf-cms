@@ -61,7 +61,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
 
   useEffect(() => {
     if (showScanner) {
-      const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+      const scanner = new Html5QrcodeScanner("reader", { fps: 30, qrbox: { width: 250, height: 250 }, disableFlip: true }, false);
       scanner.render(async (decodedText) => {
         scanner.clear();
         setShowScanner(false);

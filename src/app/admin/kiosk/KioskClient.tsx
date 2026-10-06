@@ -113,7 +113,7 @@ export default function KioskClient({ events, branches }: { events: EventType[],
           html5QrCode = new Html5Qrcode("kiosk-reader");
           await html5QrCode.start(
             { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 300, height: 300 }, aspectRatio: 1.0 },
+            { fps: 30, qrbox: { width: 300, height: 300 }, aspectRatio: 1.0, disableFlip: true },
             async (decodedText) => {
               if (isProcessing) return;
               
