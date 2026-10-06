@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "../../../lib/auth-client";
 import {
@@ -62,8 +63,8 @@ export default function Sidebar({ role, userName, newRegistrations = 0 }: { role
     <>
       {/* Header */}
       <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#111" }}>CMS Portal</h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <Image src="/LCC-LOGO.png" alt="Church Logo" width={80} height={40} style={{ objectFit: 'contain' }} unoptimized />
           <span style={{ display: "inline-block", background: "rgba(43,63,242,0.1)", color: "#2b3ff2", padding: "0.15rem 0.5rem", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase" as const, marginTop: "0.25rem" }}>
             {role.replace(/_/g, " ")}
           </span>

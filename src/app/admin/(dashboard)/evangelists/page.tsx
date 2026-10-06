@@ -4,7 +4,6 @@ import { db } from "../../../../db";
 import { registrations, user, events } from "../../../../db/schema";
 import { eq, desc } from "drizzle-orm";
 import EvangelistTable from "./EvangelistTable";
-import Image from "next/image";
 
 export default async function EvangelistsPage({ searchParams }: { searchParams: Promise<{ eventId?: string }> }) {
   const reqHeaders = await headers();
@@ -78,9 +77,6 @@ export default async function EvangelistsPage({ searchParams }: { searchParams: 
           <p style={{ color: "#666", fontSize: "0.95rem", margin: 0 }}>
             See who is inviting the most people and track the check-in status of their invitees.
           </p>
-        </div>
-        <div style={{ background: "#fff", padding: "0.5rem 1rem", borderRadius: "12px", border: "1px solid #eaeaea", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
-          <Image src="/LCC-LOGO.png" alt="Church Logo" width={80} height={80} style={{ objectFit: 'contain' }} unoptimized />
         </div>
       </div>
 
