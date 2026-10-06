@@ -9,7 +9,7 @@ type ScanState = "IDLE" | "SUCCESS" | "ALREADY_CHECKED_IN" | "INVALID";
 
 interface EventType { id: string; name: string; }
 interface BranchType { id: string; name: string; }
-interface RegistrationType { id: number; fullName?: string | null; email?: string | null; status?: string | null; eventId?: string | null; branchId?: string | null; }
+interface RegistrationType { id: number; fullName?: string | null; email?: string | null; status?: string | null; eventId?: string | null; branchId?: string | null; customData?: unknown; }
 
 export default function KioskClient({ events, branches }: { events: EventType[], branches: BranchType[] }) {
   const [selectedEvent, setSelectedEvent] = useState(events[0]?.id || "");
@@ -139,7 +139,13 @@ export default function KioskClient({ events, branches }: { events: EventType[],
               } else {
                 const res = await checkInById(regId);
                 if (res.success) {
-                  const branchName = branches.find(b => b.id === registration.branchId)?.name || "VIP Guest";
+                  let branchName = branches.find(b => b.id === registration.branchId)?.name || "VIP Guest";
+                  if (registration.branchId === "other" && registration.customData) {
+                    try {
+                      const custom = typeof registration.customData === 'string' ? JSON.parse(registration.customData) : registration.customData;
+                      if (custom.specifiedBranch) branchName = custom.specifiedBranch;
+                    } catch { /* ignore */ }
+                  }
                   handleResult("SUCCESS", `Welcome, ${registration.fullName || 'Guest'}!`, branchName);
                   setRecentCheckins(prev => [{ name: registration.fullName || 'Guest', time: new Date() }, ...prev].slice(0, 5));
                 } else {
@@ -202,7 +208,13 @@ export default function KioskClient({ events, branches }: { events: EventType[],
     }
     const res = await checkInById(reg.id);
     if (res.success) {
-      const branchName = branches.find(b => b.id === reg.branchId)?.name || "VIP Guest";
+      let branchName = branches.find(b => b.id === reg.branchId)?.name || "VIP Guest";
+      if (reg.branchId === "other" && reg.customData) {
+        try {
+          const custom = typeof reg.customData === 'string' ? JSON.parse(reg.customData) : reg.customData;
+          if (custom.specifiedBranch) branchName = custom.specifiedBranch;
+        } catch { /* ignore */ }
+      }
       handleResult("SUCCESS", `Welcome, ${reg.fullName || 'Guest'}!`, branchName);
       setRecentCheckins(prev => [{ name: reg.fullName || 'Guest', time: new Date() }, ...prev].slice(0, 5));
     } else {

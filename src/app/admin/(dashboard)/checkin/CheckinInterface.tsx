@@ -179,7 +179,12 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
     setHistory(prev => [{ id, name, time: new Date() }, ...prev].slice(0, 50));
     playSuccessSound();
     setFlashCardId(id);
-    setTimeout(() => setFlashCardId(null), 1000);
+    setTimeout(() => {
+      setFlashCardId(null);
+      setResults([]);
+      setSearched(false);
+      setQuery("");
+    }, 1500);
 
     try {
       if (!navigator.onLine) throw new Error("Offline");
