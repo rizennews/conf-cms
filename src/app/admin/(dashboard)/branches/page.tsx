@@ -2,8 +2,13 @@ import { db } from "../../../../db";
 import { branches, registrations } from "../../../../db/schema";
 import CreateBranchForm from "./CreateBranchForm";
 import DeleteBranchButton from "./DeleteBranchButton";
+import ImpersonateBranchButton from "./ImpersonateBranchButton";
+import { cookies } from "next/headers";
 
 export default async function BranchesPage() {
+  const cookieStore = await cookies();
+  const impersonatedBranch = cookieStore.get("impersonatedBranch")?.value;
+
   const allBranches = (await db.select().from(branches)).filter(b => b.id !== "other");
   const allRegistrations = await db.select({ branchId: registrations.branchId, status: registrations.status }).from(registrations);
 
@@ -46,6 +51,7 @@ export default async function BranchesPage() {
                       <td style={{ padding: "1rem 1.5rem", color: "#111", fontSize: "0.9rem", textAlign: "right", fontWeight: 500 }}>{branchRegs.length}</td>
                       <td style={{ padding: "1rem 1.5rem", color: "#16a34a", fontSize: "0.9rem", textAlign: "right", fontWeight: 600 }}>{checkedInCount}</td>
                       <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>
+                        <ImpersonateBranchButton id={branch.id} isCurrent={impersonatedBranch === branch.id} />
                         <DeleteBranchButton id={branch.id} />
                       </td>
                     </tr>

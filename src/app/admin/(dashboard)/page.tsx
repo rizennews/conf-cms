@@ -1,5 +1,5 @@
 import { auth } from "../../../lib/auth";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { db } from "../../../db";
 import { registrations, events, branches, user } from "../../../db/schema";
 import { eq, count, desc, not } from "drizzle-orm";
@@ -37,14 +37,18 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
   const userRole = currentUser[0]?.role || "branch_head";
   const userBranchId = currentUser[0]?.branchId;
 
+  const cookieStore = await cookies();
+  const impersonatedBranch = cookieStore.get("impersonatedBranch")?.value;
+  const effectiveBranchId = (userRole === "super_admin" || userRole === "admin") && impersonatedBranch ? impersonatedBranch : (userRole === "branch_head" ? userBranchId : null);
+
   let userBranchName = null;
-  if (userBranchId) {
-    const branchRes = await db.select().from(branches).where(eq(branches.id, userBranchId)).limit(1);
+  if (effectiveBranchId) {
+    const branchRes = await db.select().from(branches).where(eq(branches.id, effectiveBranchId)).limit(1);
     if (branchRes.length > 0) userBranchName = branchRes[0].name;
   }
 
-  if (userRole === "branch_head" && userBranchId) {
-    allRegs = allRegs.filter(r => r.branchId === userBranchId);
+  if (effectiveBranchId) {
+    allRegs = allRegs.filter(r => r.branchId === effectiveBranchId);
   }
 
   const totalBranchesResult = await db.select({ count: count() }).from(branches).where(not(eq(branches.id, "other")));

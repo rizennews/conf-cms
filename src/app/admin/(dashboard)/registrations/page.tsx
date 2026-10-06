@@ -1,5 +1,5 @@
 import { auth } from "../../../../lib/auth";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { db } from "../../../../db";
 import { registrations, user, events, branches } from "../../../../db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -23,15 +23,17 @@ export default async function RegistrationsPage() {
     branchId = currentUser[0].branchId;
   }
 
+  const cookieStore = await cookies();
+  const impersonatedBranch = cookieStore.get("impersonatedBranch")?.value;
+  const effectiveBranchId = (role === "super_admin" || role === "admin") && impersonatedBranch ? impersonatedBranch : (role === "branch_head" ? branchId : null);
+
   let allRegs: Record<string, unknown>[] = [];
-  if (role === "super_admin" || role === "admin" || role === "data_team") {
+  if (effectiveBranchId) {
+    allRegs = await db.select().from(registrations).where(eq(registrations.branchId, effectiveBranchId)).orderBy(desc(registrations.createdAt));
+  } else if (role === "super_admin" || role === "admin" || role === "data_team") {
     allRegs = await db.select().from(registrations).orderBy(desc(registrations.createdAt));
   } else {
-    if (branchId) {
-      allRegs = await db.select().from(registrations).where(eq(registrations.branchId, branchId)).orderBy(desc(registrations.createdAt));
-    } else {
-      allRegs = [];
-    }
+    allRegs = [];
   }
 
   const allEvents = await db.select().from(events);

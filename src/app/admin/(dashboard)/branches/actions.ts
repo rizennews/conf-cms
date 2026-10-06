@@ -3,6 +3,21 @@
 import { db } from "../../../../db";
 import { branches } from "../../../../db/schema";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+
+export async function impersonateBranch(branchId: string) {
+  const cookieStore = await cookies();
+  cookieStore.set("impersonatedBranch", branchId, { path: '/' });
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+export async function clearImpersonation() {
+  const cookieStore = await cookies();
+  cookieStore.delete("impersonatedBranch");
+  revalidatePath("/", "layout");
+  return { success: true };
+}
 
 export async function createBranch(formData: FormData) {
   const name = formData.get("name") as string;
@@ -22,11 +37,11 @@ export async function createBranch(formData: FormData) {
 
     revalidatePath("/admin/branches");
     return { success: true };
-  } catch (err: any) {
-    if (err.code === '23505') { // Unique constraint violation in Postgres
+  } catch (err: unknown) {
+    if (err instanceof Error && (err as any).code === '23505') { // Unique constraint violation in Postgres
       return { error: "A branch with this name already exists." };
     }
-    return { error: "Failed to create branch: " + err.message };
+    return { error: "Failed to create branch: " + (err instanceof Error ? err.message : String(err)) };
   }
 }
 
@@ -49,7 +64,7 @@ export async function deleteBranch(id: string) {
     await db.delete(branches).where(eq(branches.id, id));
     revalidatePath("/admin/branches");
     return { success: true };
-  } catch (err: any) {
-    return { error: "Failed to delete branch: " + (err.message || String(err)) };
+  } catch (err: unknown) {
+    return { error: "Failed to delete branch: " + (err instanceof Error ? err.message : String(err)) };
   }
 }

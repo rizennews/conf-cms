@@ -1,10 +1,11 @@
 import { auth } from "../../../lib/auth";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "../../../db";
 import { user } from "../../../db/schema";
 import { eq, gte, and, sql } from "drizzle-orm";
 import Sidebar from "./Sidebar";
+import ImpersonationBanner from "./ImpersonationBanner";
 import { registrations } from "../../../db/schema";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -34,11 +35,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
+  // Get impersonation
+  const cookieStore = await cookies();
+  const impersonatedBranch = cookieStore.get("impersonatedBranch")?.value;
+  const effectiveBranchId = (role === "super_admin" || role === "admin") && impersonatedBranch ? impersonatedBranch : (role === "branch_head" ? currentUser[0]?.branchId : null);
+
   let newRegistrations = 0;
   try {
     let query = db.select({ count: sql<number>`count(*)` }).from(registrations).where(gte(registrations.createdAt, today));
-    if (role === "branch_head" && currentUser[0]?.branchId) {
-      query = db.select({ count: sql<number>`count(*)` }).from(registrations).where(and(gte(registrations.createdAt, today), eq(registrations.branchId, currentUser[0].branchId)));
+    if (effectiveBranchId) {
+      query = db.select({ count: sql<number>`count(*)` }).from(registrations).where(and(gte(registrations.createdAt, today), eq(registrations.branchId, effectiveBranchId)));
     }
     const [{ count }] = await query;
     newRegistrations = Number(count);
@@ -57,6 +63,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <Sidebar role={role} userName={session.user.name} newRegistrations={newRegistrations} />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        {(role === "super_admin" || role === "admin") && impersonatedBranch && (
+          <ImpersonationBanner branchId={impersonatedBranch} />
+        )}
         {/* Main content — extra top padding on mobile accounts for the sticky topbar */}
         <main style={{ flex: 1, padding: "2.5rem" }} className="dashboard-main">
           <style>{`

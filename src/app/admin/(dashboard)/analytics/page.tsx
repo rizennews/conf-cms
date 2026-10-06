@@ -1,5 +1,5 @@
 import { auth } from "../../../../lib/auth";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { db } from "../../../../db";
 import { registrations, events, branches, user } from "../../../../db/schema";
 import { eq } from "drizzle-orm";
@@ -18,8 +18,12 @@ export default async function AnalyticsPage() {
   const userRole = currentUser[0]?.role || "branch_head";
   const userBranchId = currentUser[0]?.branchId;
 
-  if (userRole === "branch_head" && userBranchId) {
-    allRegistrations = allRegistrations.filter(r => r.branchId === userBranchId);
+  const cookieStore = await cookies();
+  const impersonatedBranch = cookieStore.get("impersonatedBranch")?.value;
+  const effectiveBranchId = (userRole === "super_admin" || userRole === "admin") && impersonatedBranch ? impersonatedBranch : (userRole === "branch_head" ? userBranchId : null);
+
+  if (effectiveBranchId) {
+    allRegistrations = allRegistrations.filter(r => r.branchId === effectiveBranchId);
   }
 
   return (
