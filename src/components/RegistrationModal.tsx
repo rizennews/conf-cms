@@ -362,7 +362,7 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
               }
 
               return (
-              <div key={fieldId} className={styles.inputGroup}>
+              <div key={fieldId} className={`${styles.inputGroup} ${fieldType === 'textarea' || fieldType === 'address' ? styles.fullWidth : ''}`}>
                 <InputLabel required={fieldRequired} description={fieldDescription}>{fieldLabel}</InputLabel>
                 
                 {fieldType === "text" || fieldType === "email" || fieldType === "url" || fieldType === "fullname" || fieldType === "address" || fieldType === "number" || fieldType === "date" || fieldType === "time" ? (
