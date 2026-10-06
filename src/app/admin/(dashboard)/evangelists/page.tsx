@@ -36,35 +36,69 @@ export default async function EvangelistsPage({ searchParams }: { searchParams: 
     allRegs = allRegs.filter(r => r.branchId === userBranchId);
   }
 
-  // Group by evangelist (invitees)
-  const evangelistMap: Record<string, Record<string, unknown>[]> = {};
-  
+  // Parse raw invitees text
+  function parseInviteesText(text: string) {
+    if (text.includes('\n') || text.includes(',')) {
+      return text.split(/[\n,]+/).map(s => s.trim()).filter(Boolean).map(s => {
+         const match = s.match(/(.+?)[-:]?\s*(\+?\d{8,15})/);
+         if (match) return { name: match[1].trim().replace(/^\d+\.\s*/, ''), phone: match[2].trim() };
+         return { name: s.replace(/^\d+\.\s*/, ''), phone: "" };
+      });
+    }
+    const regex = /(.+?)[-:]?\s*(\+?\d{8,15})/g;
+    let match;
+    const results = [];
+    while ((match = regex.exec(text)) !== null) {
+      results.push({ name: match[1].trim().replace(/^\d+\.\s*/, ''), phone: match[2].trim() });
+    }
+    if (results.length === 0) return [{ name: text.trim(), phone: "" }];
+    return results;
+  }
+
+  // The Evangelist is the person who filled out the form (r.fullName)
+  // The Invitees are the people listed in r.invitees
+  const evangelistsMap: Record<string, { name: string; totalInvited: number; checkedInCount: number; invitees: { id: string; fullName: string; whatsapp: string | null; status: string; createdAt: string | Date; }[] }> = {};
+
   allRegs.forEach(r => {
     if (r.invitees && r.invitees.trim().length > 0) {
-      // Normalize name to handle slight typos or cases if needed, but for now exact match (trimmed)
-      const name = r.invitees.trim();
-      if (!evangelistMap[name]) evangelistMap[name] = [];
-      evangelistMap[name].push(r);
+      const evangelistName = r.fullName ? String(r.fullName).trim() : "Unknown";
+      const parsedInvitees = parseInviteesText(r.invitees);
+      
+      if (!evangelistsMap[evangelistName]) {
+        evangelistsMap[evangelistName] = {
+          name: evangelistName,
+          totalInvited: 0,
+          checkedInCount: 0,
+          invitees: []
+        };
+      }
+
+      parsedInvitees.forEach((inv, idx) => {
+        // Try to find if this invitee actually registered and checked in!
+        const matchedReg = allRegs.find(reg => 
+          (inv.phone && reg.whatsapp && reg.whatsapp.includes(inv.phone)) ||
+          (inv.name && reg.fullName && String(reg.fullName).toLowerCase() === inv.name.toLowerCase())
+        );
+
+        const status = matchedReg?.status === "checked-in" ? "checked-in" : "registered";
+        if (status === "checked-in") {
+          evangelistsMap[evangelistName].checkedInCount++;
+        }
+
+        evangelistsMap[evangelistName].invitees.push({
+          id: `${r.id}-${idx}`,
+          fullName: inv.name,
+          whatsapp: inv.phone || null,
+          status: status,
+          createdAt: matchedReg?.createdAt || r.createdAt
+        });
+      });
+
+      evangelistsMap[evangelistName].totalInvited += parsedInvitees.length;
     }
   });
 
-  const evangelists = Object.entries(evangelistMap).map(([name, inviteesList]) => {
-    const checkedInCount = inviteesList.filter(i => i.status === "checked-in").length;
-    return {
-      name,
-      totalInvited: inviteesList.length,
-      checkedInCount,
-      invitees: inviteesList.map(i => ({
-        id: String(i.id),
-        fullName: String(i.fullName),
-        whatsapp: i.whatsapp ? String(i.whatsapp) : null,
-        status: i.status ? String(i.status) : "registered",
-        createdAt: String(i.createdAt)
-      }))
-    };
-  });
-
-  // Sort by most invited
+  const evangelists = Object.values(evangelistsMap);
   evangelists.sort((a, b) => b.totalInvited - a.totalInvited);
 
   return (

@@ -63,13 +63,29 @@ export default function AnalyticsClient({ registrations, events, branches, effec
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
 
+  // Parse raw invitees text
+  function parseInviteesText(text: string) {
+    if (text.includes('\n') || text.includes(',')) {
+      return text.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+    }
+    const regex = /(.+?)[-:]?\s*(\+?\d{8,15})/g;
+    let match;
+    const results = [];
+    while ((match = regex.exec(text)) !== null) {
+      results.push(match[1]);
+    }
+    if (results.length === 0) return [text.trim()];
+    return results;
+  }
+
   // Inviters
   const inviterMap: Record<string, number> = {};
   filteredRegs.forEach(r => {
     const inv = r.invitees as string | undefined;
     if (inv && inv.trim().length > 0) {
-      const trimmedInv = inv.trim();
-      inviterMap[trimmedInv] = (inviterMap[trimmedInv] || 0) + 1;
+      const evangelistName = r.fullName ? String(r.fullName).trim() : "Unknown";
+      const parsed = parseInviteesText(inv);
+      inviterMap[evangelistName] = (inviterMap[evangelistName] || 0) + parsed.length;
     }
   });
   const topInviters = Object.entries(inviterMap)
