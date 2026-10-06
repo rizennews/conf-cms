@@ -72,8 +72,8 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: EventType
     }
   };
 
-  const addField = () => {
-    const newField = { id: Math.random().toString(36).substring(2, 9), label: "New Question", type: "text", required: true };
+  const addField = (type = "text", label = "New Question", options?: string[]) => {
+    const newField = { id: Math.random().toString(36).substring(2, 9), label, type, required: true, options };
     setFields([...fields, newField]);
     setActiveIndex(fields.length);
   };
@@ -217,12 +217,56 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: EventType
               ))}
             </div>
             
-            <button 
-              onClick={addField}
-              style={{ width: "100%", padding: "0.75rem", background: "transparent", border: "1px dashed #d1d5db", borderRadius: "6px", color: "#6b7280", fontWeight: 500, cursor: "pointer", marginTop: "1rem", fontSize: "0.9rem" }}
-            >
-              + Add Question
-            </button>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginTop: "1rem" }}>
+              <button 
+                onClick={() => addField("fullname", "Full Name")}
+                style={{ padding: "0.6rem", background: "transparent", border: "1px dashed #d1d5db", borderRadius: "6px", color: "#6b7280", fontWeight: 500, cursor: "pointer", fontSize: "0.85rem" }}
+              >
+                + Name
+              </button>
+              <button 
+                onClick={() => addField("email", "Email Address")}
+                style={{ padding: "0.6rem", background: "transparent", border: "1px dashed #d1d5db", borderRadius: "6px", color: "#6b7280", fontWeight: 500, cursor: "pointer", fontSize: "0.85rem" }}
+              >
+                + Email
+              </button>
+              <button 
+                onClick={() => addField("tel", "Phone Number")}
+                style={{ padding: "0.6rem", background: "transparent", border: "1px dashed #d1d5db", borderRadius: "6px", color: "#6b7280", fontWeight: 500, cursor: "pointer", fontSize: "0.85rem" }}
+              >
+                + Phone
+              </button>
+              <button 
+                onClick={() => addField("textarea", "Address / Location")}
+                style={{ padding: "0.6rem", background: "transparent", border: "1px dashed #d1d5db", borderRadius: "6px", color: "#6b7280", fontWeight: 500, cursor: "pointer", fontSize: "0.85rem" }}
+              >
+                + Address
+              </button>
+              <button 
+                onClick={() => addField("select", "Branch / Church", ["Other"])}
+                style={{ padding: "0.6rem", background: "transparent", border: "1px dashed #d1d5db", borderRadius: "6px", color: "#6b7280", fontWeight: 500, cursor: "pointer", fontSize: "0.85rem" }}
+              >
+                + Branch
+              </button>
+              <button 
+                onClick={() => addField("radio", "Gender", ["Male", "Female"])}
+                style={{ padding: "0.6rem", background: "transparent", border: "1px dashed #d1d5db", borderRadius: "6px", color: "#6b7280", fontWeight: 500, cursor: "pointer", fontSize: "0.85rem" }}
+              >
+                + Gender
+              </button>
+              <button 
+                onClick={() => addField("select", "Age Range", ["13-17", "18-24", "25-34", "35-44", "45-54", "55+"])}
+                style={{ padding: "0.6rem", background: "transparent", border: "1px dashed #d1d5db", borderRadius: "6px", color: "#6b7280", fontWeight: 500, cursor: "pointer", fontSize: "0.85rem" }}
+              >
+                + Age Range
+              </button>
+              <button 
+                onClick={() => addField("text", "New Question")}
+                style={{ padding: "0.6rem", background: "transparent", border: "1px dashed #d1d5db", borderRadius: "6px", color: "#6b7280", fontWeight: 500, cursor: "pointer", fontSize: "0.85rem" }}
+              >
+                + Question
+              </button>
+            </div>
           </div>
         </div>
 
