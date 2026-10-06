@@ -6,7 +6,7 @@ import { eq, or, ilike, and, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { auth } from "../../../../lib/auth";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { user } from "../../../../db/schema";
 
 export async function searchRegistrations(query: string, eventId: string) {
@@ -17,9 +17,11 @@ export async function searchRegistrations(query: string, eventId: string) {
     let branchIdFilter = null;
     if (session) {
       const currentUser = await db.select().from(user).where(eq(user.id, session.user.id)).limit(1);
-      if (currentUser.length > 0 && currentUser[0].role === "branch_head") {
-        branchIdFilter = currentUser[0].branchId;
-      }
+      const userRole = currentUser[0]?.role;
+      const cookieStore = await cookies();
+      const impersonatedBranch = cookieStore.get("impersonatedBranch")?.value;
+      const isImpersonating = (userRole === "super_admin" || userRole === "admin") && impersonatedBranch;
+      branchIdFilter = isImpersonating ? impersonatedBranch : (userRole === "branch_head" ? currentUser[0].branchId : null);
     }
 
     const conditions = [
@@ -124,9 +126,11 @@ export async function getAllRegistrations(eventId: string) {
     let branchIdFilter = null;
     if (session) {
       const currentUser = await db.select().from(user).where(eq(user.id, session.user.id)).limit(1);
-      if (currentUser.length > 0 && currentUser[0].role === "branch_head") {
-        branchIdFilter = currentUser[0].branchId;
-      }
+      const userRole = currentUser[0]?.role;
+      const cookieStore = await cookies();
+      const impersonatedBranch = cookieStore.get("impersonatedBranch")?.value;
+      const isImpersonating = (userRole === "super_admin" || userRole === "admin") && impersonatedBranch;
+      branchIdFilter = isImpersonating ? impersonatedBranch : (userRole === "branch_head" ? currentUser[0].branchId : null);
     }
 
     const conditions = [eq(registrations.eventId, eventId)];
