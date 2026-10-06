@@ -401,14 +401,17 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                           style={{ 
                             border: "none", 
                             cursor: "pointer", 
-                            display: "inline-block", 
-                            padding: "0.2rem 0.6rem", 
+                            display: "inline-flex", 
+                            alignItems: "center",
+                            gap: "0.3rem",
+                            padding: "0.3rem 0.8rem", 
                             borderRadius: "99px", 
-                            fontSize: "0.7rem", 
+                            fontSize: "0.75rem", 
                             fontWeight: 600, 
                             background: isCheckedIn ? "#dcfce7" : "#fef9c3", 
                             color: isCheckedIn ? "#16a34a" : "#854d0e",
-                            transition: "opacity 0.2s"
+                            whiteSpace: "nowrap",
+                            transition: "all 0.2s"
                           }}
                           onMouseOver={e => e.currentTarget.style.opacity = "0.7"}
                           onMouseOut={e => e.currentTarget.style.opacity = "1"}
@@ -417,7 +420,7 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
                           {isCheckedIn ? "✓ Checked In" : "Pending"}
                         </button>
                         {r.registrantStatus && r.registrantStatus !== "Unknown" ? (
-                          <span style={{ fontSize: "0.7rem", color: "#6b7280", background: "#f3f4f6", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>
+                          <span style={{ fontSize: "0.7rem", color: "#475569", background: "#f1f5f9", padding: "0.2rem 0.6rem", borderRadius: "6px", whiteSpace: "nowrap", border: "1px solid #e2e8f0", fontWeight: 500 }}>
                             {r.registrantStatus as string}
                           </span>
                         ) : null}
