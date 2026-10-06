@@ -70,30 +70,30 @@ export default function StaffTable({ users, branches }: { users: UserType[]; bra
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
           <thead>
             <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb", textAlign: "left" }}>
-              <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Name</th>
-              <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Email</th>
-              <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Role</th>
-              <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem" }}>Assigned Branch</th>
-              <th style={{ padding: "1rem 1.5rem", fontWeight: 600, color: "#374151", fontSize: "0.9rem", textAlign: "right" }}>Actions</th>
+              <th style={{ padding: "0.85rem 1.25rem", fontWeight: 600, color: "#374151", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.6px" }}>Name</th>
+              <th style={{ padding: "0.85rem 1.25rem", fontWeight: 600, color: "#374151", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.6px" }}>Email</th>
+              <th style={{ padding: "0.85rem 1.25rem", fontWeight: 600, color: "#374151", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.6px" }}>Role</th>
+              <th style={{ padding: "0.85rem 1.25rem", fontWeight: 600, color: "#374151", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.6px" }}>Assigned Branch</th>
+              <th style={{ padding: "0.85rem 1.25rem", fontWeight: 600, color: "#374151", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.6px", textAlign: "right" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
               <tr key={u.id} style={{ borderBottom: "1px solid #e5e7eb", transition: "background 0.2s" }} onMouseOver={e => e.currentTarget.style.background = "#f9fafb"} onMouseOut={e => e.currentTarget.style.background = "transparent"}>
-                <td style={{ padding: "1rem 1.5rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                    <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", color: "#6b7280" }}>
-                      {u.name.charAt(0).toUpperCase()}
+                <td style={{ padding: "0.85rem 1.25rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#2b3ff2", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.95rem", flexShrink: 0, border: "1px solid rgba(43,63,242,0.2)" }}>
+                      {(u.name || "?").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 500, color: "#111" }}>{u.name}</div>
+                      <div style={{ fontWeight: 600, color: "#111", fontSize: "0.9rem", lineHeight: 1.3 }}>{u.name}</div>
                     </div>
                   </div>
                 </td>
-                <td style={{ padding: "1rem 1.5rem", color: "#4b5563" }}>
+                <td style={{ padding: "0.85rem 1.25rem", color: "#4b5563", fontSize: "0.85rem" }}>
                   {u.email}
                 </td>
-                <td style={{ padding: "1rem 1.5rem" }}>
+                <td style={{ padding: "0.85rem 1.25rem" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                     <span style={{
                       background: ROLE_DEFINITIONS.find(r => r.id === u.role)?.bg || "#f3f4f6",
@@ -111,21 +111,19 @@ export default function StaffTable({ users, branches }: { users: UserType[]; bra
                       value={u.role} 
                       onChange={e => handleRoleChange(u.id, e.target.value, u.branchId)}
                       disabled={loadingId === u.id}
-                      style={{ padding: "0.25rem", borderRadius: "4px", border: "1px solid transparent", background: "transparent", fontSize: "0.85rem", color: "#6b7280", cursor: "pointer", outline: "none" }}
-                      onMouseOver={e => e.currentTarget.style.border = "1px solid #d1d5db"}
-                      onMouseOut={e => e.currentTarget.style.border = "1px solid transparent"}
+                      style={{ padding: "0.3rem 0.5rem", borderRadius: "6px", border: "1px solid #e5e7eb", background: "#f9fafb", fontSize: "0.8rem", color: "#4b5563", cursor: "pointer", outline: "none", fontWeight: 500 }}
                     >
                       {ROLE_DEFINITIONS.map(r => <option key={r.id} value={r.id}>Change to {r.label}</option>)}
                     </select>
                   </div>
                 </td>
-                <td style={{ padding: "1rem 1.5rem" }}>
+                <td style={{ padding: "0.85rem 1.25rem" }}>
                   {u.role === "branch_head" ? (
                     <select 
                       value={u.branchId || ""} 
                       onChange={e => handleBranchChange(u.id, u.role, e.target.value)}
                       disabled={loadingId === u.id}
-                      style={{ padding: "0.5rem", borderRadius: "6px", border: "1px solid #d1d5db", background: "white", fontSize: "0.9rem", color: "#111" }}
+                      style={{ padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid #d1d5db", background: "white", fontSize: "0.85rem", color: "#111" }}
                     >
                       <option value="">Select Branch...</option>
                       {branches.map(b => (
@@ -133,18 +131,18 @@ export default function StaffTable({ users, branches }: { users: UserType[]; bra
                       ))}
                     </select>
                   ) : (
-                    <span style={{ color: "#9ca3af", fontSize: "0.9rem", fontStyle: "italic" }}>
+                    <span style={{ display: "inline-block", background: "#f1f5f9", padding: "0.2rem 0.5rem", borderRadius: "6px", fontSize: "0.75rem", color: "#475569", fontWeight: 500, border: "1px solid #e2e8f0" }}>
                       N/A (Global Access)
                     </span>
                   )}
                 </td>
-                <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>
+                <td style={{ padding: "0.85rem 1.25rem", textAlign: "right" }}>
                   <button 
                     onClick={() => setDeleteConfirmId(u.id)}
-                    style={{ background: "transparent", color: "#ef4444", border: "1px solid #fecaca", padding: "0.4rem", borderRadius: "4px", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+                    style={{ padding: "0.35rem", background: "white", color: "#ef4444", border: "1px solid #fecaca", borderRadius: "6px", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                     title="Delete User"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={13} />
                   </button>
                 </td>
               </tr>
