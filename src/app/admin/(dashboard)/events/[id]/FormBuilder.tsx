@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { saveEvent } from "../actions";
 import { QRCodeSVG } from "qrcode.react";
 
-type CustomField = { id: string; label: string; description?: string; type: string; options?: string[]; required?: boolean };
+type Condition = { dependentFieldId: string; operator: 'eq' | 'neq'; value: string };
+type CustomField = { id: string; label: string; description?: string; type: string; options?: string[]; required?: boolean; condition?: Condition };
 
 type EventType = {
   id?: number | string;
@@ -21,6 +22,7 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: EventType
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{title: string, msg: string, type: 'success' | 'error'} | null>(null);
   
   const [name, setName] = useState(initialEvent?.name || "Untitled Event");
   const [slug, setSlug] = useState(initialEvent?.slug || "");
@@ -62,11 +64,11 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: EventType
     setLoading(false);
     
     if ('error' in res && res.error) {
-      alert("Failed to save: " + res.error);
+      setSaveMessage({ title: "Save Failed", msg: res.error, type: "error" });
     } else if ('id' in res && res.id && !initialEvent?.id) {
       router.push(`/admin/events/${res.id}`);
     } else {
-      alert("Form saved successfully!");
+      setSaveMessage({ title: "Success", msg: "Event saved successfully!", type: "success" });
     }
   };
 
@@ -246,7 +248,13 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: EventType
                 <p style={{ color: "#6b7280", margin: "0 0 2rem 0", fontSize: "1.1rem" }}>{activeField.description}</p>
               )}
               <div style={{ marginTop: activeField.description ? "0" : "2rem" }}>
-                {activeField.type === "text" || activeField.type === "email" || activeField.type === "tel" ? (
+                {activeField.type === "page_break" ? (
+                  <div style={{ padding: "2rem", border: "2px dashed #d1d5db", borderRadius: "8px", textAlign: "center", color: "#6b7280", background: "#f9fafb" }}>
+                    <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>📄</div>
+                    <div style={{ fontWeight: 600 }}>Page Break</div>
+                    <div style={{ fontSize: "0.85rem", marginTop: "0.25rem" }}>Attendees will see a &quot;Next&quot; button here</div>
+                  </div>
+                ) : activeField.type === "text" || activeField.type === "email" || activeField.type === "tel" ? (
                   <div style={{ borderBottom: "2px solid #2b3ff2", paddingBottom: "0.5rem" }}>
                     <input type="text" placeholder="Type your answer here..." disabled style={{ background: "transparent", border: "none", fontSize: "1.2rem", color: "#9ca3af", width: "100%" }} />
                   </div>
@@ -341,6 +349,7 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: EventType
                     <option value="url">Website / URL</option>
                     <option value="select">Dropdown Menu</option>
                     <option value="radio">Multiple Choice (Radio)</option>
+                    <option value="page_break">-- Page Break --</option>
                   </select>
                 </div>
 
@@ -392,6 +401,62 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: EventType
                     Required field
                   </label>
                 </div>
+
+                {activeField.type !== "page_break" && (
+                  <div style={{ marginBottom: "1.5rem", background: "#eff6ff", padding: "1rem", borderRadius: "8px", border: "1px solid #bfdbfe" }}>
+                    <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600, fontSize: "0.9rem", color: "#1e3a8a" }}>Conditional Logic</label>
+                    <p style={{ fontSize: "0.8rem", color: "#3b82f6", margin: "0 0 1rem 0" }}>Show this question only if a specific condition is met.</p>
+                    
+                    {!activeField.condition ? (
+                      <button 
+                        onClick={() => updateActiveField({ condition: { dependentFieldId: "", operator: "eq", value: "" } })}
+                        style={{ background: "white", border: "1px solid #93c5fd", color: "#2563eb", padding: "0.5rem 1rem", borderRadius: "4px", fontSize: "0.85rem", cursor: "pointer", fontWeight: 500 }}
+                      >
+                        + Add Logic Rule
+                      </button>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.8rem", color: "#1e3a8a", marginBottom: "0.25rem" }}>If Question:</label>
+                          <select 
+                            value={activeField.condition.dependentFieldId}
+                            onChange={(e) => updateActiveField({ condition: { ...activeField.condition!, dependentFieldId: e.target.value } })}
+                            style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #93c5fd", fontSize: "0.85rem" }}
+                          >
+                            <option value="">Select a previous question...</option>
+                            {fields.map(f => {
+                              if (f.id === activeField.id || f.type === "page_break") return null;
+                              return <option key={f.id} value={f.id}>{f.label || "Untitled Question"}</option>;
+                            })}
+                          </select>
+                        </div>
+                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                          <select 
+                            value={activeField.condition.operator}
+                            onChange={(e) => updateActiveField({ condition: { ...activeField.condition!, operator: e.target.value as 'eq'|'neq' } })}
+                            style={{ flex: 1, padding: "0.5rem", borderRadius: "4px", border: "1px solid #93c5fd", fontSize: "0.85rem" }}
+                          >
+                            <option value="eq">Equals</option>
+                            <option value="neq">Does not equal</option>
+                          </select>
+                          <input 
+                            type="text" 
+                            placeholder="Value..."
+                            value={activeField.condition.value}
+                            onChange={(e) => updateActiveField({ condition: { ...activeField.condition!, value: e.target.value } })}
+                            style={{ flex: 2, padding: "0.5rem", borderRadius: "4px", border: "1px solid #93c5fd", fontSize: "0.85rem" }}
+                          />
+                        </div>
+                        <button 
+                          onClick={() => updateActiveField({ condition: undefined })}
+                          style={{ background: "transparent", border: "none", color: "#ef4444", fontSize: "0.85rem", textAlign: "left", cursor: "pointer", padding: 0, marginTop: "0.25rem" }}
+                        >
+                          Remove Rule
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div style={{ marginTop: "2rem", paddingTop: "1.5rem", borderTop: "1px solid #e5e7eb" }}>
                   <button onClick={deleteActiveField} style={{ background: "transparent", border: "none", color: "#ef4444", fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -473,6 +538,26 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: EventType
                 Delete Question
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {saveMessage && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+          <div style={{ background: "white", padding: "2.5rem", borderRadius: "12px", maxWidth: "400px", width: "90%", textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>
+              {saveMessage.type === "success" ? "✅" : "❌"}
+            </div>
+            <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.5rem", color: "#111", fontWeight: 600 }}>{saveMessage.title}</h3>
+            <p style={{ color: "#4b5563", fontSize: "1rem", lineHeight: 1.5, marginBottom: "2rem" }}>
+              {saveMessage.msg}
+            </p>
+            <button 
+              onClick={() => setSaveMessage(null)}
+              style={{ width: "100%", padding: "0.85rem", background: saveMessage.type === "success" ? "#2b3ff2" : "#111", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "1rem" }}
+            >
+              Okay
+            </button>
           </div>
         </div>
       )}

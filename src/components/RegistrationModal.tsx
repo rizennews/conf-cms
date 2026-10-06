@@ -41,6 +41,7 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
   const [website, setWebsite] = useState(""); // Honeypot
   const [countryCode, setCountryCode] = useState("gh");
   const [customData, setCustomData] = useState<Record<string, string>>({});
+  const [currentPage, setCurrentPage] = useState(0);
 
   let parsedCustomFields: Record<string, unknown>[] = [];
   try {
@@ -239,12 +240,73 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
     );
   }
 
+  const visibleFields = parsedCustomFields.filter((field: Record<string, unknown>) => {
+    const fieldCondition = field.condition as Record<string, string> | undefined;
+    if (fieldCondition && fieldCondition.dependentFieldId) {
+       const depField = parsedCustomFields.find((f: Record<string, unknown>) => f.id === fieldCondition.dependentFieldId);
+       if (depField) {
+         const val = customData[String(depField.label || "")] || "";
+         const ruleVal = String(fieldCondition.value);
+         if (fieldCondition.operator === "eq" && val.toLowerCase() !== ruleVal.toLowerCase()) return false;
+         if (fieldCondition.operator === "neq" && val.toLowerCase() === ruleVal.toLowerCase()) return false;
+       }
+    }
+    
+    // Legacy hack for 'Other' branch specify
+    const lowerLabel = String(field.label || "").toLowerCase();
+    if (lowerLabel.includes("specify") && lowerLabel.includes("other")) {
+       let hasOtherSelected = false;
+       parsedCustomFields.forEach((f: Record<string, unknown>) => {
+          const l = String(f.label || "").toLowerCase();
+          if (l.includes("branch") && customData[String(f.label || "")] === "Other") {
+             hasOtherSelected = true;
+          }
+       });
+       if (!hasOtherSelected) return false;
+    }
+    return true;
+  });
+
+  const pages: Record<string, unknown>[][] = [[]];
+  visibleFields.forEach((f: Record<string, unknown>) => {
+    if (f.type === "page_break") {
+      pages.push([]);
+    } else {
+      pages[pages.length - 1].push(f);
+    }
+  });
+
+  const activePageFields = pages[currentPage] || [];
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const form = e.currentTarget.closest('form');
+    if (form && !form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+    setCurrentPage(p => Math.min(p + 1, pages.length - 1));
+  };
+  
+  const handlePrev = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setCurrentPage(p => Math.max(p - 1, 0));
+  };
+
   return (
     <div className={styles.overlay} onClick={onClose} style={{ zIndex: 100 }}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <button className={styles.closeButton} onClick={onClose} aria-label="Close registration form">×</button>
         <h2 className={styles.title}>{event?.name || 'Registration Form'}</h2>
         
+        {pages.length > 1 && (
+          <div style={{ display: "flex", gap: "0.25rem", marginBottom: "1.5rem", justifyContent: "center" }}>
+            {pages.map((_, idx) => (
+              <div key={idx} style={{ height: "4px", flex: 1, maxWidth: "40px", borderRadius: "2px", background: idx <= currentPage ? "#2b3ff2" : "#e5e7eb", transition: "background 0.3s" }} />
+            ))}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className={styles.formContainer}>
           <div className={styles.stepContainer} style={{ maxHeight: "60vh", overflowY: "auto", paddingRight: "0.5rem" }}>
             
@@ -259,26 +321,13 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
               autoComplete="off" 
             />
 
-            {parsedCustomFields.map((field: Record<string, unknown>) => {
+            {activePageFields.map((field: Record<string, unknown>) => {
               const fieldId = String(field.id);
               const fieldLabel = String(field.label);
               const fieldDescription = field.description ? String(field.description) : undefined;
               const fieldType = String(field.type);
               const fieldRequired = Boolean(field.required);
               const fieldOptions = (field.options as string[]) || [];
-
-              // Hack for conditional "Other" branch logic
-              const lowerLabel = fieldLabel.toLowerCase();
-              if (lowerLabel.includes("specify") && lowerLabel.includes("other")) {
-                 let hasOtherSelected = false;
-                 parsedCustomFields.forEach((f: Record<string, unknown>) => {
-                    const l = String(f.label || "").toLowerCase();
-                    if (l.includes("branch") && customData[String(f.label || "")] === "Other") {
-                       hasOtherSelected = true;
-                    }
-                 });
-                 if (!hasOtherSelected) return null; // hide it!
-              }
 
               // If the field is a phone number, append country code
               if (fieldType === "tel" || fieldLabel.toLowerCase().includes("contact") || fieldLabel.toLowerCase().includes("phone") || fieldLabel.toLowerCase().includes("whatsapp")) {
@@ -367,9 +416,21 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
           </div>
 
           <div className={styles.buttonRow} style={{ marginTop: "2rem", display: "flex", gap: "1rem", paddingTop: "1rem", borderTop: "1px solid #e5e7eb" }}>
-            <button type="submit" disabled={isSubmitting} style={{ background: "#111", border: "none", color: "white", padding: "0.85rem 2rem", borderRadius: "8px", fontWeight: 600, cursor: "pointer", flex: 1, fontSize: "1.05rem" }}>
-              {isSubmitting ? 'Submitting...' : 'Complete Registration'}
-            </button>
+            {currentPage > 0 && (
+              <button type="button" onClick={handlePrev} disabled={isSubmitting} style={{ background: "transparent", border: "1px solid #d1d5db", color: "#374151", padding: "0.85rem 2rem", borderRadius: "8px", fontWeight: 600, cursor: "pointer", fontSize: "1.05rem" }}>
+                Previous
+              </button>
+            )}
+            
+            {currentPage < pages.length - 1 ? (
+              <button type="button" onClick={handleNext} disabled={isSubmitting} style={{ background: "#111", border: "none", color: "white", padding: "0.85rem 2rem", borderRadius: "8px", fontWeight: 600, cursor: "pointer", flex: 1, fontSize: "1.05rem" }}>
+                Next
+              </button>
+            ) : (
+              <button type="submit" disabled={isSubmitting} style={{ background: "#2b3ff2", border: "none", color: "white", padding: "0.85rem 2rem", borderRadius: "8px", fontWeight: 600, cursor: "pointer", flex: 1, fontSize: "1.05rem" }}>
+                {isSubmitting ? 'Submitting...' : 'Complete Registration'}
+              </button>
+            )}
           </div>
         </form>
       </div>

@@ -22,6 +22,8 @@ export async function saveEvent(data: { id?: string; name: string; slug: string;
       }).where(eq(events.id, data.id));
       
       revalidatePath("/admin/events");
+      revalidatePath("/" + data.slug);
+      revalidatePath("/", "layout");
       return { success: true, id: data.id };
     } else {
       const id = "evt_" + Math.random().toString(36).substring(2, 9);
@@ -35,6 +37,8 @@ export async function saveEvent(data: { id?: string; name: string; slug: string;
         customFields: data.customFields
       });
       revalidatePath("/admin/events");
+      revalidatePath("/" + data.slug);
+      revalidatePath("/", "layout");
       return { success: true, id };
     }
   } catch (err: unknown) {
