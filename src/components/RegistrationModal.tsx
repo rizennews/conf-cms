@@ -365,9 +365,9 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
               <div key={fieldId} className={styles.inputGroup}>
                 <InputLabel required={fieldRequired} description={fieldDescription}>{fieldLabel}</InputLabel>
                 
-                {fieldType === "text" || fieldType === "email" || fieldType === "url" || fieldType === "fullname" ? (
+                {fieldType === "text" || fieldType === "email" || fieldType === "url" || fieldType === "fullname" || fieldType === "address" || fieldType === "number" || fieldType === "date" || fieldType === "time" ? (
                   <input 
-                    type={fieldType === "fullname" ? "text" : fieldType} 
+                    type={fieldType === "fullname" || fieldType === "address" ? "text" : fieldType} 
                     required={fieldRequired} 
                     value={customData[fieldLabel] || ""} 
                     onChange={e => setCustomData({...customData, [fieldLabel]: e.target.value})} 

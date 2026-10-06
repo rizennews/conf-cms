@@ -387,10 +387,14 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: EventType
                   >
                     <option value="text">Short Text</option>
                     <option value="fullname">Full Name</option>
+                    <option value="address">Address / Location</option>
                     <option value="textarea">Long Text (Message)</option>
                     <option value="email">Email Address</option>
                     <option value="tel">Phone Number</option>
                     <option value="url">Website / URL</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="time">Time</option>
                     <option value="select">Dropdown Menu</option>
                     <option value="radio">Multiple Choice (Radio)</option>
                     <option value="page_break">-- Page Break --</option>
