@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../../db";
-import { branches, registrations } from "../../../../db/schema";
+import { db } from "../../../db";
+import { branches, registrations } from "../../../db/schema";
 import { eq, like } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic'; // Ensure it's not cached
@@ -27,9 +27,10 @@ export async function GET() {
       message: "Cleanup complete",
       migratedRegistrationsFromBranchCount: migratedCount,
       deletedBadBranches: deletedCount,
-      branchesFixed: badBranches.map(b => b.name)
+      branchesFixed: badBranches.map((b: { name: string | null }) => b.name)
     });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
