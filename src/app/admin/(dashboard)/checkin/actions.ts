@@ -71,7 +71,7 @@ export async function checkInById(registrationId: number) {
       await db.insert(activityLogs).values({
         userId: session.user.id,
         action: "check-in",
-        details: JSON.stringify({ name: record[0].fullName || "Unknown", registrationId }),
+        details: JSON.stringify({ name: record[0].fullName || "Unknown", registrationId, data: record[0] }),
       });
     }
 
@@ -96,7 +96,7 @@ export async function undoCheckInById(registrationId: number) {
       await db.insert(activityLogs).values({
         userId: session.user.id,
         action: "undo-check-in",
-        details: JSON.stringify({ name: record[0].fullName || "Unknown", registrationId }),
+        details: JSON.stringify({ name: record[0].fullName || "Unknown", registrationId, data: record[0] }),
       });
     }
 

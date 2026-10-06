@@ -100,7 +100,7 @@ export async function submitRegistration(data: RegistrationInput) {
     // Log the public registration
     await db.insert(activityLogs).values({
       action: "public-registration",
-      details: JSON.stringify({ name: fullName, eventId }),
+      details: JSON.stringify({ name: fullName, eventId, data: { fullName, email, whatsapp, address, ageRange, branchId, isMember, isFirstTime, heardFrom, invitees, registrantStatus, customData: data.customData } }),
     });
 
     return { success: true, id: inserted.id };
