@@ -13,10 +13,13 @@ type Props = {
   event?: EventType | null;
 };
 
-const InputLabel = ({ children, required }: { children: React.ReactNode, required?: boolean }) => (
-  <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>
-    {children} {required && <span style={{ color: "#ef4444" }}>*</span>}
-  </label>
+const InputLabel = ({ children, required, description }: { children: React.ReactNode, required?: boolean, description?: string }) => (
+  <div style={{ marginBottom: "0.5rem" }}>
+    <label style={{ display: "block", fontWeight: 600, color: "#111", fontSize: "0.95rem" }}>
+      {children} {required && <span style={{ color: "#ef4444" }}>*</span>}
+    </label>
+    {description && <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.85rem", color: "#6b7280" }}>{description}</p>}
+  </div>
 );
 
 const COUNTRIES = [
@@ -259,6 +262,7 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
             {parsedCustomFields.map((field: Record<string, unknown>) => {
               const fieldId = String(field.id);
               const fieldLabel = String(field.label);
+              const fieldDescription = field.description ? String(field.description) : undefined;
               const fieldType = String(field.type);
               const fieldRequired = Boolean(field.required);
               const fieldOptions = (field.options as string[]) || [];
@@ -280,7 +284,7 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
               if (fieldType === "tel" || fieldLabel.toLowerCase().includes("contact") || fieldLabel.toLowerCase().includes("phone") || fieldLabel.toLowerCase().includes("whatsapp")) {
                 return (
                   <div key={fieldId} className={styles.inputGroup}>
-                    <InputLabel required={fieldRequired}>{fieldLabel}</InputLabel>
+                    <InputLabel required={fieldRequired} description={fieldDescription}>{fieldLabel}</InputLabel>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', background: '#f9fafb', border: '1px solid #d1d5db', borderRadius: '8px', padding: '0 0.5rem' }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -310,7 +314,7 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
 
               return (
               <div key={fieldId} className={styles.inputGroup}>
-                <InputLabel required={fieldRequired}>{fieldLabel}</InputLabel>
+                <InputLabel required={fieldRequired} description={fieldDescription}>{fieldLabel}</InputLabel>
                 
                 {fieldType === "text" || fieldType === "email" || fieldType === "url" || fieldType === "fullname" ? (
                   <input 
