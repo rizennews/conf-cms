@@ -7,7 +7,12 @@ export const dynamic = 'force-dynamic'; // Ensure it's not cached
 
 export async function GET() {
   try {
-    const badBranches = await db.select().from(branches).where(like(branches.id, "%other-external%"));
+    const allBranches = await db.select().from(branches);
+    
+    // Find bad branches dynamically
+    const badBranches = allBranches.filter(b => 
+      b.id !== 'other' && b.name && b.name.toLowerCase().includes('other')
+    );
     
     let migratedCount = 0;
     let deletedCount = 0;
@@ -27,7 +32,8 @@ export async function GET() {
       message: "Cleanup complete",
       migratedRegistrationsFromBranchCount: migratedCount,
       deletedBadBranches: deletedCount,
-      branchesFixed: badBranches.map((b: { name: string | null }) => b.name)
+      branchesFixed: badBranches.map(b => b.name),
+      debugAllBranches: allBranches.map(b => ({ id: b.id, name: b.name }))
     });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";
