@@ -124,8 +124,11 @@ export default function AnalyticsClient({ registrations, events, branches, effec
     if (r.customData) {
       try {
         const custom = typeof r.customData === 'string' ? JSON.parse(r.customData) : r.customData;
-        if (custom['Age Range'] || custom['ageRange'] || custom['Age']) {
-          age = String(custom['Age Range'] || custom['ageRange'] || custom['Age']);
+        
+        // Find any key that looks like an age field
+        const ageKey = Object.keys(custom).find(k => k.toLowerCase().includes('age'));
+        if (ageKey && custom[ageKey]) {
+          age = String(custom[ageKey]);
         }
       } catch { /* ignore */ }
     }
@@ -176,7 +179,7 @@ export default function AnalyticsClient({ registrations, events, branches, effec
     if (field.type === "select" || field.type === "radio") {
       const labelStr = field.label as string;
       const lowerLabel = labelStr.toLowerCase();
-      if (lowerLabel === "branch" || lowerLabel === "age" || lowerLabel === "age range" || lowerLabel === "agerange") {
+      if (lowerLabel.includes("branch") || lowerLabel.includes("age")) {
         return; // Skip fields that are already covered by main analytics
       }
       
