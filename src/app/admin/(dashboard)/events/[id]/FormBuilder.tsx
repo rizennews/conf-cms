@@ -91,6 +91,25 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: any }) {
     setLoading(false);
   };
 
+  const moveField = (index: number, direction: 'up' | 'down') => {
+    const newFields = [...fields];
+    if (direction === 'up' && index > 0) {
+      const temp = newFields[index];
+      newFields[index] = newFields[index - 1];
+      newFields[index - 1] = temp;
+      setFields(newFields);
+      if (activeIndex === index) setActiveIndex(index - 1);
+      else if (activeIndex === index - 1) setActiveIndex(index);
+    } else if (direction === 'down' && index < fields.length - 1) {
+      const temp = newFields[index];
+      newFields[index] = newFields[index + 1];
+      newFields[index + 1] = temp;
+      setFields(newFields);
+      if (activeIndex === index) setActiveIndex(index + 1);
+      else if (activeIndex === index + 1) setActiveIndex(index);
+    }
+  };
+
   return (
     <div className="builder-wrapper" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 80px)", background: "#f3f4f6", borderRadius: "12px", border: "1px solid #e5e7eb", overflow: "hidden" }}>
       <style>{`
@@ -161,11 +180,19 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: any }) {
                     fontWeight: activeIndex === i ? 600 : 400,
                     border: "1px solid",
                     borderColor: activeIndex === i ? "#bfdbfe" : "#e5e7eb",
-                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: "0.9rem"
+                    fontSize: "0.9rem", display: "flex", justifyContent: "space-between", alignItems: "center"
                   }}
                 >
-                  <span style={{ color: "#9ca3af", marginRight: "0.5rem" }}>{i + 1}.</span> 
-                  {field.label || "Empty Question"}
+                  <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <span style={{ color: "#9ca3af", marginRight: "0.5rem" }}>{i + 1}.</span> 
+                    {field.label || "Empty Question"}
+                  </div>
+                  {activeIndex === i && (
+                    <div style={{ display: "flex", gap: "0.25rem", color: "#2b3ff2" }}>
+                      <button onClick={(e) => { e.stopPropagation(); moveField(i, 'up'); }} disabled={i === 0} style={{ background: "transparent", border: "none", color: "inherit", cursor: i === 0 ? "default" : "pointer", opacity: i === 0 ? 0.3 : 1, padding: "2px" }}>↑</button>
+                      <button onClick={(e) => { e.stopPropagation(); moveField(i, 'down'); }} disabled={i === fields.length - 1} style={{ background: "transparent", border: "none", color: "inherit", cursor: i === fields.length - 1 ? "default" : "pointer", opacity: i === fields.length - 1 ? 0.3 : 1, padding: "2px" }}>↓</button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
