@@ -16,14 +16,16 @@ export default async function EventBuilderPage({ params }: { params: Promise<{ i
       let customFields = [];
       try {
         customFields = JSON.parse(eventData.customFields || "[]");
-      } catch(e) {}
+      } catch {}
       
       let updated = false;
       for (const f of customFields) {
         if (f.label.toLowerCase().includes("branch") || f.label.toLowerCase().includes("church")) {
           const { branches } = await import("../../../../../db/schema");
           const allBranches = await db.select().from(branches);
-          const branchNames = allBranches.map((b: any) => b.name);
+          const branchNames = allBranches.map((b: Record<string, unknown>) => String(b.name));
+          if (!branchNames.includes("Other")) branchNames.push("Other");
+          
           // If the branch names list is different or larger, update it
           if (f.options?.length !== branchNames.length) {
             f.options = branchNames;
@@ -39,5 +41,5 @@ export default async function EventBuilderPage({ params }: { params: Promise<{ i
     }
   }
 
-  return <FormBuilder initialEvent={eventData} />;
+  return <FormBuilder initialEvent={eventData ? { ...eventData, customFields: eventData.customFields || undefined } : null} />;
 }

@@ -20,6 +20,9 @@ export async function saveEvent(data: { id?: string; name: string; slug: string;
         isMainEvent: data.isMainEvent,
         customFields: data.customFields
       }).where(eq(events.id, data.id));
+      
+      revalidatePath("/admin/events");
+      return { success: true, id: data.id };
     } else {
       const id = "evt_" + Math.random().toString(36).substring(2, 9);
       await db.insert(events).values({
@@ -31,15 +34,14 @@ export async function saveEvent(data: { id?: string; name: string; slug: string;
         isMainEvent: data.isMainEvent,
         customFields: data.customFields
       });
+      revalidatePath("/admin/events");
+      return { success: true, id };
     }
-    
-    revalidatePath("/admin/events");
-    return { success: true };
-  } catch (err: any) {
-    if (err.code === '23505') {
+  } catch (err: unknown) {
+    if (err instanceof Error && (err as Error & { code?: string }).code === '23505') {
       return { error: "An event with this slug URL already exists." };
     }
-    return { error: "Failed to save event: " + err.message };
+    return { error: "Failed to save event: " + (err instanceof Error ? err.message : String(err)) };
   }
 }
 
@@ -72,7 +74,7 @@ export async function deleteEvent(id: string) {
     await db.delete(events).where(eq(events.id, id));
     revalidatePath("/admin/events");
     return { success: true };
-  } catch (err: any) {
-    return { error: "Failed to delete event: " + err.message };
+  } catch (err: unknown) {
+    return { error: "Failed to delete event: " + (err instanceof Error ? err.message : String(err)) };
   }
 }

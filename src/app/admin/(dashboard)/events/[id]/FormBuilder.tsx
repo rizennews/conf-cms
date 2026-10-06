@@ -50,7 +50,7 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: EventType
 
   const handleSave = async () => {
     setLoading(true);
-    await saveEvent({
+    const res = await saveEvent({
       id: initialEvent?.id ? String(initialEvent.id) : undefined,
       name,
       slug,
@@ -60,6 +60,14 @@ export default function FormBuilder({ initialEvent }: { initialEvent?: EventType
       customFields: JSON.stringify(fields)
     });
     setLoading(false);
+    
+    if ('error' in res && res.error) {
+      alert("Failed to save: " + res.error);
+    } else if ('id' in res && res.id && !initialEvent?.id) {
+      router.push(`/admin/events/${res.id}`);
+    } else {
+      alert("Form saved successfully!");
+    }
   };
 
   const addField = () => {
