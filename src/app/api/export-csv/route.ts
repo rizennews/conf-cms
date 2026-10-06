@@ -2,7 +2,7 @@ import { auth } from "../../../lib/auth";
 import { headers } from "next/headers";
 import { db } from "../../../db";
 import { registrations, user, activityLogs } from "../../../db/schema";
-import { eq, desc, or, ilike } from "drizzle-orm";
+import { eq, desc, or, ilike, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {

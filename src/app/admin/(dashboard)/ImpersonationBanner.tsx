@@ -1,8 +1,10 @@
 "use client";
 
 import { clearImpersonation } from "./branches/actions";
+import { useRouter } from "next/navigation";
 
 export default function ImpersonationBanner({ branchId }: { branchId: string }) {
+  const router = useRouter();
   return (
     <div style={{
       background: "#fffbeb",
@@ -19,7 +21,10 @@ export default function ImpersonationBanner({ branchId }: { branchId: string }) 
         ⚠️ You are currently impersonating the branch: <strong>{branchId}</strong>. You are only seeing data for this branch.
       </div>
       <button 
-        onClick={() => clearImpersonation()}
+        onClick={async () => {
+          await clearImpersonation();
+          router.push("/admin/branches");
+        }}
         style={{
           background: "#f59e0b",
           border: "none",

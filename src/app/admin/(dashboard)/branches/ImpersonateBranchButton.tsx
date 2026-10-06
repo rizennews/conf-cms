@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { impersonateBranch } from "./actions";
+import { useRouter } from "next/navigation";
 
 export default function ImpersonateBranchButton({ id, isCurrent }: { id: string, isCurrent?: boolean }) {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleImpersonate = async () => {
     setLoading(true);
     await impersonateBranch(id);
-    setLoading(false);
+    router.push("/admin");
   };
 
   return (

@@ -35,10 +35,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  // Get impersonation
   const cookieStore = await cookies();
   const impersonatedBranch = cookieStore.get("impersonatedBranch")?.value;
-  const effectiveBranchId = (role === "super_admin" || role === "admin") && impersonatedBranch ? impersonatedBranch : (role === "branch_head" ? currentUser[0]?.branchId : null);
+  const isImpersonating = (role === "super_admin" || role === "admin") && impersonatedBranch;
+  const effectiveBranchId = isImpersonating ? impersonatedBranch : (role === "branch_head" ? currentUser[0]?.branchId : null);
+  const effectiveRole = isImpersonating ? "branch_head" : role;
 
   let newRegistrations = 0;
   try {
@@ -60,7 +61,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           .layout-root { flex-direction: column; }
         }
       `}</style>
-      <Sidebar role={role} userName={session.user.name} newRegistrations={newRegistrations} />
+      <Sidebar role={effectiveRole} userName={session.user.name} newRegistrations={newRegistrations} />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         {(role === "super_admin" || role === "admin") && impersonatedBranch && (
