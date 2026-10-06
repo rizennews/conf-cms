@@ -22,8 +22,35 @@ interface RegistrationInput {
   website?: string; // Honeypot
 }
 
+import { headers } from "next/headers";
+
+// Simple in-memory rate limiter (per Edge instance) to protect against DoS/Spam
+const rateLimitMap = new Map<string, { count: number, resetTime: number }>();
+
 export async function submitRegistration(data: RegistrationInput) {
   try {
+    // 1. IP Rate Limiting
+    const reqHeaders = await headers();
+    const ip = reqHeaders.get("x-forwarded-for") || "unknown-ip";
+    
+    const now = Date.now();
+    const windowMs = 60 * 1000; // 1 minute window
+    const maxRequests = 5; // Max 5 registrations per minute per IP
+    
+    const ipData = rateLimitMap.get(ip);
+    if (ipData) {
+      if (now > ipData.resetTime) {
+        // Reset window
+        rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+      } else {
+        if (ipData.count >= maxRequests) {
+          return { error: "You are registering too fast. Please wait a minute and try again." };
+        }
+        ipData.count++;
+      }
+    } else {
+      rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+    }
     // Spam protection: honeypot check
     if (data.website) {
       return { id: 999999, success: true };
