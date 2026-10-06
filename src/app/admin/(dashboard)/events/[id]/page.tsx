@@ -20,7 +20,7 @@ export default async function EventBuilderPage({ params }: { params: Promise<{ i
       
       let updated = false;
       for (const f of customFields) {
-        if (f.label.toLowerCase().includes("branch") || f.label.toLowerCase().includes("church")) {
+        if (f.label.toLowerCase().trim() === "branch") {
           const { branches } = await import("../../../../../db/schema");
           const allBranches = await db.select().from(branches);
           const branchNames = allBranches.map((b: Record<string, unknown>) => String(b.name));
