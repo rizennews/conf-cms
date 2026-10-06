@@ -11,6 +11,8 @@ type Props = {
   onClose: () => void;
   branches?: BranchType[];
   event?: EventType | null;
+  initialBranch?: string;
+  initialHeardFrom?: string;
 };
 
 const InputLabel = ({ children, required, description }: { children: React.ReactNode, required?: boolean, description?: string }) => (
@@ -33,14 +35,31 @@ const COUNTRIES = [
   { code: "ci", dial: "+225", name: "Ivory Coast" },
 ];
 
-export default function RegistrationModal({ isOpen, onClose, event }: Props) {
+export default function RegistrationModal({ isOpen, onClose, event, initialBranch, initialHeardFrom }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [registrationId, setRegistrationId] = useState("");
   
   const [website, setWebsite] = useState(""); // Honeypot
   const [countryCode, setCountryCode] = useState("gh");
-  const [customData, setCustomData] = useState<Record<string, string>>({});
+  const [customData, setCustomData] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    if (event?.customFields && typeof event.customFields === "string") {
+      try {
+        const parsed = JSON.parse(event.customFields);
+        parsed.forEach((field: Record<string, unknown>) => {
+          const label = String(field.label || "");
+          const lowerLabel = label.toLowerCase();
+          if (initialBranch && lowerLabel.includes("branch")) init[label] = initialBranch;
+          if (initialHeardFrom && (lowerLabel.includes("hear") || lowerLabel.includes("heard"))) init[label] = initialHeardFrom;
+          if (lowerLabel.includes("member")) init[label] = "No";
+          if (lowerLabel.includes("first time") || lowerLabel.includes("first-time")) init[label] = "Yes";
+          if (lowerLabel.includes("status") && !lowerLabel.includes("first time")) init[label] = "Guest";
+        });
+      } catch { /* ignore */ }
+    }
+    return init;
+  });
   const [currentPage, setCurrentPage] = useState(0);
 
   let parsedCustomFields: Record<string, unknown>[] = [];

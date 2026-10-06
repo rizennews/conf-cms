@@ -19,6 +19,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
   
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [showWalkinModal, setShowWalkinModal] = useState(false);
+  const [walkinInitialData, setWalkinInitialData] = useState<{ branch?: string, heardFrom?: string }>({});
   const [showScanner, setShowScanner] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCheckins, setPendingCheckins] = useState<number[]>([]);
@@ -282,7 +283,7 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
               {pendingCheckins.length > 0 ? `Sync (${pendingCheckins.length})` : "Sync Device"}
             </button>
             <button 
-              onClick={() => setShowWalkinModal(true)}
+              onClick={() => { setWalkinInitialData({}); setShowWalkinModal(true); }}
               style={{ padding: "0.75rem 1rem", background: "#f3f4f6", color: "#111", border: "1px solid #d1d5db", borderRadius: "8px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}
             >
               <UserPlus size={16} /> Walk-in
@@ -425,6 +426,34 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
                                 return null;
                               })()}
                             </div>
+                            
+                            {Boolean(r.invitees) && String(r.invitees).trim() !== "" && (
+                              <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", fontSize: "0.85rem", color: "#166534" }}>
+                                <div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>Invitees Listed:</div>
+                                <div style={{ color: "#15803d", marginBottom: "0.5rem" }}>{String(r.invitees)}</div>
+                                <button 
+                                  onClick={() => {
+                                    const branchName = events.find(e => e.id === selectedEvent)?.customFields 
+                                      ? (() => {
+                                          try {
+                                            const branches = JSON.parse(events.find(e => e.id === selectedEvent)?.customFields || "[]").find((f: { label?: string, options?: string[] }) => String(f.label || "").toLowerCase().includes("branch"))?.options;
+                                            return branches ? r.branchId : "Other";
+                                          } catch { return "Other"; }
+                                        })()
+                                      : "Other";
+
+                                    setWalkinInitialData({ 
+                                      branch: branchName as string, 
+                                      heardFrom: (r.heardFrom as string) || "Invite from member" 
+                                    });
+                                    setShowWalkinModal(true);
+                                  }}
+                                  style={{ background: "#16a34a", color: "white", border: "none", padding: "0.3rem 0.75rem", borderRadius: "6px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                                >
+                                  <UserPlus size={14} /> + Register Invitee
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -532,6 +561,8 @@ export default function CheckinInterface({ events }: { events: { id: string; nam
         isOpen={showWalkinModal} 
         onClose={() => setShowWalkinModal(false)}
         event={activeEventObj ? { ...activeEventObj, customFields: activeEventObj.customFields || undefined } : undefined}
+        initialBranch={walkinInitialData.branch}
+        initialHeardFrom={walkinInitialData.heardFrom}
       />
     </div>
   );
