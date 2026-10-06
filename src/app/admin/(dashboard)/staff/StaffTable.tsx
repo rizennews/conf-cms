@@ -154,7 +154,7 @@ export default function StaffTable({ users, branches }: { users: UserType[]; bra
 
     {showAddModal && (
       <div style={{ position: "fixed", inset: 0, backgroundColor: "#fff", display: "flex", justifyContent: "center", zIndex: 9999, overflowY: "auto" }}>
-        <div style={{ padding: "4rem 2rem", width: "100%", maxWidth: "600px" }}>
+        <div style={{ padding: "4rem 2rem 8rem 2rem", width: "100%", maxWidth: "600px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
             <h2 style={{ margin: 0, color: "#111", fontSize: "1.75rem", fontWeight: 700 }}>Add New User</h2>
             <button onClick={() => setShowAddModal(false)} style={{ background: "none", border: "none", fontSize: "2rem", cursor: "pointer", color: "#6b7280" }}>&times;</button>
