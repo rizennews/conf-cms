@@ -26,8 +26,7 @@ export default function ImpersonateBranchButton({ id, isCurrent }: { id: string,
         borderRadius: "6px", 
         fontSize: "0.8rem", 
         fontWeight: 600,
-        cursor: (loading || isCurrent) ? "not-allowed" : "pointer",
-        marginRight: "0.5rem"
+        cursor: (loading || isCurrent) ? "not-allowed" : "pointer"
       }}
     >
       {loading ? "..." : isCurrent ? "Viewing" : "View Dashboard"}

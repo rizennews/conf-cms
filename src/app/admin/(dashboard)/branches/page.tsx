@@ -50,9 +50,11 @@ export default async function BranchesPage() {
                       <td style={{ padding: "1rem 1.5rem", color: "#666", fontSize: "0.9rem", fontFamily: "monospace" }}>{branch.id}</td>
                       <td style={{ padding: "1rem 1.5rem", color: "#111", fontSize: "0.9rem", textAlign: "right", fontWeight: 500 }}>{branchRegs.length}</td>
                       <td style={{ padding: "1rem 1.5rem", color: "#16a34a", fontSize: "0.9rem", textAlign: "right", fontWeight: 600 }}>{checkedInCount}</td>
-                      <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>
-                        <ImpersonateBranchButton id={branch.id} isCurrent={impersonatedBranch === branch.id} />
-                        <DeleteBranchButton id={branch.id} />
+                      <td style={{ padding: "1rem 1.5rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0.5rem" }}>
+                          <ImpersonateBranchButton id={branch.id} isCurrent={impersonatedBranch === branch.id} />
+                          <DeleteBranchButton id={branch.id} />
+                        </div>
                       </td>
                     </tr>
                   );
