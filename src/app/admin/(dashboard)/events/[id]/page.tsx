@@ -24,7 +24,7 @@ export default async function EventBuilderPage({ params }: { params: Promise<{ i
           const { branches } = await import("../../../../../db/schema");
           const allBranches = await db.select().from(branches);
           const branchNames = allBranches.map((b: Record<string, unknown>) => String(b.name));
-          if (!branchNames.includes("Other")) branchNames.push("Other");
+          if (!branchNames.some(name => name.toLowerCase().includes("other"))) branchNames.push("Other (External)");
           
           // If the branch names list is different or larger, update it
           if (f.options?.length !== branchNames.length) {
