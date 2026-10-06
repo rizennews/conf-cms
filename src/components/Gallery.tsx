@@ -97,7 +97,7 @@ export default function Gallery({ branches, event, autoOpen = false }: { branche
       <div className={styles.galleryGrid}>
         {/* Hero Card embedded in the grid */}
         <div className={styles.heroCard}>
-          <div style={{ marginBottom: "1rem", marginTop: "-1rem" }}>
+          <div style={{ marginBottom: "-1.5rem", marginTop: "-2rem" }}>
             <Image 
               src="/LCC-LOGO.png" 
               alt="LCC Logo" 
