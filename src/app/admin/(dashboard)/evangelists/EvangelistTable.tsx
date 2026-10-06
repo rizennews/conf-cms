@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, UserCheck, UserX, User, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, UserCheck, UserX, Search } from "lucide-react";
 
 interface Invitee {
   id: string | number;
@@ -49,6 +49,7 @@ export default function EvangelistTable({ data }: { data: EvangelistData[] }) {
             <tr style={{ background: "#f9fafb", borderBottom: "1px solid #eaeaea" }}>
               <th style={{ padding: "1rem 1.25rem", fontWeight: 600, color: "#374151", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Evangelist Name</th>
               <th style={{ padding: "1rem 1.25rem", fontWeight: 600, color: "#374151", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Invited</th>
+              <th style={{ padding: "1rem 1.25rem", fontWeight: 600, color: "#374151", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Invited People</th>
               <th style={{ padding: "1rem 1.25rem", fontWeight: 600, color: "#374151", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Checked In</th>
               <th style={{ padding: "1rem 1.25rem", fontWeight: 600, color: "#374151", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "right" }}>Action</th>
             </tr>
@@ -61,26 +62,33 @@ export default function EvangelistTable({ data }: { data: EvangelistData[] }) {
                 </td>
               </tr>
             ) : (
-              filteredData.map((ev, i) => (
-                <React.Fragment key={ev.name + i}>
-                  <tr 
-                    style={{ borderBottom: expandedRow === ev.name ? "none" : "1px solid #eaeaea", cursor: "pointer", background: expandedRow === ev.name ? "#fafafa" : "#fff", transition: "background 0.2s" }}
-                    onClick={() => setExpandedRow(expandedRow === ev.name ? null : ev.name)}
-                    onMouseOver={e => { if (expandedRow !== ev.name) e.currentTarget.style.background = "#f9fafb" }}
-                    onMouseOut={e => { if (expandedRow !== ev.name) e.currentTarget.style.background = "#fff" }}
-                  >
-                    <td style={{ padding: "1.25rem", fontWeight: 500, color: "#111" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
-                           <User size={16} color="#111" />
+              filteredData.map((ev, i) => {
+                const namePart = ev.name.split(" - ")[0] || "Unknown";
+                const initials = namePart.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+                
+                return (
+                  <React.Fragment key={ev.name + i}>
+                    <tr 
+                      style={{ borderBottom: expandedRow === ev.name ? "none" : "1px solid #eaeaea", cursor: "pointer", background: expandedRow === ev.name ? "#fafafa" : "#fff", transition: "background 0.2s" }}
+                      onClick={() => setExpandedRow(expandedRow === ev.name ? null : ev.name)}
+                      onMouseOver={e => { if (expandedRow !== ev.name) e.currentTarget.style.background = "#f9fafb" }}
+                      onMouseOut={e => { if (expandedRow !== ev.name) e.currentTarget.style.background = "#fff" }}
+                    >
+                      <td style={{ padding: "1.25rem", fontWeight: 500, color: "#111" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#2b3ff2", color: "#fff", fontSize: "0.75rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(43,63,242,0.2)" }}>
+                             {initials}
+                          </div>
+                          {ev.name}
                         </div>
-                        {ev.name}
-                      </div>
-                    </td>
-                    <td style={{ padding: "1.25rem", color: "#374151", fontWeight: 500 }}>
-                      {ev.totalInvited}
-                    </td>
-                    <td style={{ padding: "1.25rem" }}>
+                      </td>
+                      <td style={{ padding: "1.25rem", color: "#374151", fontWeight: 500 }}>
+                        {ev.totalInvited}
+                      </td>
+                      <td style={{ padding: "1.25rem", color: "#6b7280", fontSize: "0.85rem", maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {ev.invitees.map(inv => inv.fullName).join(", ")}
+                      </td>
+                      <td style={{ padding: "1.25rem" }}>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.25rem 0.75rem", borderRadius: "99px", fontSize: "0.85rem", fontWeight: 600, background: ev.checkedInCount > 0 ? "rgba(16, 185, 129, 0.1)" : "#f3f4f6", color: ev.checkedInCount > 0 ? "#10b981" : "#6b7280" }}>
                         {ev.checkedInCount} / {ev.totalInvited}
                       </span>
@@ -93,48 +101,49 @@ export default function EvangelistTable({ data }: { data: EvangelistData[] }) {
                   </tr>
 
                   {/* Expanded Detail Row */}
-                  {expandedRow === ev.name && (
-                    <tr style={{ background: "#fafafa", borderBottom: "1px solid #eaeaea" }}>
-                      <td colSpan={4} style={{ padding: "0 1.25rem 1.5rem 1.25rem" }}>
-                        <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", overflow: "hidden" }}>
-                          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                            <thead>
-                              <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
-                                <th style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#6b7280", fontWeight: 600, textAlign: "left" }}>Invitee Name</th>
-                                <th style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#6b7280", fontWeight: 600, textAlign: "left" }}>Phone / WhatsApp</th>
-                                <th style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#6b7280", fontWeight: 600, textAlign: "left" }}>Status</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {ev.invitees.map((invitee) => (
-                                <tr key={invitee.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                                  <td style={{ padding: "0.75rem 1rem", fontSize: "0.9rem", color: "#111", fontWeight: 500 }}>
-                                    {invitee.fullName}
-                                  </td>
-                                  <td style={{ padding: "0.75rem 1rem", fontSize: "0.9rem", color: "#374151" }}>
-                                    {invitee.whatsapp || "N/A"}
-                                  </td>
-                                  <td style={{ padding: "0.75rem 1rem", fontSize: "0.9rem" }}>
-                                    {invitee.status === "checked-in" ? (
-                                      <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#10b981", fontWeight: 600, fontSize: "0.8rem" }}>
-                                        <UserCheck size={14} /> Checked In
-                                      </span>
-                                    ) : (
-                                      <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#ef4444", fontWeight: 600, fontSize: "0.8rem" }}>
-                                        <UserX size={14} /> Not Arrived
-                                      </span>
-                                    )}
-                                  </td>
+                    {expandedRow === ev.name && (
+                      <tr style={{ background: "#fafafa", borderBottom: "1px solid #eaeaea" }}>
+                        <td colSpan={5} style={{ padding: "0 1.25rem 1.5rem 1.25rem" }}>
+                          <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", overflow: "hidden" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                              <thead>
+                                <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
+                                  <th style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#6b7280", fontWeight: 600, textAlign: "left" }}>Invitee Name</th>
+                                  <th style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#6b7280", fontWeight: 600, textAlign: "left" }}>Phone / WhatsApp</th>
+                                  <th style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#6b7280", fontWeight: 600, textAlign: "left" }}>Status</th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              ))
+                              </thead>
+                              <tbody>
+                                {ev.invitees.map((invitee) => (
+                                  <tr key={invitee.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                                    <td style={{ padding: "0.75rem 1rem", fontSize: "0.9rem", color: "#111", fontWeight: 500 }}>
+                                      {invitee.fullName}
+                                    </td>
+                                    <td style={{ padding: "0.75rem 1rem", fontSize: "0.9rem", color: "#374151" }}>
+                                      {invitee.whatsapp || "N/A"}
+                                    </td>
+                                    <td style={{ padding: "0.75rem 1rem", fontSize: "0.9rem" }}>
+                                      {invitee.status === "checked-in" ? (
+                                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#10b981", fontWeight: 600, fontSize: "0.8rem" }}>
+                                          <UserCheck size={14} /> Checked In
+                                        </span>
+                                      ) : (
+                                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#ef4444", fontWeight: 600, fontSize: "0.8rem" }}>
+                                          <UserX size={14} /> Not Arrived
+                                        </span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })
             )}
           </tbody>
         </table>
