@@ -107,7 +107,7 @@ export default function Sidebar({ role, userName, newRegistrations = 0 }: { role
               <span style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 {label}
                 {isRegistrations && newRegistrations > 0 && (
-                  <span style={{ background: "#ef4444", color: "white", padding: "0.1rem 0.4rem", borderRadius: "99px", fontSize: "0.7rem", fontWeight: 700 }}>
+                  <span style={{ background: "#ef4444", color: "white", padding: "0.1rem 0.4rem", borderRadius: "99px", fontSize: "0.7rem", fontWeight: 700, whiteSpace: "nowrap" }}>
                     {newRegistrations} New
                   </span>
                 )}
