@@ -98,6 +98,16 @@ export default function AnalyticsClient({ registrations, events, branches, effec
   const branchCountMap: Record<string, number> = {};
   const externalBranchCountMap: Record<string, number> = {};
 
+  const normalizeChurchName = (name: string) => {
+    if (name.toLowerCase() === "other") return "Other";
+    const cleaned = name.toLowerCase()
+      .replace(/\b(church|chapel|assembly|assemblies|ministry|ministries|international|parish)\b/g, '')
+      .replace(/[^a-z0-9]/g, ' ')
+      .trim();
+    if (!cleaned) return name.trim();
+    return cleaned.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  };
+
   filteredRegs.forEach(r => {
     if (r.branchId === "other") {
       let extName = "Other";
@@ -107,6 +117,7 @@ export default function AnalyticsClient({ registrations, events, branches, effec
           if (custom.specifiedBranch) extName = custom.specifiedBranch;
         } catch { /* ignore */ }
       }
+      extName = normalizeChurchName(extName);
       externalBranchCountMap[extName] = (externalBranchCountMap[extName] || 0) + 1;
     } else {
       const bName = branchMap[r.branchId as string] || "Unknown";

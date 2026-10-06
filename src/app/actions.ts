@@ -91,7 +91,7 @@ export async function submitRegistration(data: RegistrationInput) {
       }
     }
     
-    if (!branchName || branchName.toLowerCase() === "other") {
+    if (!branchName || branchName.toLowerCase().includes("other")) {
       branchId = "other";
       // Ensure 'Other' category exists in branches
       const existingOther = await db.select().from(branches).where(eq(branches.id, "other")).limit(1);
