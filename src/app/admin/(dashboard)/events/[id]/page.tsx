@@ -26,8 +26,9 @@ export default async function EventBuilderPage({ params }: { params: Promise<{ i
           const branchNames = allBranches.map((b: Record<string, unknown>) => b.id === 'other' ? 'Other' : String(b.name));
           if (!branchNames.includes("Other")) branchNames.push("Other");
           
-          // If the branch names list is different or larger, update it
-          if (f.options?.length !== branchNames.length) {
+          // Check if the branch names list is different at all
+          const isDifferent = !f.options || f.options.length !== branchNames.length || !f.options.every((opt: string, i: number) => opt === branchNames[i]);
+          if (isDifferent) {
             f.options = branchNames;
             updated = true;
           }
