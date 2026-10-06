@@ -59,7 +59,7 @@ export async function submitRegistration(data: RegistrationInput) {
       }
     }
     
-    if (branchName === "Other") {
+    if (!branchName || branchName.toLowerCase() === "other") {
       branchId = "other";
       // Ensure 'Other' category exists in branches
       const existingOther = await db.select().from(branches).where(eq(branches.id, "other")).limit(1);
@@ -67,7 +67,7 @@ export async function submitRegistration(data: RegistrationInput) {
         await db.insert(branches).values({ id: "other", name: "Other (External)" });
       }
     } else {
-      const finalBranchName = branchName || "Unknown";
+      const finalBranchName = branchName;
       const existing = await db.select().from(branches).where(eq(branches.name, finalBranchName)).limit(1);
       
       if (existing.length > 0) {
