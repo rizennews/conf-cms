@@ -696,7 +696,25 @@ export default function RegistrationsTable({ data, events, branches = [], canBul
             {viewRegistration.customData ? (() => {
               try {
                 const custom = typeof viewRegistration.customData === 'string' ? JSON.parse(viewRegistration.customData as string) : viewRegistration.customData;
-                const keys = Object.keys(custom as Record<string, unknown>).filter(k => k !== '_countryCode');
+                const keys = Object.keys(custom as Record<string, unknown>).filter(k => {
+                  if (k === '_countryCode') return false;
+                  
+                  const lower = k.toLowerCase();
+                  if (lower.includes("full name") || (lower.includes("name") && !lower.includes("spouse") && !lower.includes("emergency"))) return false;
+                  if (lower.includes("email")) return false;
+                  if (lower.includes("phone") || lower.includes("whatsapp") || lower.includes("contact")) return false;
+                  if ((lower.includes("address") || lower.includes("home") || lower.includes("residence") || lower.includes("location")) && !lower.includes("email")) return false;
+                  if (lower.includes("age")) return false;
+                  if (lower.includes("branch")) return false;
+                  if (lower.includes("specify") || lower.includes("other church") || lower.includes("other branch") || lower.includes("if other")) return false;
+                  if (lower.includes("first time") || lower.includes("first-time")) return false;
+                  if (lower.includes("member")) return false;
+                  if (lower.includes("hear") || lower.includes("heard")) return false;
+                  if (lower.includes("invite") || lower.includes("details of y")) return false;
+                  if (lower.includes("status") && !lower.includes("first time")) return false;
+                  
+                  return true;
+                });
                 if (keys.length === 0) return null;
                 return (
                   <div style={{ marginTop: "2rem" }}>
