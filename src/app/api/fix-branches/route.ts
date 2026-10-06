@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "../../../db";
 import { branches, registrations } from "../../../db/schema";
-import { eq, like } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic'; // Ensure it's not cached
 
