@@ -64,15 +64,15 @@ export default function EvangelistTable({ data }: { data: EvangelistData[] }) {
               filteredData.map((ev, i) => (
                 <React.Fragment key={ev.name + i}>
                   <tr 
-                    style={{ borderBottom: expandedRow === ev.name ? "none" : "1px solid #eaeaea", cursor: "pointer", background: expandedRow === ev.name ? "rgba(43,63,242,0.02)" : "#fff", transition: "background 0.2s" }}
+                    style={{ borderBottom: expandedRow === ev.name ? "none" : "1px solid #eaeaea", cursor: "pointer", background: expandedRow === ev.name ? "#fafafa" : "#fff", transition: "background 0.2s" }}
                     onClick={() => setExpandedRow(expandedRow === ev.name ? null : ev.name)}
                     onMouseOver={e => { if (expandedRow !== ev.name) e.currentTarget.style.background = "#f9fafb" }}
                     onMouseOut={e => { if (expandedRow !== ev.name) e.currentTarget.style.background = "#fff" }}
                   >
                     <td style={{ padding: "1.25rem", fontWeight: 500, color: "#111" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(43,63,242,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                           <User size={16} color="#2b3ff2" />
+                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb" }}>
+                           <User size={16} color="#111" />
                         </div>
                         {ev.name}
                       </div>
@@ -94,7 +94,7 @@ export default function EvangelistTable({ data }: { data: EvangelistData[] }) {
 
                   {/* Expanded Detail Row */}
                   {expandedRow === ev.name && (
-                    <tr style={{ background: "rgba(43,63,242,0.02)", borderBottom: "1px solid #eaeaea" }}>
+                    <tr style={{ background: "#fafafa", borderBottom: "1px solid #eaeaea" }}>
                       <td colSpan={4} style={{ padding: "0 1.25rem 1.5rem 1.25rem" }}>
                         <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", overflow: "hidden" }}>
                           <table style={{ width: "100%", borderCollapse: "collapse" }}>

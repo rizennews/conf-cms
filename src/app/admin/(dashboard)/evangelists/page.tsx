@@ -4,6 +4,7 @@ import { db } from "../../../../db";
 import { registrations, user, events } from "../../../../db/schema";
 import { eq, desc } from "drizzle-orm";
 import EvangelistTable from "./EvangelistTable";
+import Image from "next/image";
 
 export default async function EvangelistsPage({ searchParams }: { searchParams: Promise<{ eventId?: string }> }) {
   const reqHeaders = await headers();
@@ -69,13 +70,18 @@ export default async function EvangelistsPage({ searchParams }: { searchParams: 
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto", paddingBottom: "4rem" }}>
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#111", margin: "0 0 0.5rem 0", letterSpacing: "-0.02em" }}>
-          Top Evangelists
-        </h1>
-        <p style={{ color: "#666", fontSize: "0.95rem", margin: 0 }}>
-          See who is inviting the most people and track the check-in status of their invitees.
-        </p>
+      <div style={{ marginBottom: "2.5rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "1rem" }}>
+        <div>
+          <h1 style={{ fontSize: "1.85rem", fontWeight: 800, color: "#111", margin: "0 0 0.5rem 0", letterSpacing: "-0.03em" }}>
+            Top Evangelists
+          </h1>
+          <p style={{ color: "#666", fontSize: "0.95rem", margin: 0 }}>
+            See who is inviting the most people and track the check-in status of their invitees.
+          </p>
+        </div>
+        <div style={{ background: "#fff", padding: "0.5rem 1rem", borderRadius: "12px", border: "1px solid #eaeaea", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+          <Image src="/LCC-LOGO.png" alt="Church Logo" width={80} height={80} style={{ objectFit: 'contain' }} unoptimized />
+        </div>
       </div>
 
       <EvangelistTable data={evangelists} />
