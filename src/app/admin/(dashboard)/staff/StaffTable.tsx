@@ -153,10 +153,13 @@ export default function StaffTable({ users, branches }: { users: UserType[]; bra
     </div>
 
     {showAddModal && (
-      <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 50 }}>
-        <div style={{ background: "white", padding: "2rem", borderRadius: "12px", width: "100%", maxWidth: "450px" }}>
-          <h2 style={{ marginTop: 0, marginBottom: "1.5rem", color: "#111" }}>Add New User</h2>
-          <form onSubmit={handleAddSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div style={{ position: "fixed", inset: 0, backgroundColor: "#fff", display: "flex", justifyContent: "center", zIndex: 9999, overflowY: "auto" }}>
+        <div style={{ padding: "4rem 2rem", width: "100%", maxWidth: "600px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+            <h2 style={{ margin: 0, color: "#111", fontSize: "1.75rem", fontWeight: 700 }}>Add New User</h2>
+            <button onClick={() => setShowAddModal(false)} style={{ background: "none", border: "none", fontSize: "2rem", cursor: "pointer", color: "#6b7280" }}>&times;</button>
+          </div>
+          <form onSubmit={handleAddSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
             
             <div>
               <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, fontSize: "0.9rem", color: "#111" }}>Full Name</label>
@@ -216,9 +219,9 @@ export default function StaffTable({ users, branches }: { users: UserType[]; bra
               </div>
             )}
 
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-              <button type="button" onClick={() => setShowAddModal(false)} style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer", fontWeight: 600, color: "#111" }}>Cancel</button>
-              <button type="submit" disabled={isSubmitting} style={{ flex: 1, padding: "0.75rem", background: "#111", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
+            <div style={{ display: "flex", gap: "1rem", marginTop: "2rem" }}>
+              <button type="button" onClick={() => setShowAddModal(false)} style={{ flex: 1, padding: "0.85rem", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "8px", cursor: "pointer", fontWeight: 600, color: "#374151" }}>Cancel</button>
+              <button type="submit" disabled={isSubmitting} style={{ flex: 1, padding: "0.85rem", background: "#2b3ff2", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
                 {isSubmitting ? "Creating..." : "Create User"}
               </button>
             </div>
