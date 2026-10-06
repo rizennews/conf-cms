@@ -39,7 +39,9 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
 
   const cookieStore = await cookies();
   const impersonatedBranch = cookieStore.get("impersonatedBranch")?.value;
-  const effectiveBranchId = (userRole === "super_admin" || userRole === "admin") && impersonatedBranch ? impersonatedBranch : (userRole === "branch_head" ? userBranchId : null);
+  const isImpersonating = (userRole === "super_admin" || userRole === "admin") && impersonatedBranch;
+  const effectiveBranchId = isImpersonating ? impersonatedBranch : (userRole === "branch_head" ? userBranchId : null);
+  const effectiveRole = isImpersonating ? "branch_head" : userRole;
 
   let userBranchName = null;
   if (effectiveBranchId) {
@@ -83,10 +85,10 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
     <div style={{ maxWidth: "900px", margin: "0 auto", paddingBottom: "4rem" }}>
       <div style={{ marginBottom: "2.5rem" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 600, color: "#111", margin: "0 0 0.5rem 0", letterSpacing: "-0.02em" }}>
-          {userRole === "branch_head" && userBranchName ? `Welcome, ${userBranchName}` : "Overview"}
+          {effectiveRole === "branch_head" && userBranchName ? `Welcome, ${userBranchName}` : "Overview"}
         </h1>
         <p style={{ color: "#666", fontSize: "0.95rem", margin: 0 }}>
-          {userRole === "branch_head" 
+          {effectiveRole === "branch_head" 
             ? "View your branch's current registration and check-in metrics." 
             : "View your current registration and check-in metrics."}
         </p>
@@ -100,7 +102,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
         checkInPct={checkInPct}
         events={allEvents}
         selectedEventId={eventId || ""}
-        userRole={userRole}
+        userRole={effectiveRole}
       />
 
 
