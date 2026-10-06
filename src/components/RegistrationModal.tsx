@@ -263,6 +263,19 @@ export default function RegistrationModal({ isOpen, onClose, event }: Props) {
               const fieldRequired = Boolean(field.required);
               const fieldOptions = (field.options as string[]) || [];
 
+              // Hack for conditional "Other" branch logic
+              const lowerLabel = fieldLabel.toLowerCase();
+              if (lowerLabel.includes("specify") && lowerLabel.includes("other")) {
+                 let hasOtherSelected = false;
+                 parsedCustomFields.forEach((f: Record<string, unknown>) => {
+                    const l = String(f.label || "").toLowerCase();
+                    if (l.includes("branch") && customData[String(f.label || "")] === "Other") {
+                       hasOtherSelected = true;
+                    }
+                 });
+                 if (!hasOtherSelected) return null; // hide it!
+              }
+
               // If the field is a phone number, append country code
               if (fieldType === "tel" || fieldLabel.toLowerCase().includes("contact") || fieldLabel.toLowerCase().includes("phone") || fieldLabel.toLowerCase().includes("whatsapp")) {
                 return (
