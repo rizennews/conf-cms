@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
 
-const connectionString = process.env.DATABASE_URL!;
+const connectionString = (process.env.DATABASE_URL || process.env.POSTGRES_URL)!;
 
 // Cache the database connection in development. This prevents creating a new connection 
 // pool on every Hot Module Replacement (HMR) update.
